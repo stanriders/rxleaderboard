@@ -59,7 +59,7 @@ public class LeaderboardUpdateService : BackgroundService
 
                 for (var i = 0; i < unparsedMaps.Length; i += 100)
                 {
-                    _logger.LogInformation("Starting new batch ({Current}/{Total})", i, unparsedMaps);
+                    _logger.LogInformation("Starting new batch ({Current}/{Total})", i, unparsedMaps.Length);
 
                     // we're catching score collection exceptions separately to run beatmap/pp population regardless of its fails
                     try
