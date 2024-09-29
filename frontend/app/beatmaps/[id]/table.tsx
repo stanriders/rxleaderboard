@@ -12,9 +12,9 @@ export const BeatmapPageTable: FC<Props> = ( props ) => {
   <>
     <Table isStriped isCompact fullWidth={true}>
       <TableHeader>
-        <TableColumn width={55} align="start">{""}</TableColumn>
-        <TableColumn width={55} align="start">{""}</TableColumn>
-        <TableColumn width={75} >Score</TableColumn>
+        <TableColumn width={45} align="start">{""}</TableColumn>
+        <TableColumn width={45} align="center">{""}</TableColumn>
+        <TableColumn width={75} align="center">Score</TableColumn>
         <TableColumn >Player</TableColumn>
         <TableColumn width={75} align="center">Combo</TableColumn>
         <TableColumn width={65} align="center">300</TableColumn>

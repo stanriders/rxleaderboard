@@ -28,7 +28,7 @@ export default async function UserPage({ params }: Props) {
   <>    
     <Card>
       <CardBody className="flex flex-row">
-        <div className="flex flex-auto basis-1/2">
+        <div className="flex flex-auto content-center">
           <Avatar size="lg" src={`https://a.ppy.sh/${player.id}`}/>
           <Spacer x={2} />
           <Link className="text-secondary-700 text-2xl" size="lg" isExternal href={`https://osu.ppy.sh/users/${player.id}`}>
@@ -36,9 +36,9 @@ export default async function UserPage({ params }: Props) {
             <Spacer x={1} />{player.username}
           </Link>
         </div>
-        <div className="flex flex-col flex-auto basis-1/2">
+        <div className="flex flex-col flex-none">
           <p className="text-default-400 text-right">{player.totalAccuracy?.toFixed(2)}%</p>
-          <p className="text-3xl text-right">{player.totalPp?.toFixed(2)}pp</p>
+          <p className="xs: text-xl md:text-3xl text-right">{player.totalPp?.toFixed(2)}pp</p>
         </div>
       </CardBody>
     </Card>

@@ -26,7 +26,7 @@ export default async function BeatmapPage({ params }: Props) {
   return (
   <>    
     <Card>
-      <CardHeader className="absolute z-10 top-1 flex-col !items-start">
+      <CardHeader className="absolute z-10 top-1 flex-col !items-start md:h-52 xs:h-32">
         <Card>
           <CardBody>
             <Link isExternal href={`https://osu.ppy.sh/beatmaps/${beatmap.id}`} className="text-secondary-800 text-xl">{beatmap.artist} - {beatmap.title}</Link>
@@ -37,7 +37,7 @@ export default async function BeatmapPage({ params }: Props) {
       <Image
         removeWrapper
         alt="Background"
-        className="z-0 w-full h-52 object-cover"
+        className="z-0 w-full h-48 object-cover"
         src={`https://assets.ppy.sh/beatmaps/${beatmap.beatmapSetId}/covers/cover@2x.jpg`}
       />
       <CardBody className="flex flex-row">

@@ -2,7 +2,7 @@ export type SiteConfig = typeof siteConfig;
 
 export const siteConfig = {
   name: "Relaxation Vault",
-  description: "Leaderboard of osu!lazer relax players",
+  description: "Leaderboard of osu!lazer relax scores",
   navItems: [
     {
       label: "Leaderboard",
@@ -12,15 +12,5 @@ export const siteConfig = {
       label: "Top scores",
       href: "/topscores",
     },
-  ],
-  navMenuItems: [
-    {
-      label: "Leaderboard",
-      href: "/leaderboard",
-    },
-    {
-      label: "Top scores",
-      href: "/topscores",
-    },
-  ],
+  ]
 };
