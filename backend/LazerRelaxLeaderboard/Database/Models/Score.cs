@@ -1,6 +1,7 @@
 ﻿using LazerRelaxLeaderboard.OsuApi.Models;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace LazerRelaxLeaderboard.Database.Models
 {
@@ -16,6 +17,7 @@ namespace LazerRelaxLeaderboard.Database.Models
         public required int BeatmapId { get; set; }
         public Beatmap? Beatmap { get; set; } = null!;
 
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public required Grade Grade { get; set; }
 
         public required double Accuracy { get; set; }
