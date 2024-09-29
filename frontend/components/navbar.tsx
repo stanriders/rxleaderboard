@@ -7,7 +7,6 @@ import {
   NavbarItem,
   NavbarMenuItem,
 } from "@nextui-org/navbar";
-import { Link } from "@nextui-org/link";
 import { link as linkStyles } from "@nextui-org/theme";
 import NextLink from "next/link";
 import clsx from "clsx";
@@ -42,7 +41,8 @@ export const Navbar = () => {
           ))}
         </ul>
       </NavbarContent>
-
+ 
+      {/* small */}
       <NavbarContent
         className="hidden sm:flex basis-1/5 sm:basis-full"
         justify="end"
@@ -59,21 +59,17 @@ export const Navbar = () => {
 
       <NavbarMenu>
         <div className="mx-4 mt-2 flex flex-col gap-2">
-          {siteConfig.navMenuItems.map((item, index) => (
-            <NavbarMenuItem key={`${item}-${index}`}>
-              <Link
-                color={
-                  index === 2
-                    ? "primary"
-                    : index === siteConfig.navMenuItems.length - 1
-                      ? "danger"
-                      : "foreground"
-                }
-                href="#"
-                size="lg"
+          {siteConfig.navItems.map((item, index) => (
+            <NavbarMenuItem key={item.href}>
+              <NextLink
+                className={clsx(linkStyles({ color: "foreground" }),
+                          "data-[active=true]:text-primary data-[active=true]:font-medium",
+                          )}
+                color="foreground"
+                href={item.href}
               >
                 {item.label}
-              </Link>
+              </NextLink>
             </NavbarMenuItem>
           ))}
         </div>
