@@ -55,7 +55,7 @@ public class LeaderboardUpdateService : BackgroundService
                 // TODO: we need to update this occasionally
                 var parsedMaps = await context.Beatmaps.AsNoTracking().Select(m => m.Id)
                     .ToArrayAsync(cancellationToken: stoppingToken);
-                var unparsedMaps = maps.Where(x => !parsedMaps.Contains(x)).ToArray();
+                var unparsedMaps = maps.Where(x => !parsedMaps.Contains(x)).Reverse().ToArray();
 
                 for (var i = 0; i < unparsedMaps.Length; i += 100)
                 {
