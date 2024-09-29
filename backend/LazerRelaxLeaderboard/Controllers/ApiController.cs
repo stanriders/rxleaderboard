@@ -65,7 +65,7 @@ namespace LazerRelaxLeaderboard.Controllers
             }
 
             return await _databaseContext.Users.AsNoTracking()
-                .Where(x => x.Username.StartsWith(query))
+                .Where(x => x.Username.ToUpper().StartsWith(query.ToUpper()))
                 .ToListAsync();
         }
 

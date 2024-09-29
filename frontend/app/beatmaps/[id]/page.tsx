@@ -7,6 +7,7 @@ import { Link } from "@nextui-org/link";
 import {BeatmapPageTable} from "./table";
 import type { Metadata } from 'next'
 import { ApiBase } from "@/api/address";
+import { notFound } from "next/navigation";
 
 type Props = {
   params: { id: number }
@@ -14,6 +15,9 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const beatmap : BeatmapModel = await fetch(`${ApiBase}/beatmaps/${params.id}`).then((res) => res.json())
+  if (!beatmap)
+    return {};
+  
   return {
     title: beatmap.title
   }
@@ -21,6 +25,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function BeatmapPage({ params }: Props) {
   const beatmap : BeatmapModel = await fetch(`${ApiBase}/beatmaps/${params.id}`, {next: {revalidate: 3600}}).then(x=> x.json())
+  if(!beatmap)
+    return notFound();
+
   const scores : ScoreModel[] = await fetch(`${ApiBase}/beatmaps/${params.id}/scores`).then(x=> x.json())
 
   return (

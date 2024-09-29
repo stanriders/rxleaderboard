@@ -4,6 +4,7 @@ using LazerRelaxLeaderboard.Database;
 using LazerRelaxLeaderboard.OsuApi;
 using LazerRelaxLeaderboard.OsuApi.Interfaces;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Npgsql;
@@ -29,7 +30,6 @@ var basePath = builder.Configuration.GetValue<string>("PathBase");
 
 builder.Services.Configure<OsuApiConfig>(osuConfig);
 
-
 var connectionString = new NpgsqlConnectionStringBuilder
 {
     Host = dbConfig["Host"],
@@ -48,7 +48,14 @@ builder.Services.AddHttpClient<OsuApiProvider>();
 builder.Services.AddSingleton<IOsuApiProvider, OsuApiProvider>();
 builder.Services.AddHostedService<LeaderboardUpdateService>();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers((options =>
+{
+    options.OutputFormatters.RemoveType(typeof(HttpNoContentOutputFormatter));
+    options.OutputFormatters.Insert(0, new HttpNoContentOutputFormatter
+    {
+        TreatNullValueAsNoContent = false
+    });
+}));
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

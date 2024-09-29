@@ -8,6 +8,7 @@ import { Flag } from "@/components/flag";
 import { Link } from "@nextui-org/link";
 import type { Metadata } from 'next'
 import { ApiBase } from "@/api/address";
+import { notFound } from "next/navigation";
 
 type Props = {
   params: { id: number }
@@ -15,6 +16,9 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const player : UserModel = await fetch(`${ApiBase}/players/${params.id}`).then((res) => res.json())
+  if (!player)
+    return {};
+
   return {
     title: player.username,
   }
@@ -22,6 +26,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function UserPage({ params }: Props) {
   const player : UserModel = await fetch(`${ApiBase}/players/${params.id}`).then(x=> x.json())
+  if(!player)
+    return notFound();
+
   const scores = await fetch(`${ApiBase}/players/${params.id}/scores`).then(x=> x.json())
 
   return (
