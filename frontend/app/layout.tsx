@@ -20,6 +20,9 @@ export const metadata: Metadata = {
   },
 };
 
+// all fetch request should be cached for 1 minute unless specified otherwise
+export const revalidate = 60;
+
 export const viewport: Viewport = {
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "white" },

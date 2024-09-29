@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default async function TopscoresPage() {
-  const scores : ScoreModel[] = await fetch(`${ApiBase}/scores`, { next: { revalidate: 3600 } }).then(x=> x.json())
+  const scores : ScoreModel[] = await fetch(`${ApiBase}/scores`).then(x=> x.json())
   
   return (
   <>    
