@@ -63,11 +63,11 @@ export default function RootLayout({ children, }: { children: React.ReactNode; }
                 isExternal
                 size="sm"
                 className="gap-1 text-current"
-                href="https://osu.ppy.sh/users/7217455"
+                href="https://github.com/stanriders/rxleaderboard"
                 title="GitHub"
               >Source code</Link> | <Link
               isExternal
-                size="sm"
+              size="sm"
               className="gap-1 text-current"
               href="https://paypal.me/stanridersnew"
               title="PayPal"

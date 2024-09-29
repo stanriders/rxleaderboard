@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function UserPage({ params }: Props) {
   const player : UserModel = await fetch(`${ApiBase}/players/${params.id}`).then(x=> x.json())
-  const scores = await fetch(`${ApiBase}/players/${params.id}/scores`)).then(x=> x.json())
+  const scores = await fetch(`${ApiBase}/players/${params.id}/scores`).then(x=> x.json())
 
   return (
   <>    
