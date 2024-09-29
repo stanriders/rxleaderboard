@@ -33,16 +33,16 @@ services:
     restart: unless-stopped
     pull_policy: build
 
-  # frontend:
-  #   build: ./frontend/.
-  #   ports:
-  #     - "127.0.0.1:3550:3000"
-  #   volumes:
-  #     - ./logs/frontend:/app/logs
-  #   networks:
-  #     - main
-  #   restart: unless-stopped
-  #   pull_policy: build
+  frontend:
+    build: ./frontend/.
+    ports:
+      - "127.0.0.1:3550:3000"
+    volumes:
+      - ./logs/frontend:/app/logs
+    networks:
+      - main
+    restart: unless-stopped
+    pull_policy: build
 
   postgres:
     image: postgres:latest
