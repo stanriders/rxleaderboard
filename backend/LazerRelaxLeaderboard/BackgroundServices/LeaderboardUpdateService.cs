@@ -59,6 +59,8 @@ public class LeaderboardUpdateService : BackgroundService
 
                 for (var i = 0; i < unparsedMaps.Length; i += 100)
                 {
+                    _logger.LogInformation("Starting new batch ({Current}/{Total})", i, unparsedMaps);
+
                     // we're catching score collection exceptions separately to run beatmap/pp population regardless of its fails
                     try
                     {
@@ -90,9 +92,9 @@ public class LeaderboardUpdateService : BackgroundService
     {
         for (var i = 0; i < maps.Length; i++)
         {
-            _logger.LogInformation("Populating {Current}/{Total}", i, maps.Length);
-
             var mapId = maps[i];
+
+            _logger.LogInformation("Processing {MapId}...", mapId);
 
             var allowedMods = new[] { "HD", "DT", "HR" };
             var modCombos = CreateCombinations(0, Array.Empty<string>(), allowedMods);
