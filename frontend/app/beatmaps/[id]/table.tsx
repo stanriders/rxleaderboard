@@ -1,0 +1,50 @@
+"use client"
+import { FC } from "react";
+import { ScoreModel, UserModel } from "@/api/types";
+import { User } from "@/components/user";
+import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "@nextui-org/table";
+
+type Props = { scores: ScoreModel[] }
+
+// this stupid thing exists because of the nextui bug that makes tables not work in ssr
+export const BeatmapPageTable: FC<Props> = ( props ) => {
+  return (
+  <>
+    <Table isStriped isCompact fullWidth={true}>
+      <TableHeader>
+        <TableColumn width={55} align="start">{""}</TableColumn>
+        <TableColumn width={55} align="start">{""}</TableColumn>
+        <TableColumn width={75} >Score</TableColumn>
+        <TableColumn >Player</TableColumn>
+        <TableColumn width={75} align="center">Combo</TableColumn>
+        <TableColumn width={65} align="center">300</TableColumn>
+        <TableColumn width={65} align="center">100</TableColumn>
+        <TableColumn width={65} align="center">50</TableColumn>
+        <TableColumn width={65} align="center">Misses</TableColumn>
+
+        <TableColumn align="end">Mods</TableColumn>
+        <TableColumn width={85} align="center">Accuracy</TableColumn>
+        <TableColumn width={100} align="center">PP</TableColumn>
+      </TableHeader>
+      <TableBody>
+        {props.scores.map((row: ScoreModel, index: number) => (
+        <TableRow key={row.id}>
+          <TableCell>#{index+1}</TableCell>
+          <TableCell>{row.grade}</TableCell>
+          <TableCell><p className="text-default-500">{row.totalScore}</p></TableCell>
+          <TableCell><User user={row.user as UserModel}/></TableCell>
+          <TableCell><p className="text-default-500">{row.combo}x</p></TableCell>
+          <TableCell><p className="text-default-400">{row.count300}</p></TableCell>
+          <TableCell><p className="text-default-400">{row.count100}</p></TableCell>
+          <TableCell><p className="text-default-400">{row.count50}</p></TableCell>
+          <TableCell><p className="text-default-400">{row.countMiss}</p></TableCell>
+          <TableCell><p className="text-default-500">{row.mods}</p></TableCell>
+          <TableCell><p className="text-default-400">{(row.accuracy * 100).toFixed(2)}%</p></TableCell>
+          <TableCell>{row.pp === null ? "-" : row.pp?.toFixed(1)}</TableCell>
+        </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  </>
+  );
+}

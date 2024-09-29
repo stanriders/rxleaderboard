@@ -1,2 +1,2 @@
-# rxleaderboard
-Relaxation Vault - osu!lazer relax leaderboard
+# Relaxation Vault - osu!lazer relax leaderboard
+

@@ -1,0 +1,63 @@
+version: '3.8'
+
+networks:
+  main:
+  logs:
+    external: true
+
+services:
+  backend:
+    build: ./backend/.
+    depends_on:
+      - postgres
+    ports:
+      - "127.0.0.1:3551:3001"
+    environment:
+      - ASPNETCORE_ENVIRONMENT
+      - ASPNETCORE_URLS=http://+:3001
+      - Database__Database=rxleaderboard
+      - Database__Host=postgres
+      - Database__Port=5432
+      - Database__Username=postgres
+      - Database__Password=postgres
+      - osuApi__ClientId
+      - osuApi__ClientSecret
+      - osuApi__CallbackUrl=/oauth/callback
+    volumes:
+      - ./logs/backend:/app/logs
+      - ./keys:/root/.aspnet/DataProtection-Keys
+      - ./beatmapcache:/app/beatmapcache
+    networks:
+      - main
+      - logs
+    restart: unless-stopped
+    pull_policy: build
+
+  frontend:
+    build: ./frontend/.
+    ports:
+      - "127.0.0.1:3550:3000"
+    volumes:
+      - ./logs/frontend:/app/logs
+    networks:
+      - main
+    restart: unless-stopped
+    pull_policy: build
+
+  postgres:
+    image: postgres:latest
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=rxleaderboard
+      - PGDATA=/data/postgres
+    volumes:
+      - ./db:/data/postgres
+    networks:
+      - main
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
