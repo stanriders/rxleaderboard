@@ -90,11 +90,35 @@ public class LeaderboardUpdateService : BackgroundService
 
     public async Task CollectScores(int[] maps, DatabaseContext databaseContext)
     {
-        for (var i = 0; i < maps.Length; i++)
+        foreach (var mapId in maps)
         {
-            var mapId = maps[i];
-
             _logger.LogInformation("Processing {MapId}...", mapId);
+
+            var osuBeatmap = await _osuApiProvider.GetBeatmap( mapId);
+            if (osuBeatmap != null)
+            {
+                await databaseContext.Beatmaps.AddAsync(new Database.Models.Beatmap
+                {
+                    Id = osuBeatmap.Id,
+                    ApproachRate = osuBeatmap.ApproachRate,
+                    Artist = osuBeatmap.BeatmapSet.Artist,
+                    BeatmapSetId = osuBeatmap.BeatmapSet.Id,
+                    BeatsPerMinute = osuBeatmap.BeatsPerMinute,
+                    CircleSize = osuBeatmap.CircleSize,
+                    Circles = osuBeatmap.Circles,
+                    CreatorId = osuBeatmap.BeatmapSet.CreatorId,
+                    DifficultyName = osuBeatmap.Version,
+                    HealthDrain = osuBeatmap.HealthDrain,
+                    Title = osuBeatmap.BeatmapSet.Title,
+                    OverallDifficulty = osuBeatmap.OverallDifficulty,
+                    Sliders = osuBeatmap.Sliders,
+                    Spinners = osuBeatmap.Spinners,
+                    StarRatingNormal = osuBeatmap.StarRating
+                });
+            }
+            await databaseContext.SaveChangesAsync();
+
+            await Task.Delay(_interval);
 
             var allowedMods = new[] { "HD", "DT", "HR" };
             var modCombos = CreateCombinations(0, Array.Empty<string>(), allowedMods);
@@ -105,7 +129,7 @@ public class LeaderboardUpdateService : BackgroundService
                 var scores = await _osuApiProvider.GetScores(mapId, modCombo);
                 if (scores == null)
                 {
-                    await Task.Delay(1000);
+                    await Task.Delay(_interval);
 
                     continue;
                 }
@@ -114,7 +138,9 @@ public class LeaderboardUpdateService : BackgroundService
                 foreach (var score in filteredScores)
                 {
                     if (await databaseContext.Scores.FindAsync(score.Id) != null)
+                    {
                         continue;
+                    }
 
                     var user = await databaseContext.Users.FindAsync(score.User.Id);
                     if (user != null)
