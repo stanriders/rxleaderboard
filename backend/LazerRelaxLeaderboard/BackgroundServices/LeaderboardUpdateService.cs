@@ -18,6 +18,7 @@ public class LeaderboardUpdateService : BackgroundService
     private readonly ILogger<LeaderboardUpdateService> _logger;
     private readonly string _cachePath;
     private readonly int _interval;
+    private readonly int _batchSize;
 
     public LeaderboardUpdateService(IOsuApiProvider osuApiProvider, IConfiguration configuration, ILogger<LeaderboardUpdateService> logger, IServiceScopeFactory serviceScopeFactory)
     {
@@ -25,6 +26,7 @@ public class LeaderboardUpdateService : BackgroundService
         _logger = logger;
         _serviceScopeFactory = serviceScopeFactory;
         _interval = int.Parse(configuration["ScoreQueryInterval"]!);
+        _batchSize = int.Parse(configuration["ScoreQueryBatch"]!);
         _cachePath = configuration["BeatmapCachePath"]!;
     }
 
@@ -57,14 +59,14 @@ public class LeaderboardUpdateService : BackgroundService
                     .ToArrayAsync(cancellationToken: stoppingToken);
                 var unparsedMaps = maps.Where(x => !parsedMaps.Contains(x)).OrderBy(_ => Random.Shared.Next()).ToArray();
 
-                for (var i = 0; i < unparsedMaps.Length; i += 100)
+                for (var i = 0; i < unparsedMaps.Length; i += _batchSize)
                 {
                     _logger.LogInformation("Starting new batch ({Current}/{Total})", i, unparsedMaps.Length);
 
                     // we're catching score collection exceptions separately to run beatmap/pp population regardless of its fails
                     try
                     {
-                        await CollectScores(unparsedMaps.Skip(i).Take(100).ToArray(), context);
+                        await CollectScores(unparsedMaps.Skip(i).Take(_batchSize).ToArray(), context);
                     }
                     catch (Exception ex)
                     {
