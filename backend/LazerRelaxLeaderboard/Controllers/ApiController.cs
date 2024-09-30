@@ -11,10 +11,12 @@ namespace LazerRelaxLeaderboard.Controllers
     public class ApiController : ControllerBase
     {
         private readonly DatabaseContext _databaseContext;
+        private readonly int _apiRequestInterval;
 
-        public ApiController(DatabaseContext databaseContext)
+        public ApiController(DatabaseContext databaseContext, IConfiguration configuration)
         {
             _databaseContext = databaseContext;
+            _apiRequestInterval = int.Parse(configuration["ScoreQueryInterval"]!);
         }
 
         [HttpGet("/scores")]
@@ -97,6 +99,21 @@ namespace LazerRelaxLeaderboard.Controllers
                 .OrderByDescending(x => x.Pp)
                 .Take(100)
                 .ToListAsync();
+        }
+
+        [HttpGet("/stats")]
+        public async Task<StatsResponse> GetStats()
+        {
+            var beatmaps = await _databaseContext.Beatmaps.CountAsync();
+            const int modCombos = 8;
+
+            return new StatsResponse
+            {
+                BeatmapsTotal = beatmaps,
+                ScoresTotal = await _databaseContext.Scores.CountAsync(),
+                UsersTotal = await _databaseContext.Users.CountAsync(),
+                UpdateRunLengthEstimate = (beatmaps * modCombos) * (_apiRequestInterval / 1000.0) / 60.0 / 60.0 / 24.0
+            };
         }
     }
 }
