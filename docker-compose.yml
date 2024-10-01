@@ -35,6 +35,8 @@ services:
 
   frontend:
     build: ./frontend/.
+    depends_on:
+      - backend
     ports:
       - "127.0.0.1:3550:3000"
     volumes:
