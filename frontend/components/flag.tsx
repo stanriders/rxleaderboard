@@ -17,6 +17,6 @@ export const Flag: FC<Props> = ( props ) => {
       };
 
     return (
-      <Image src={flagUrl(props.country)} radius="none" className="mr-1" fallbackSrc={flagUrl(props.country)} width={props.width} />
+      <Image src={flagUrl(props.country)} radius="none" className="mr-1 min-w-3" fallbackSrc={flagUrl(props.country)} width={props.width} />
     );
   };

@@ -28,7 +28,7 @@ export default function LeaderboardTable() {
         <Table isCompact fullWidth={true} topContent={"Leaderboard"}>
         <TableHeader>
           <TableColumn width={55} align="start">{""}</TableColumn>
-          <TableColumn >Username</TableColumn>
+          <TableColumn className="text-ellipsis">Username</TableColumn>
           <TableColumn align="center">Accuracy</TableColumn>
           <TableColumn align="center">PP</TableColumn>
         </TableHeader>
@@ -43,9 +43,6 @@ export default function LeaderboardTable() {
     return (
     <>    
       <Table isStriped isCompact fullWidth={true}
-      topContent={
-        "Leaderboard"
-      }
           bottomContent={
           <div className="flex w-full justify-center">
             <Pagination

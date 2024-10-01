@@ -43,7 +43,7 @@ export default function RootLayout({ children, }: { children: React.ReactNode; }
         <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
           <div className="relative flex flex-col h-screen">
             <Navbar />
-            <main className="container mx-auto max-w-7xl pt-4 px-6 flex-grow">
+            <main className="container mx-auto max-w-7xl pt-2 px-1 md:px-6 flex-grow">
             <section className="flex flex-col items-center justify-center gap-4 py-4">
               <div className="inline-block w-full text-center justify-center">
                 {children}

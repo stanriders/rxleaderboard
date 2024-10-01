@@ -6,7 +6,7 @@ import { Metadata } from "next";
 import { ApiBase } from "@/api/address";
 
 export const metadata: Metadata = {
-  title: 'Best scores'
+  title: 'Top scores'
 };
 
 export default async function TopscoresPage() {
