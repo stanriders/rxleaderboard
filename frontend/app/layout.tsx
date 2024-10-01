@@ -76,6 +76,7 @@ export default function RootLayout({ children, }: { children: React.ReactNode; }
             </footer>
           </div>
         </Providers>
+        <script defer src="https://umami.stanr.info/script.js" data-website-id="516606cb-17b7-4166-8315-c47fef8d73dd"></script>
       </body>
     </html>
   );
