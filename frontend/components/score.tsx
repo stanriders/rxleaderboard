@@ -6,6 +6,7 @@ import { User } from "./user";
 import { Link } from "@nextui-org/link";
 import { formatDistance } from 'date-fns';
 import { Spacer } from "@nextui-org/spacer";
+import { Mod } from "./mod";
 
 type Props = { score: ScoreModel, showPlayer: boolean }
 
@@ -33,7 +34,7 @@ export const Score: FC<Props> = ( props ) => {
             <div className="truncate text-default-300 text-xs">{formatDistance(new Date(score.date), new Date(), { addSuffix: true })}</div>
           </div>
           
-          <div className="hidden md:block flex-none text-default-500 text-sm">{score.mods}</div>
+          <div className="hidden md:block flex-none text-sm">{score.mods?.map(m => <Mod mod={m}/>)}</div>
           <div className="hidden md:block flex-none text-default-400 text-center text-sm w-16">{(score.accuracy * 100).toFixed(2) ?? 0}%</div>
           <div className="hidden md:block flex-none text-default-900 items-center text-center w-24 text-lg">{Math.round(score.pp ?? 0)}pp</div>
         </div>
