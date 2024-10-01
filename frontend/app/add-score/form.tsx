@@ -1,7 +1,6 @@
 "use client"
 import { Textarea } from "@nextui-org/input";
 import { Button } from "@nextui-org/button";
-import useSWR from 'swr'
 import { useState } from 'react'
 import { Spacer } from "@nextui-org/react";
 
