@@ -12,5 +12,9 @@ export const siteConfig = {
       label: "Top scores",
       href: "/topscores",
     },
+    {
+      label: "Add score",
+      href: "/add-score",
+    },
   ]
 };
