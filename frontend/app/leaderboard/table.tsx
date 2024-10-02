@@ -25,7 +25,9 @@ export default function LeaderboardTable() {
     if (error) return <div>Failed to load</div>
     if (!data) 
     return (<>
-        <Table isCompact fullWidth={true}>
+        <Table isCompact fullWidth={true} bottomContent={
+          <div className="flex w-full justify-center"><Pagination isCompact showControls showShadow color="secondary" total={0} /></div>
+          }>
         <TableHeader>
           <TableColumn width={55} align="start">{""}</TableColumn>
           <TableColumn className="text-ellipsis">Username</TableColumn>
