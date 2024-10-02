@@ -25,7 +25,7 @@ export default function LeaderboardTable() {
     if (error) return <div>Failed to load</div>
     if (!data) 
     return (<>
-        <Table isCompact fullWidth={true} topContent={"Leaderboard"}>
+        <Table isCompact fullWidth={true}>
         <TableHeader>
           <TableColumn width={55} align="start">{""}</TableColumn>
           <TableColumn className="text-ellipsis">Username</TableColumn>
