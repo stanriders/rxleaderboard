@@ -69,8 +69,8 @@ export default function RootLayout({ children, }: { children: React.ReactNode; }
               isExternal
               size="sm"
               className="gap-1 text-current"
-              href="https://paypal.me/stanridersnew"
-              title="PayPal"
+              href="https://ko-fi.com/stanr"
+              title="Ko-fi"
             >Donate ❤</Link>
             </p>
             </footer>
