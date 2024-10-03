@@ -1,6 +1,6 @@
 
 import { Score } from "@/components/score";
-import { ScoreModel, UserModel } from "@/api/types";
+import { ScoreModel, ExtendedUserModel } from "@/api/types";
 import { Spacer } from "@nextui-org/spacer";
 import { Avatar } from "@nextui-org/avatar";
 import { Card, CardBody } from "@nextui-org/card";
@@ -15,7 +15,7 @@ type Props = {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const player : UserModel = await fetch(`${ApiBase}/players/${params.id}`).then((res) => res.json())
+  const player : ExtendedUserModel = await fetch(`${ApiBase}/players/${params.id}`).then((res) => res.json())
   if (!player)
     return {};
 
@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function UserPage({ params }: Props) {
-  const player : UserModel = await fetch(`${ApiBase}/players/${params.id}`).then(x=> x.json())
+  const player : ExtendedUserModel = await fetch(`${ApiBase}/players/${params.id}`).then(x=> x.json())
   if(!player)
     return notFound();
 
@@ -34,18 +34,21 @@ export default async function UserPage({ params }: Props) {
   return (
   <>    
     <Card>
-      <CardBody className="flex flex-row">
-        <div className="flex flex-auto content-center">
-          <Avatar size="lg" src={`https://a.ppy.sh/${player.id}`}/>
+      <CardBody className="flex flex-row items-center">
+        <div className="flex flex-auto content-center truncate">
+          <Avatar size="lg" src={`https://a.ppy.sh/${player.id}`} className="min-w-10 w-10 h-10 md:w-14 md:h-14"/>
           <Spacer x={2} />
-          <Link className="text-secondary-700 text-2xl" size="lg" isExternal href={`https://osu.ppy.sh/users/${player.id}`}>
+          <Link className="text-secondary-700 text-md md:text-2xl" size="lg" isExternal href={`https://osu.ppy.sh/users/${player.id}`}>
             <Flag country={player.countryCode} width={25}/>
             <Spacer x={1} />{player.username}
           </Link>
         </div>
         <div className="flex flex-col flex-none">
-          <p className="text-default-400 text-right">{player.totalAccuracy?.toFixed(2)}%</p>
-          <p className="xs: text-xl md:text-3xl text-right">{player.totalPp?.toFixed(2)}pp</p>
+          <p className="text-sm md:text-md text-default-400 text-right">{player.totalAccuracy?.toFixed(2)}%</p>
+          <p className="text-md md:text-xl text-right">{player.totalPp?.toFixed(2)}pp</p>
+        </div>
+        <div className="flex-none px-2 md:px-5">
+          <p className="text-2xl md:text-3xl justify-center items-center">#{player.rank ?? (<>-</>)}</p>
         </div>
       </CardBody>
     </Card>
