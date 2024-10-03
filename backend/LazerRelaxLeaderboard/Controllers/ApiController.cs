@@ -49,11 +49,35 @@ namespace LazerRelaxLeaderboard.Controllers
         }
 
         [HttpGet("/players/{id}")]
-        public async Task<User?> GetPlayer(int id)
+        public async Task<PlayersDataResponse?> GetPlayer(int id)
         {
-            return await _databaseContext.Users.AsNoTracking()
+            var user = await _databaseContext.Users.AsNoTracking()
                 .Where(x => x.Id == id)
                 .FirstOrDefaultAsync();
+
+            if (user != null)
+            {
+                int? rank = null;
+                if (user.TotalPp != null)
+                {
+                    // todo: how expensive is it?
+                    rank = await _databaseContext.Database
+                        .SqlQuery<int>($"select x.row_number as \"Value\" from (SELECT \"Id\", ROW_NUMBER() OVER(order by \"TotalPp\" desc) FROM \"Users\" where \"TotalPp\" is not null) x WHERE x.\"Id\" = {user.Id}")
+                        .SingleOrDefaultAsync();
+                }
+
+                return new PlayersDataResponse
+                {
+                    Id = user.Id,
+                    Rank = rank,
+                    CountryCode = user.CountryCode,
+                    TotalAccuracy = user.TotalAccuracy,
+                    Username = user.Username,
+                    UpdatedAt = user.UpdatedAt,
+                    TotalPp = user.TotalPp
+                };
+            }
+            return null;
         }
 
         [HttpGet("/players/search/{query}")]
