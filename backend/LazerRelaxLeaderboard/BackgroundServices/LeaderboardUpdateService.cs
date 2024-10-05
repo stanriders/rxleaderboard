@@ -361,16 +361,24 @@ public class LeaderboardUpdateService : BackgroundService
         var players = await databaseContext.Users.ToListAsync();
         foreach (var player in players)
         {
-            // TODO: remove null beatmap status when all maps get populated
             var scores = await databaseContext.Scores.AsNoTracking()
                 .Where(x => x.Beatmap != null)
                 .Include(x => x.Beatmap)
                 .Select(x=> new {x.UserId, BeatmapStatus = x.Beatmap!.Status, x.Pp, x.Accuracy})
                 .Where(x => x.UserId == player.Id)
-                .Where(x => x.BeatmapStatus == BeatmapStatus.Ranked || x.BeatmapStatus == BeatmapStatus.Approved || x.BeatmapStatus == null)
+                .Where(x => x.BeatmapStatus == BeatmapStatus.Ranked || x.BeatmapStatus == BeatmapStatus.Approved)
                 .Where(x => x.Pp != null)
                 .OrderByDescending(x => x.Pp)
                 .ToArrayAsync();
+
+            if (!scores.Any())
+            {
+                player.TotalPp = null;
+                player.TotalAccuracy = null;
+                databaseContext.Users.Update(player);
+
+                continue;
+            }
 
             // Build the diminishing sum
             double factor = 1;
@@ -384,12 +392,8 @@ public class LeaderboardUpdateService : BackgroundService
                 factor *= 0.95;
             }
 
-            // We want our accuracy to be normalized.
-            if (scores.Length > 0)
-            {
-                // We want the percentage, not a factor in [0, 1], hence we divide 20 by 100.
-                totalAccuracy *= 100.0 / (20 * (1 - Math.Pow(0.95, scores.Length)));
-            }
+            // We want the percentage, not a factor in [0, 1], hence we divide 20 by 100.
+            totalAccuracy *= 100.0 / (20 * (1 - Math.Pow(0.95, scores.Length)));
 
             // handle floating point precision edge cases.
             totalAccuracy = Math.Clamp(totalAccuracy, 0, 100);
