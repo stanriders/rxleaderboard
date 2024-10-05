@@ -357,12 +357,13 @@ public class LeaderboardUpdateService : BackgroundService
         var players = await databaseContext.Users.ToListAsync();
         foreach (var player in players)
         {
+            // TODO: remove null beatmap status when all maps get populated
             var scores = await databaseContext.Scores.AsNoTracking()
                 .Where(x => x.Beatmap != null)
                 .Include(x => x.Beatmap)
                 .Select(x=> new {x.UserId, BeatmapStatus = x.Beatmap!.Status, x.Pp, x.Accuracy})
                 .Where(x => x.UserId == player.Id)
-                .Where(x => x.BeatmapStatus == BeatmapStatus.Ranked || x.BeatmapStatus == BeatmapStatus.Approved)
+                .Where(x => x.BeatmapStatus == BeatmapStatus.Ranked || x.BeatmapStatus == BeatmapStatus.Approved || x.BeatmapStatus == null)
                 .OrderByDescending(x => x.Pp)
                 .ToArrayAsync();
 
