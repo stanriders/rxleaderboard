@@ -13,7 +13,6 @@ public class BeatmapUpdateService : BackgroundService
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly ILogger<LeaderboardUpdateService> _logger;
     private readonly int _interval;
-    private readonly int _batchSize;
 
     public BeatmapUpdateService(IOsuApiProvider osuApiProvider, IServiceScopeFactory serviceScopeFactory, ILogger<LeaderboardUpdateService> logger, IConfiguration configuration)
     {
@@ -21,7 +20,6 @@ public class BeatmapUpdateService : BackgroundService
         _serviceScopeFactory = serviceScopeFactory;
         _logger = logger;
         _interval = int.Parse(configuration["ScoreQueryInterval"]!);
-        _batchSize = int.Parse(configuration["ScoreQueryBatch"]!);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -61,8 +59,7 @@ public class BeatmapUpdateService : BackgroundService
                         dbMap.Status = osuBeatmap.Status;
                         dbMap.MaxCombo = osuBeatmap.MaxCombo;
 
-                        if (osuBeatmap.Status != BeatmapStatus.Ranked ||
-                            osuBeatmap.Status != BeatmapStatus.Approved)
+                        if (osuBeatmap.Status != BeatmapStatus.Ranked && osuBeatmap.Status != BeatmapStatus.Approved)
                         {
                             _logger.LogInformation("Nullifying pp for scores on map {Id}...", maps[i].Key);
 
