@@ -41,6 +41,7 @@ namespace LazerRelaxLeaderboard.OsuApi.Models
         public double StarRating { get; set; }
 
         [JsonPropertyName("status")]
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public BeatmapStatus Status { get; set; }
 
         [JsonPropertyName("max_combo")]
