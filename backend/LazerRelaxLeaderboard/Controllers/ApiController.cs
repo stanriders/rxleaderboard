@@ -36,7 +36,7 @@ namespace LazerRelaxLeaderboard.Controllers
         {
             const int take = 50;
 
-            return new PlayersResult()
+            return new PlayersResult
             {
                 Players = await _databaseContext.Users.AsNoTracking()
                     .Where(x => x.TotalPp != null)
@@ -99,7 +99,7 @@ namespace LazerRelaxLeaderboard.Controllers
         public async Task<List<Score>> GetPlayerScores(int id)
         {
             return await _databaseContext.Scores.AsNoTracking()
-                .Where(x => x.UserId == id && x.Pp != null)
+                .Where(x => x.UserId == id)
                 .Include(x => x.Beatmap)
                 .OrderByDescending(x => x.Pp)
                 .Take(100)

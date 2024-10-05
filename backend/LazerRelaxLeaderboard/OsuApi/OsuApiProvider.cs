@@ -14,6 +14,7 @@ public class OsuApiProvider : IOsuApiProvider
     private const string osu_base = "https://osu.ppy.sh/";
     private const string api_scores_link = "api/v2/beatmaps/{0}/scores?mods[]=RX&mods[]={1}&mode=osu";
     private const string api_beatmap_link = "api/v2/beatmaps/{0}";
+    private const string api_score_link = "api/v2/scores/{0}";
     private const string api_token_link = "oauth/token";
 
     private readonly HttpClient _httpClient;
@@ -79,6 +80,29 @@ public class OsuApiProvider : IOsuApiProvider
         response.EnsureSuccessStatusCode();
 
         return await response.Content.ReadFromJsonAsync<Beatmap>();
+    }
+
+    public async Task<Score?> GetScore(long id)
+    {
+        await RefreshUserlessToken();
+
+        var requestMessage = new HttpRequestMessage
+        {
+            Method = HttpMethod.Get,
+            RequestUri = new Uri(osu_base + string.Format(api_score_link, id)),
+            Headers = { Authorization = new AuthenticationHeaderValue("Bearer", _userlessToken!.AccessToken) }
+        };
+        requestMessage.Headers.Add("x-api-version", "99999999");
+
+        var response = await _httpClient.SendAsync(requestMessage);
+        if (response is { IsSuccessStatusCode: false, StatusCode: HttpStatusCode.NotFound })
+        {
+            return null;
+        }
+
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<Score>();
     }
 
     private async Task RefreshUserlessToken()

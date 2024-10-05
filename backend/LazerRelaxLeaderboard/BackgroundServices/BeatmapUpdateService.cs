@@ -2,11 +2,11 @@
 using LazerRelaxLeaderboard.OsuApi.Interfaces;
 using LazerRelaxLeaderboard.OsuApi.Models;
 using Microsoft.EntityFrameworkCore;
+using osu.Game.Rulesets.Osu.Beatmaps;
 
 namespace LazerRelaxLeaderboard.BackgroundServices;
 
-// TEMP: remove when all maps get their status populated
-// TODO: same for scores 
+// TEMP: remove when all scores get their lazer statistics populated
 public class BeatmapUpdateService : BackgroundService
 {
     private readonly IOsuApiProvider _osuApiProvider;
@@ -24,7 +24,7 @@ public class BeatmapUpdateService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("Starting BeatmapUpdateService loop...");
+        _logger.LogInformation("Starting ScoreUpdateService loop...");
 
         try
         {
@@ -37,42 +37,33 @@ public class BeatmapUpdateService : BackgroundService
                 return;
             }
 
-            var maps = await context.Scores.AsNoTracking()
-                .Where(x => x.Pp != null && x.Beatmap != null)
-                .Include(x => x.Beatmap)
-                .Where(x => x.Beatmap!.Status == null)
-                .Select(x=> new {x.Id, x.BeatmapId, x.Pp})
-                .OrderByDescending(x => x.Pp)
-                .GroupBy(x => x.BeatmapId)
+            var scores = await context.Scores.AsNoTracking()
+                .Where(x => x.Pp != null)
+                .Select(x => new {x.Id})
                 .ToArrayAsync(cancellationToken: stoppingToken);
 
-            for (var i = 0; i < maps.Length; i++)
+            for (var i = 0; i < scores.Length; i++)
             {
-                _logger.LogInformation("Updating map {Id} ({Current}/{Total})", maps[i].Key, i, maps.Length);
+                _logger.LogInformation("Updating score {Id} ({Current}/{Total})", scores[i].Id, i, scores.Length);
 
-                var osuBeatmap = await _osuApiProvider.GetBeatmap(maps[i].Key);
-                if (osuBeatmap != null)
+                var dbScore = await context.Scores.FindAsync(scores[i].Id);
+                if (dbScore != null)
                 {
-                    var dbMap = await context.Beatmaps.FindAsync(osuBeatmap.Id);
-                    if (dbMap != null)
+                    var osuScore = await _osuApiProvider.GetScore(scores[i].Id);
+                    if (osuScore == null)
                     {
-                        dbMap.Status = osuBeatmap.Status;
-                        dbMap.MaxCombo = osuBeatmap.MaxCombo;
+                        _logger.LogWarning("Score {Id} doesn't exist according to osu!API!!!", dbScore.Id);
+                        context.Scores.Remove(dbScore);
+                        await context.SaveChangesAsync(stoppingToken);
 
-                        if (osuBeatmap.Status != BeatmapStatus.Ranked && osuBeatmap.Status != BeatmapStatus.Approved)
-                        {
-                            _logger.LogInformation("Nullifying pp for scores on map {Id}...", maps[i].Key);
-
-                            var scores = await context.Scores
-                                .Where(x => x.Pp != null && x.BeatmapId == osuBeatmap.Id)
-                                .ToListAsync(cancellationToken: stoppingToken);
-
-                            foreach (var score in scores)
-                            {
-                                score.Pp = null;
-                            }
-                        }
+                        continue;
                     }
+
+                    dbScore.LegacySliderEnds = osuScore.Statistics.LegacySliderEnds;
+                    dbScore.SliderEnds = osuScore.Statistics.SliderEnds;
+                    dbScore.SliderTicks = osuScore.Statistics.SliderTicks;
+                    dbScore.SpinnerBonus = osuScore.Statistics.SpinnerBonus;
+                    dbScore.SpinnerSpins = osuScore.Statistics.SpinnerSpins;
                 }
 
                 await context.SaveChangesAsync(stoppingToken);
@@ -84,9 +75,9 @@ public class BeatmapUpdateService : BackgroundService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "BeatmapUpdateService failed!");
+            _logger.LogError(ex, "ScoreUpdateService failed!");
         }
 
-        _logger.LogInformation("Finished BeatmapUpdateService loop");
+        _logger.LogInformation("Finished ScoreUpdateService loop");
     }
 }
