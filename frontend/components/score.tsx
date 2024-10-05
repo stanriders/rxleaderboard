@@ -41,7 +41,7 @@ export const Score: FC<Props> = ( props ) => {
       </CardBody>
       <CardFooter className="md:hidden flex gap-2 items-center justify-center">
           <div className="flex-none text-default-400 text-center w-10 text-md">{score.grade}</div>
-          <div className="flex-auto text-default-500 text-right text-sm">{score.mods}</div>
+          <div className="flex-auto text-default-500 text-right text-sm">{score.mods?.map(m => <Mod key={m} mod={m}/>)}</div>
           <div className="flex-none text-default-400 text-center text-sm">{(score.accuracy * 100).toFixed(2) ?? 0}%</div>
           <div className="flex-none text-default-900 items-center text-center w-20 text-lg">{Math.round(score.pp ?? 0)}pp</div>
       </CardFooter>
