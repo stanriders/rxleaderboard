@@ -40,7 +40,7 @@ export const BeatmapPageTable: FC<Props> = ( props ) => {
           <TableCell><p className="text-default-400">{row.count50}</p></TableCell>
           <TableCell><p className="text-default-400">{row.countMiss}</p></TableCell>
           <TableCell><p className="text-default-500">{row.mods?.map(m => <Mod key={m} mod={m}/>)}</p></TableCell>
-          <TableCell><p className="text-default-400">{(row.accuracy * 100).toFixed(2)}%</p></TableCell>
+          <TableCell><p className="text-default-400">{(row.accuracy * 100)?.toFixed(2) ?? (<>-</>)}%</p></TableCell>
           <TableCell>{row.pp === null ? "-" : row.pp?.toFixed(1)}</TableCell>
         </TableRow>
         ))}

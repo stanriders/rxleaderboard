@@ -101,7 +101,7 @@ namespace LazerRelaxLeaderboard.Controllers
             return await _databaseContext.Scores.AsNoTracking()
                 .Where(x => x.UserId == id)
                 .Include(x => x.Beatmap)
-                .OrderByDescending(x => x.Pp)
+                .OrderByDescending(x => x.Pp ?? double.MinValue)
                 .Take(100)
                 .ToListAsync();
         }
