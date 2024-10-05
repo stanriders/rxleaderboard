@@ -129,14 +129,14 @@ namespace LazerRelaxLeaderboard.Controllers
         public async Task<StatsResponse> GetStats()
         {
             var beatmaps = await _databaseContext.Beatmaps.CountAsync();
-            const int modCombos = 8;
+            const int queries = 9; // there are 8 mod combos + 1 beatmap request
 
             return new StatsResponse
             {
                 BeatmapsTotal = beatmaps,
                 ScoresTotal = await _databaseContext.Scores.CountAsync(),
                 UsersTotal = await _databaseContext.Users.CountAsync(),
-                UpdateRunLengthEstimate = (beatmaps * modCombos) * (_apiRequestInterval / 1000.0) / 60.0 / 60.0 / 24.0
+                UpdateRunLengthEstimate = (beatmaps * queries) * (_apiRequestInterval / 1000.0) / 60.0 / 60.0 / 24.0
             };
         }
     }

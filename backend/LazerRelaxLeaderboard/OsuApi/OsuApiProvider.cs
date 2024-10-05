@@ -48,8 +48,10 @@ public class OsuApiProvider : IOsuApiProvider
 
         var response = await _httpClient.SendAsync(requestMessage);
 
-        if (response is { IsSuccessStatusCode: false, StatusCode: HttpStatusCode.NotFound }) 
+        if (response is { IsSuccessStatusCode: false, StatusCode: HttpStatusCode.NotFound })
+        {
             return null;
+        }
 
         response.EnsureSuccessStatusCode();
 
@@ -69,6 +71,10 @@ public class OsuApiProvider : IOsuApiProvider
         requestMessage.Headers.Add("x-api-version", "99999999");
 
         var response = await _httpClient.SendAsync(requestMessage);
+        if (response is { IsSuccessStatusCode: false, StatusCode: HttpStatusCode.NotFound })
+        {
+            return null;
+        }
 
         response.EnsureSuccessStatusCode();
 

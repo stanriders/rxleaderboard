@@ -106,30 +106,35 @@ public class LeaderboardUpdateService : BackgroundService
             else
             {
                 var osuBeatmap = await _osuApiProvider.GetBeatmap(mapId);
-                if (osuBeatmap != null)
+                if (osuBeatmap == null)
                 {
-                    await databaseContext.Beatmaps.AddAsync(new Database.Models.Beatmap
-                    {
-                        Id = osuBeatmap.Id,
-                        ApproachRate = osuBeatmap.ApproachRate,
-                        Artist = osuBeatmap.BeatmapSet.Artist,
-                        BeatmapSetId = osuBeatmap.BeatmapSet.Id,
-                        BeatsPerMinute = osuBeatmap.BeatsPerMinute,
-                        CircleSize = osuBeatmap.CircleSize,
-                        Circles = osuBeatmap.Circles,
-                        CreatorId = osuBeatmap.BeatmapSet.CreatorId,
-                        DifficultyName = osuBeatmap.Version,
-                        HealthDrain = osuBeatmap.HealthDrain,
-                        Title = osuBeatmap.BeatmapSet.Title,
-                        OverallDifficulty = osuBeatmap.OverallDifficulty,
-                        Sliders = osuBeatmap.Sliders,
-                        Spinners = osuBeatmap.Spinners,
-                        StarRatingNormal = osuBeatmap.StarRating,
-                        MaxCombo = osuBeatmap.MaxCombo,
-                        Status = osuBeatmap.Status
-                    });
+                    _logger.LogInformation("Beatmap {Id} was not found on osu!API", mapId);
+
+                    // wait until querying api again
+                    await Task.Delay(_interval);
+                    continue;
                 }
 
+                await databaseContext.Beatmaps.AddAsync(new Database.Models.Beatmap
+                {
+                    Id = osuBeatmap.Id,
+                    ApproachRate = osuBeatmap.ApproachRate,
+                    Artist = osuBeatmap.BeatmapSet.Artist,
+                    BeatmapSetId = osuBeatmap.BeatmapSet.Id,
+                    BeatsPerMinute = osuBeatmap.BeatsPerMinute,
+                    CircleSize = osuBeatmap.CircleSize,
+                    Circles = osuBeatmap.Circles,
+                    CreatorId = osuBeatmap.BeatmapSet.CreatorId,
+                    DifficultyName = osuBeatmap.Version,
+                    HealthDrain = osuBeatmap.HealthDrain,
+                    Title = osuBeatmap.BeatmapSet.Title,
+                    OverallDifficulty = osuBeatmap.OverallDifficulty,
+                    Sliders = osuBeatmap.Sliders,
+                    Spinners = osuBeatmap.Spinners,
+                    StarRatingNormal = osuBeatmap.StarRating,
+                    MaxCombo = osuBeatmap.MaxCombo,
+                    Status = osuBeatmap.Status
+                });
                 await databaseContext.SaveChangesAsync();
 
                 // wait until querying api again
@@ -197,7 +202,6 @@ public class LeaderboardUpdateService : BackgroundService
                         TotalScore = score.TotalScore,
                         UserId = score.User.Id,
                     });
-
                 }
 
                 await Task.Delay(_interval);
