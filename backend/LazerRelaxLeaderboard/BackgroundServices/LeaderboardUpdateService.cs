@@ -364,6 +364,7 @@ public class LeaderboardUpdateService : BackgroundService
                 .Select(x=> new {x.UserId, BeatmapStatus = x.Beatmap!.Status, x.Pp, x.Accuracy})
                 .Where(x => x.UserId == player.Id)
                 .Where(x => x.BeatmapStatus == BeatmapStatus.Ranked || x.BeatmapStatus == BeatmapStatus.Approved || x.BeatmapStatus == null)
+                .Where(x => x.Pp != null)
                 .OrderByDescending(x => x.Pp)
                 .ToArrayAsync();
 
