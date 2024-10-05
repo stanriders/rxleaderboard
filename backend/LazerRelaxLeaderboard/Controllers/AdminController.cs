@@ -1,5 +1,6 @@
 ﻿using LazerRelaxLeaderboard.Database;
 using LazerRelaxLeaderboard.OsuApi.Interfaces;
+using LazerRelaxLeaderboard.OsuApi.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using osu.Game.Beatmaps;
@@ -96,13 +97,17 @@ namespace LazerRelaxLeaderboard.Controllers
             return Ok(unpopulatedIds.Count);
         }
 
-        [HttpPost("populatePp")]
+        [HttpPost("recalculatePp")]
         public async Task<IActionResult> PopulatePp()
         {
             var mapScores = await _databaseContext.Scores
-                .Where(x=> x.Pp == null)
-                .GroupBy(x=> x.BeatmapId)
-                .ToListAsync();
+                       .Where(x => x.Beatmap != null)
+                       .Include(x => x.Beatmap)
+                       .Where(x => x.Beatmap!.Status == BeatmapStatus.Ranked || x.Beatmap!.Status == BeatmapStatus.Approved)
+                       .GroupBy(x => x.BeatmapId)
+                       .ToListAsync();
+
+            _logger.LogInformation("Populating pp - {Total} total", mapScores.Count);
 
             var populatedScores = 0;
 
@@ -115,7 +120,7 @@ namespace LazerRelaxLeaderboard.Controllers
                 var ruleset = new OsuRuleset();
                 var difficultyCalculator = ruleset.CreateDifficultyCalculator(workingBeatmap);
 
-                foreach (var modsGroup in mapGroup.GroupBy(x=> x.Mods))
+                foreach (var modsGroup in mapGroup.GroupBy(x => x.Mods))
                 {
                     var mods = GetMods(ruleset, modsGroup.Key);
                     var difficultyAttributes = difficultyCalculator.Calculate(mods);
@@ -138,6 +143,31 @@ namespace LazerRelaxLeaderboard.Controllers
                             TotalScore = score.TotalScore,
                         };
 
+                        if (score.SliderEnds != null)
+                        {
+                            scoreInfo.Statistics.Add(HitResult.SliderTailHit, score.SliderEnds.Value);
+                        }
+
+                        if (score.SliderTicks != null)
+                        {
+                            scoreInfo.Statistics.Add(HitResult.LargeTickHit, score.SliderTicks.Value);
+                        }
+
+                        if (score.SpinnerBonus != null)
+                        {
+                            scoreInfo.Statistics.Add(HitResult.LargeBonus, score.SpinnerBonus.Value);
+                        }
+
+                        if (score.SpinnerSpins != null)
+                        {
+                            scoreInfo.Statistics.Add(HitResult.SmallBonus, score.SpinnerSpins.Value);
+                        }
+
+                        if (score.LegacySliderEnds != null)
+                        {
+                            scoreInfo.Statistics.Add(HitResult.SmallTickHit, score.LegacySliderEnds.Value);
+                        }
+
                         var performanceAttributes = performanceCalculator.Calculate(scoreInfo, difficultyAttributes);
 
                         score.Pp = performanceAttributes.Total;
@@ -152,14 +182,20 @@ namespace LazerRelaxLeaderboard.Controllers
             return Ok(populatedScores);
         }
 
-        [HttpPost("populatePlayerPp")]
+        [HttpPost("recalculatePlayerPp")]
         public async Task<IActionResult> PopulatePlayerPp()
         {
+            _logger.LogInformation("Recalculating all player pp...");
+
             var players = await _databaseContext.Users.ToListAsync();
             foreach (var player in players)
             {
                 var scores = await _databaseContext.Scores.AsNoTracking()
+                    .Where(x => x.Beatmap != null)
+                    .Include(x => x.Beatmap)
+                    .Select(x => new { x.UserId, BeatmapStatus = x.Beatmap!.Status, x.Pp, x.Accuracy })
                     .Where(x => x.UserId == player.Id)
+                    .Where(x => x.BeatmapStatus == BeatmapStatus.Ranked || x.BeatmapStatus == BeatmapStatus.Approved)
                     .OrderByDescending(x => x.Pp)
                     .ToArrayAsync();
 
@@ -174,7 +210,7 @@ namespace LazerRelaxLeaderboard.Controllers
                     totalAccuracy += score.Accuracy * factor;
                     factor *= 0.95;
                 }
-                
+
                 // We want our accuracy to be normalized.
                 if (scores.Length > 0)
                 {
@@ -190,7 +226,7 @@ namespace LazerRelaxLeaderboard.Controllers
                 _databaseContext.Users.Update(player);
             }
 
-            await  _databaseContext.SaveChangesAsync();
+            await _databaseContext.SaveChangesAsync();
 
             return Ok();
         }

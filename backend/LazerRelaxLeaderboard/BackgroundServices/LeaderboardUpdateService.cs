@@ -1,5 +1,6 @@
 ﻿using LazerRelaxLeaderboard.Database;
 using LazerRelaxLeaderboard.OsuApi.Interfaces;
+using LazerRelaxLeaderboard.OsuApi.Models;
 using Microsoft.EntityFrameworkCore;
 using osu.Game.Beatmaps;
 using osu.Game.Rulesets;
@@ -273,6 +274,9 @@ public class LeaderboardUpdateService : BackgroundService
     {
         var mapScores = await databaseContext.Scores
             .Where(x => x.Pp == null)
+            .Where(x => x.Beatmap != null)
+            .Include(x => x.Beatmap)
+            .Where(x => x.Beatmap!.Status == BeatmapStatus.Ranked || x.Beatmap!.Status == BeatmapStatus.Approved)
             .GroupBy(x => x.BeatmapId)
             .ToListAsync();
 
@@ -354,7 +358,11 @@ public class LeaderboardUpdateService : BackgroundService
         foreach (var player in players)
         {
             var scores = await databaseContext.Scores.AsNoTracking()
+                .Where(x => x.Beatmap != null)
+                .Include(x => x.Beatmap)
+                .Select(x=> new {x.UserId, BeatmapStatus = x.Beatmap!.Status, x.Pp, x.Accuracy})
                 .Where(x => x.UserId == player.Id)
+                .Where(x => x.BeatmapStatus == BeatmapStatus.Ranked || x.BeatmapStatus == BeatmapStatus.Approved)
                 .OrderByDescending(x => x.Pp)
                 .ToArrayAsync();
 
