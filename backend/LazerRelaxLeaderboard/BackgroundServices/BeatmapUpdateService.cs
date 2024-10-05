@@ -64,6 +64,8 @@ public class BeatmapUpdateService : BackgroundService
                         if (osuBeatmap.Status != BeatmapStatus.Ranked ||
                             osuBeatmap.Status != BeatmapStatus.Approved)
                         {
+                            _logger.LogInformation("Nullifying pp for scores on map {Id}...", maps[i].Key);
+
                             var scores = await context.Scores
                                 .Where(x => x.Pp != null && x.BeatmapId == osuBeatmap.Id)
                                 .ToListAsync(cancellationToken: stoppingToken);
@@ -76,10 +78,7 @@ public class BeatmapUpdateService : BackgroundService
                     }
                 }
 
-                if (i % _batchSize == 0)
-                {
-                    await context.SaveChangesAsync(stoppingToken);
-                }
+                await context.SaveChangesAsync(stoppingToken);
 
                 await Task.Delay((int)(_interval * 1.5), stoppingToken);
             }
