@@ -31,86 +31,7 @@ namespace LazerRelaxLeaderboard.Controllers
             _interval = int.Parse(configuration["ScoreQueryInterval"]!);
             _cachePath = configuration["BeatmapCachePath"]!;
         }
-
-        [HttpGet("populate")]
-        public async Task<IActionResult> StartScorePopulation()
-        {
-            var maps = (await System.IO.File.ReadAllLinesAsync($"{_cachePath}/../output.txt")).Select(x=> int.Parse(x[..^4])).ToArray();
-            var parsedMaps = await _databaseContext.Beatmaps.AsNoTracking().Select(m => m.Id).ToArrayAsync();
-            var unparsedMaps = maps.Where(x => !parsedMaps.Contains(x)).ToArray();
-
-            //for (var i = 0; i < 500; i++)
-            {
-                //_logger.LogInformation("Populating {Current}/{Total}", i, unparsedMaps.Length);
-                //Console.WriteLine($"Populating {i}/{unparsedMaps.Length}");
-                var mapId = 1256809;//unparsedMaps[Random.Shared.Next(unparsedMaps.Length)];
-
-                var allowedMods = new[] { "HD", "DT", "HR" };
-                var modCombos = CreateCombinations(0, Array.Empty<string>(), allowedMods);
-                modCombos.Add(new [] {string.Empty});
-
-                foreach (var modCombo in modCombos)
-                {
-                    var scores = await _osuApiProvider.GetScores(mapId, modCombo);
-                    if (scores == null)
-                    {
-                        //i--;
-                        await Task.Delay(1000);
-                        continue;
-                    }
-
-                    var filteredScores = scores.Scores.Where(s => s.Mods.All(m => m.Settings.Count == 0));
-                    foreach (var score in filteredScores)
-                    {
-                        if (await _databaseContext.Scores.FindAsync(score.Id) != null)
-                            continue;
-
-                        var user = await _databaseContext.Users.FindAsync(score.User.Id);
-                        if (user != null)
-                        {
-                            user.CountryCode = score.User.CountryCode;
-                            user.UpdatedAt = DateTime.UtcNow;
-                            user.Username = score.User.Username;
-                        }
-                        else
-                        {
-                            await _databaseContext.Users.AddAsync(new Database.Models.User
-                            {
-                                Id = score.User.Id,
-                                CountryCode = score.User.CountryCode,
-                                UpdatedAt = DateTime.UtcNow,
-                                Username = score.User.Username
-                            });
-                        }
-                        
-                        await _databaseContext.Scores.AddAsync(new Database.Models.Score
-                        {
-                            Id = score.Id,
-                            Accuracy = score.Accuracy,
-                            BeatmapId = score.BeatmapId,
-                            Combo = score.Combo,
-                            Count100 = score.Statistics.Count100,
-                            Count300 = score.Statistics.Count300,
-                            Count50 = score.Statistics.Count50,
-                            CountMiss = score.Statistics.CountMiss,
-                            Date = score.Date,
-                            Grade = score.Grade,
-                            Mods = score.Mods.Select(x => x.Acronym).ToArray(),
-                            TotalScore = score.TotalScore,
-                            UserId = score.User.Id,
-                        });
-
-                    }
-
-                    await Task.Delay(_interval);
-                }
-
-                await _databaseContext.SaveChangesAsync();
-            }
-
-            return Ok(unparsedMaps.Length);
-        }
-
+        
         [HttpPost("populateBeatmaps")]
         public async Task<IActionResult> PopulateBeatmaps()
         {
@@ -141,7 +62,9 @@ namespace LazerRelaxLeaderboard.Controllers
                         OverallDifficulty = osuBeatmap.OverallDifficulty,
                         Sliders = osuBeatmap.Sliders,
                         Spinners = osuBeatmap.Spinners,
-                        StarRatingNormal = osuBeatmap.StarRating
+                        StarRatingNormal = osuBeatmap.StarRating,
+                        MaxCombo = osuBeatmap.MaxCombo,
+                        Status = osuBeatmap.Status
                     });
                 }
 
@@ -287,18 +210,6 @@ namespace LazerRelaxLeaderboard.Controllers
             }
 
             return mods.ToArray();
-        }
-        
-        private static List<string[]> CreateCombinations(int startIndex, string[] pair, string[] initialArray)
-        {
-            var combinations = new List<string[]>();
-            for (int i = startIndex; i < initialArray.Length; i++)
-            {
-                combinations.Add(pair.Append(initialArray[i]).ToArray());
-                combinations.AddRange(CreateCombinations(i + 1, pair.Append(initialArray[i]).ToArray(), initialArray));
-            }
-
-            return combinations;
         }
     }
 #endif

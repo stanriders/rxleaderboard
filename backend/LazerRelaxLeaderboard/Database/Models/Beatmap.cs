@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using LazerRelaxLeaderboard.OsuApi.Models;
 
 namespace LazerRelaxLeaderboard.Database.Models
 {
@@ -36,5 +37,11 @@ namespace LazerRelaxLeaderboard.Database.Models
         public required double StarRatingNormal { get; set; }
 
         public double? StarRating { get; set; }
+
+        public DateTime ScoresUpdatedOn { get; set; }
+
+        // TODO: these should be populated and denullified
+        public required BeatmapStatus? Status { get; set; }
+        public required int? MaxCombo { get; set; }
     }
 }

@@ -39,5 +39,11 @@ namespace LazerRelaxLeaderboard.OsuApi.Models
 
         [JsonPropertyName("difficulty_rating")]
         public double StarRating { get; set; }
+
+        [JsonPropertyName("status")]
+        public BeatmapStatus Status { get; set; }
+
+        [JsonPropertyName("max_combo")]
+        public int MaxCombo { get; set; }
     }
 }

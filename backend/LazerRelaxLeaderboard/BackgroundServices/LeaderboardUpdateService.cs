@@ -73,7 +73,7 @@ public class LeaderboardUpdateService : BackgroundService
                         _logger.LogError(ex, "LeaderboardUpdateService.CollectScores failed!");
                     }
 
-                    await PopulateBeatmaps(context);
+                    await PopulateBeatmaps(context); // this is not required but might leave just in case?
                     await PopulatePp(context);
                     await PopulatePlayerPp(context);
                 }
@@ -96,31 +96,44 @@ public class LeaderboardUpdateService : BackgroundService
         {
             _logger.LogInformation("Processing {MapId}...", mapId);
 
-            var osuBeatmap = await _osuApiProvider.GetBeatmap( mapId);
-            if (osuBeatmap != null)
+            var dbBeatmap = await databaseContext.Beatmaps.FindAsync(mapId);
+            if (dbBeatmap != null)
             {
-                await databaseContext.Beatmaps.AddAsync(new Database.Models.Beatmap
-                {
-                    Id = osuBeatmap.Id,
-                    ApproachRate = osuBeatmap.ApproachRate,
-                    Artist = osuBeatmap.BeatmapSet.Artist,
-                    BeatmapSetId = osuBeatmap.BeatmapSet.Id,
-                    BeatsPerMinute = osuBeatmap.BeatsPerMinute,
-                    CircleSize = osuBeatmap.CircleSize,
-                    Circles = osuBeatmap.Circles,
-                    CreatorId = osuBeatmap.BeatmapSet.CreatorId,
-                    DifficultyName = osuBeatmap.Version,
-                    HealthDrain = osuBeatmap.HealthDrain,
-                    Title = osuBeatmap.BeatmapSet.Title,
-                    OverallDifficulty = osuBeatmap.OverallDifficulty,
-                    Sliders = osuBeatmap.Sliders,
-                    Spinners = osuBeatmap.Spinners,
-                    StarRatingNormal = osuBeatmap.StarRating
-                });
+                dbBeatmap.ScoresUpdatedOn = DateTime.UtcNow;
+                // don't save here, only save the date together with scores
             }
-            await databaseContext.SaveChangesAsync();
+            else
+            {
+                var osuBeatmap = await _osuApiProvider.GetBeatmap(mapId);
+                if (osuBeatmap != null)
+                {
+                    await databaseContext.Beatmaps.AddAsync(new Database.Models.Beatmap
+                    {
+                        Id = osuBeatmap.Id,
+                        ApproachRate = osuBeatmap.ApproachRate,
+                        Artist = osuBeatmap.BeatmapSet.Artist,
+                        BeatmapSetId = osuBeatmap.BeatmapSet.Id,
+                        BeatsPerMinute = osuBeatmap.BeatsPerMinute,
+                        CircleSize = osuBeatmap.CircleSize,
+                        Circles = osuBeatmap.Circles,
+                        CreatorId = osuBeatmap.BeatmapSet.CreatorId,
+                        DifficultyName = osuBeatmap.Version,
+                        HealthDrain = osuBeatmap.HealthDrain,
+                        Title = osuBeatmap.BeatmapSet.Title,
+                        OverallDifficulty = osuBeatmap.OverallDifficulty,
+                        Sliders = osuBeatmap.Sliders,
+                        Spinners = osuBeatmap.Spinners,
+                        StarRatingNormal = osuBeatmap.StarRating,
+                        MaxCombo = osuBeatmap.MaxCombo,
+                        Status = osuBeatmap.Status
+                    });
+                }
 
-            await Task.Delay(_interval);
+                await databaseContext.SaveChangesAsync();
+
+                // wait until querying api again
+                await Task.Delay(_interval);
+            }
 
             var allowedMods = new[] { "HD", "DT", "HR" };
             var modCombos = CreateCombinations(0, Array.Empty<string>(), allowedMods);
@@ -129,7 +142,7 @@ public class LeaderboardUpdateService : BackgroundService
             foreach (var modCombo in modCombos)
             {
                 var scores = await _osuApiProvider.GetScores(mapId, modCombo);
-                if (scores == null)
+                if (scores == null || scores.Scores.Length == 0)
                 {
                     await Task.Delay(_interval);
 
@@ -172,6 +185,11 @@ public class LeaderboardUpdateService : BackgroundService
                         Count300 = score.Statistics.Count300,
                         Count50 = score.Statistics.Count50,
                         CountMiss = score.Statistics.CountMiss,
+                        SliderEnds = score.Statistics.SliderEnds,
+                        SliderTicks = score.Statistics.SliderTicks,
+                        SpinnerBonus = score.Statistics.SpinnerBonus,
+                        SpinnerSpins = score.Statistics.SpinnerSpins,
+                        LegacySliderEnds = score.Statistics.LegacySliderEnds,
                         Date = score.Date,
                         Grade = score.Grade,
                         Mods = score.Mods.Select(x => x.Acronym).ToArray(),
@@ -219,7 +237,9 @@ public class LeaderboardUpdateService : BackgroundService
                     OverallDifficulty = osuBeatmap.OverallDifficulty,
                     Sliders = osuBeatmap.Sliders,
                     Spinners = osuBeatmap.Spinners,
-                    StarRatingNormal = osuBeatmap.StarRating
+                    StarRatingNormal = osuBeatmap.StarRating,
+                    MaxCombo = osuBeatmap.MaxCombo,
+                    Status = osuBeatmap.Status
                 });
             }
 
@@ -289,6 +309,31 @@ public class LeaderboardUpdateService : BackgroundService
                         Mods = mods,
                         TotalScore = score.TotalScore,
                     };
+
+                    if (score.SliderEnds != null)
+                    {
+                        scoreInfo.Statistics.Add(HitResult.SliderTailHit, score.SliderEnds.Value);
+                    }
+
+                    if (score.SliderTicks != null)
+                    {
+                        scoreInfo.Statistics.Add(HitResult.LargeTickHit, score.SliderTicks.Value);
+                    }
+
+                    if (score.SpinnerBonus != null)
+                    {
+                        scoreInfo.Statistics.Add(HitResult.LargeBonus, score.SpinnerBonus.Value);
+                    }
+
+                    if (score.SpinnerSpins != null)
+                    {
+                        scoreInfo.Statistics.Add(HitResult.SmallBonus, score.SpinnerSpins.Value);
+                    }
+
+                    if (score.LegacySliderEnds != null)
+                    {
+                        scoreInfo.Statistics.Add(HitResult.SmallTickHit, score.LegacySliderEnds.Value);
+                    }
 
                     var performanceAttributes = performanceCalculator.Calculate(scoreInfo, difficultyAttributes);
 

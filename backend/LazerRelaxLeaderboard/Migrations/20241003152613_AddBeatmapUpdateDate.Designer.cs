@@ -3,6 +3,7 @@ using System;
 using LazerRelaxLeaderboard.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LazerRelaxLeaderboard.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20241003152613_AddBeatmapUpdateDate")]
+    partial class AddBeatmapUpdateDate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -59,9 +62,6 @@ namespace LazerRelaxLeaderboard.Migrations
                     b.Property<double>("HealthDrain")
                         .HasColumnType("double precision");
 
-                    b.Property<int?>("MaxCombo")
-                        .HasColumnType("integer");
-
                     b.Property<double>("OverallDifficulty")
                         .HasColumnType("double precision");
 
@@ -79,9 +79,6 @@ namespace LazerRelaxLeaderboard.Migrations
 
                     b.Property<double>("StarRatingNormal")
                         .HasColumnType("double precision");
-
-                    b.Property<int?>("Status")
-                        .HasColumnType("integer");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -127,27 +124,12 @@ namespace LazerRelaxLeaderboard.Migrations
                     b.Property<int>("Grade")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("LegacySliderEnds")
-                        .HasColumnType("integer");
-
                     b.Property<string[]>("Mods")
                         .IsRequired()
                         .HasColumnType("text[]");
 
                     b.Property<double?>("Pp")
                         .HasColumnType("double precision");
-
-                    b.Property<int?>("SliderEnds")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("SliderTicks")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("SpinnerBonus")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("SpinnerSpins")
-                        .HasColumnType("integer");
 
                     b.Property<int>("TotalScore")
                         .HasColumnType("integer");

@@ -1,6 +1,5 @@
 ﻿using System.Text.Json.Serialization;
 using osu.Game.Online.API;
-using osu.Game.Rulesets.Mods;
 
 namespace LazerRelaxLeaderboard.OsuApi.Models
 {
@@ -50,6 +49,21 @@ namespace LazerRelaxLeaderboard.OsuApi.Models
 
             [JsonPropertyName("miss")]
             public int CountMiss { get; set; }
+
+            [JsonPropertyName("large_bonus")]
+            public int SpinnerBonus { get; set; }
+
+            [JsonPropertyName("small_bonus")]
+            public int SpinnerSpins { get; set; }
+
+            [JsonPropertyName("small_tick_hit")]
+            public int LegacySliderEnds { get; set; }
+
+            [JsonPropertyName("large_tick_hit")]
+            public int SliderTicks { get; set; }
+
+            [JsonPropertyName("slider_tail_hit")]
+            public int SliderEnds { get; set; }
         }
     }
 }

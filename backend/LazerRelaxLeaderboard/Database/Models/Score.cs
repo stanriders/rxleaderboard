@@ -38,6 +38,17 @@ namespace LazerRelaxLeaderboard.Database.Models
 
         public required int CountMiss { get; set; }
 
+        // TODO: these should be populated and probably denullified
+        public required int? SpinnerBonus { get; set; }
+        
+        public required int? SpinnerSpins { get; set; }
+        
+        public required int? LegacySliderEnds { get; set; }
+        
+        public required int? SliderTicks { get; set; }
+        
+        public required int? SliderEnds { get; set; }
+
         public double? Pp { get; set; }
     }
 }
