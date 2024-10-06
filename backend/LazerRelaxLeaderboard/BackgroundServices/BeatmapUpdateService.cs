@@ -38,7 +38,7 @@ public class BeatmapUpdateService : BackgroundService
             var scores = await context.Scores.AsNoTracking()
                 .Where(x => x.Pp != null)
                 .Select(x => new {x.Id})
-                .OrderDescending()
+                .OrderByDescending(x=> x.Id)
                 .ToArrayAsync(cancellationToken: stoppingToken);
 
             for (var i = 0; i < scores.Length; i++)
