@@ -1,8 +1,6 @@
 ﻿using LazerRelaxLeaderboard.Database;
 using LazerRelaxLeaderboard.OsuApi.Interfaces;
-using LazerRelaxLeaderboard.OsuApi.Models;
 using Microsoft.EntityFrameworkCore;
-using osu.Game.Rulesets.Osu.Beatmaps;
 
 namespace LazerRelaxLeaderboard.BackgroundServices;
 
@@ -40,33 +38,41 @@ public class BeatmapUpdateService : BackgroundService
             var scores = await context.Scores.AsNoTracking()
                 .Where(x => x.Pp != null)
                 .Select(x => new {x.Id})
+                .OrderDescending()
                 .ToArrayAsync(cancellationToken: stoppingToken);
 
             for (var i = 0; i < scores.Length; i++)
             {
                 _logger.LogInformation("Updating score {Id} ({Current}/{Total})", scores[i].Id, i, scores.Length);
 
-                var dbScore = await context.Scores.FindAsync(scores[i].Id);
-                if (dbScore != null)
+                try
                 {
-                    var osuScore = await _osuApiProvider.GetScore(scores[i].Id);
-                    if (osuScore == null)
+                    var dbScore = await context.Scores.FindAsync(scores[i].Id);
+                    if (dbScore != null)
                     {
-                        _logger.LogWarning("Score {Id} doesn't exist according to osu!API!!!", dbScore.Id);
-                        context.Scores.Remove(dbScore);
-                        await context.SaveChangesAsync(stoppingToken);
+                        var osuScore = await _osuApiProvider.GetScore(scores[i].Id);
+                        if (osuScore == null)
+                        {
+                            _logger.LogWarning("Score {Id} doesn't exist according to osu!API!!!", dbScore.Id);
+                            context.Scores.Remove(dbScore);
+                            await context.SaveChangesAsync(stoppingToken);
 
-                        continue;
+                            continue;
+                        }
+
+                        dbScore.LegacySliderEnds = osuScore.Statistics.LegacySliderEnds;
+                        dbScore.SliderEnds = osuScore.Statistics.SliderEnds;
+                        dbScore.SliderTicks = osuScore.Statistics.SliderTicks;
+                        dbScore.SpinnerBonus = osuScore.Statistics.SpinnerBonus;
+                        dbScore.SpinnerSpins = osuScore.Statistics.SpinnerSpins;
                     }
 
-                    dbScore.LegacySliderEnds = osuScore.Statistics.LegacySliderEnds;
-                    dbScore.SliderEnds = osuScore.Statistics.SliderEnds;
-                    dbScore.SliderTicks = osuScore.Statistics.SliderTicks;
-                    dbScore.SpinnerBonus = osuScore.Statistics.SpinnerBonus;
-                    dbScore.SpinnerSpins = osuScore.Statistics.SpinnerSpins;
+                    await context.SaveChangesAsync(stoppingToken);
                 }
-
-                await context.SaveChangesAsync(stoppingToken);
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Couldn't update score {Id}", scores[i].Id);
+                }
 
                 await Task.Delay((int)(_interval * 1.5), stoppingToken);
             }
