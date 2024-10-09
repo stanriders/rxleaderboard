@@ -47,7 +47,6 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient<OsuApiProvider>();
 builder.Services.AddSingleton<IOsuApiProvider, OsuApiProvider>();
 builder.Services.AddHostedService<LeaderboardUpdateService>();
-builder.Services.AddHostedService<BeatmapUpdateService>();
 
 builder.Services.AddControllers((options =>
 {
