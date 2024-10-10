@@ -286,7 +286,7 @@ public class LeaderboardUpdateService : BackgroundService
             .GroupBy(x => x.BeatmapId)
             .ToListAsync();
 
-        _logger.LogInformation("Populating pp - {Total} total", mapScores.Count);
+        _logger.LogInformation("Populating pp - {Total} total maps", mapScores.Count);
         
         foreach (var mapGroup in mapScores)
         {
@@ -351,6 +351,23 @@ public class LeaderboardUpdateService : BackgroundService
                     databaseContext.Scores.Update(score);
                 }
             }
+        }
+
+        await databaseContext.SaveChangesAsync();
+
+        var scoresThatShouldntHavePp = await databaseContext.Scores
+            .Where(x => x.Pp != null)
+            .Where(x => x.Beatmap != null)
+            .Include(x => x.Beatmap)
+            .Where(x => x.Beatmap!.Status != BeatmapStatus.Ranked && x.Beatmap!.Status != BeatmapStatus.Approved)
+            .ToListAsync();
+
+        _logger.LogInformation("Removing pp from loved maps - {Total} total scores", scoresThatShouldntHavePp.Count);
+
+        foreach (var score in scoresThatShouldntHavePp)
+        {
+            score.Pp = null;
+            databaseContext.Scores.Update(score);
         }
 
         await databaseContext.SaveChangesAsync();
