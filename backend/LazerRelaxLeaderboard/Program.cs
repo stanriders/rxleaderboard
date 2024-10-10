@@ -3,6 +3,7 @@ using LazerRelaxLeaderboard.Config;
 using LazerRelaxLeaderboard.Database;
 using LazerRelaxLeaderboard.OsuApi;
 using LazerRelaxLeaderboard.OsuApi.Interfaces;
+using LazerRelaxLeaderboard.Services;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
@@ -46,6 +47,7 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddHttpClient<OsuApiProvider>();
 builder.Services.AddSingleton<IOsuApiProvider, OsuApiProvider>();
+builder.Services.AddTransient<IKeyAuthService, KeyAuthService>();
 builder.Services.AddHostedService<LeaderboardUpdateService>();
 
 builder.Services.AddControllers((options =>

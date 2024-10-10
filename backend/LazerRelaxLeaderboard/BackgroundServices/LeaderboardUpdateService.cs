@@ -257,6 +257,8 @@ public class LeaderboardUpdateService : BackgroundService
             .Where(x => x.StarRating == null)
             .ToListAsync();
 
+        _logger.LogInformation("Populating beatmaps sr - {Total} total", unpopulatedStarRatings.Count);
+
         foreach (var map in unpopulatedStarRatings)
         {
             var mapPath = $"{_cachePath}/{map.Id}.osu";

@@ -24,6 +24,7 @@ services:
       - osuApi__ClientSecret
       - osuApi__CallbackUrl=/oauth/callback
       - ScoreQueryInterval
+      - Key
     volumes:
       - ./logs/backend:/app/logs
       - ./keys:/root/.aspnet/DataProtection-Keys
