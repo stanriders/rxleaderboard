@@ -1,8 +1,5 @@
 ﻿using System.Collections.Concurrent;
-using System.Text;
-using System.Threading;
 using LazerRelaxLeaderboard.Database;
-using LazerRelaxLeaderboard.Database.Models;
 using LazerRelaxLeaderboard.OsuApi.Interfaces;
 using LazerRelaxLeaderboard.OsuApi.Models;
 using LazerRelaxLeaderboard.Services;
@@ -139,6 +136,8 @@ public class AdminController : ControllerBase
 
         await _databaseContext.SaveChangesAsync();
 
+        _logger.LogInformation("Populating all maps sr done!");
+
         return Ok(maps.Count);
     }
 
@@ -152,6 +151,9 @@ public class AdminController : ControllerBase
         }
 
         var mapScores = await _databaseContext.Scores.AsNoTracking()
+            .Where(x=> x.Beatmap != null)
+            .Include(x=> x.Beatmap)
+            .Where(x => x.Beatmap!.Status == BeatmapStatus.Ranked || x.Beatmap!.Status == BeatmapStatus.Approved)
             .GroupBy(x => x.BeatmapId)
             .ToListAsync();
 
@@ -234,11 +236,15 @@ public class AdminController : ControllerBase
                 return ValueTask.CompletedTask;
             });
 
+            _logger.LogInformation("Populating all scores pp - saving batch of {Total} updates", queryBuilder.Count);
+
             if (!queryBuilder.IsEmpty)
             {
                 await _databaseContext.Database.ExecuteSqlRawAsync(string.Join('\n', queryBuilder));
             }
         }
+
+        _logger.LogInformation("Populating all scores pp done - {Total} affected scores!", populatedScores);
 
         return Ok(populatedScores);
     }
@@ -293,6 +299,8 @@ public class AdminController : ControllerBase
         }
 
         await _databaseContext.SaveChangesAsync();
+
+        _logger.LogInformation("Recalculating all player pp done!");
 
         return Ok();
     }
