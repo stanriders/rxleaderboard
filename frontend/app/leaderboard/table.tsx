@@ -69,7 +69,7 @@ export default function LeaderboardTable() {
           <TableRow key={row.id}>
             <TableCell className="text-default-500">#{offset+index+1}</TableCell>
             <TableCell><User user={row}/></TableCell>
-            <TableCell><p className="text-default-400">{row.totalAccuracy === null ? "-" : row.totalAccuracy?.toFixed(2)}%</p></TableCell>
+            <TableCell><p className="text-default-500">{row.totalAccuracy === null ? "-" : row.totalAccuracy?.toFixed(2)}%</p></TableCell>
             <TableCell className="text-primary-300 font-semibold">{row.totalPp === null ? "-" : row.totalPp?.toFixed(0)}</TableCell>
           </TableRow>
           ))}

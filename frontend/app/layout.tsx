@@ -18,6 +18,10 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.ico",
   },
+  manifest: "/site.webmanifest",
+  openGraph: {
+    images: ["/rv-yellowlight.svg"]
+  },
 };
 
 // all fetch request should be cached for 1 minute unless specified otherwise
