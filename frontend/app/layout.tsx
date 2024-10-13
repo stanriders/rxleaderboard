@@ -39,7 +39,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children, }: { children: React.ReactNode; }) {
   return (
-    <html suppressHydrationWarning lang="en">
+    <html suppressHydrationWarning lang="en" prefix="og: http://ogp.me/ns#">
       <head />
       <body
         className={clsx(
