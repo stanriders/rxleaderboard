@@ -1,29 +1,29 @@
 import { Card, CardHeader, CardBody, CardFooter } from "@nextui-org/card";
 import { Divider } from "@nextui-org/divider";
-import { BeatmapModel, ScoreModel } from "@/api/types";
 import { FC } from "react";
 import { User } from "./user";
 import { Link } from "@nextui-org/link";
-import { formatDistance } from 'date-fns';
+import { formatDistance } from "date-fns";
 import { Spacer } from "@nextui-org/spacer";
 import { Mod } from "./mod";
+import { BeatmapModel, ScoreModel } from "@/api/types";
 
-type Props = { score: ScoreModel, showPlayer: boolean }
+type Props = { score: ScoreModel, showPlayer: boolean };
 
-export const Score: FC<Props> = ( props ) => {
+export const Score: FC<Props> = (props) => {
   const score = props.score;
   const beatmap = score.beatmap as BeatmapModel;
 
   return (
     <Card className="min-w-72" key={score.id}>
       {props.showPlayer ? (
-      <>
-        <CardHeader className="pl-4 pt-2 pb-1">
-          {score.user ? (<User user={score.user}/>) : "???"}
-        </CardHeader>
-        <Divider/>
-      </>) : 
-      (<></>)}
+        <>
+          <CardHeader className="pl-4 pt-2 pb-1">
+            {score.user ? (<User user={score.user}/>) : "???"}
+          </CardHeader>
+          <Divider />
+        </>) : 
+        <></>}
       
       <CardBody className="p-2">
         <div className="flex gap-2 items-center justify-center">
@@ -40,10 +40,10 @@ export const Score: FC<Props> = ( props ) => {
         </div>
       </CardBody>
       <CardFooter className="md:hidden flex gap-2 items-center justify-center">
-          <div className="flex-none text-default-400 text-center w-10 text-md">{score.grade}</div>
-          <div className="flex-auto text-default-500 text-right text-sm">{score.mods?.map(m => <Mod key={m} mod={m}/>)}</div>
-          <div className="flex-none text-default-500 text-center text-sm">{(score.accuracy * 100)?.toFixed(2) ?? (<>- </>)}%</div>
-          <div className="flex-none text-primary-300 items-center text-center w-20 text-lg font-semibold">{score.pp?.toFixed(0) ?? (<>- </>)}pp</div>
+        <div className="flex-none text-default-400 text-center w-10 text-md">{score.grade}</div>
+        <div className="flex-auto text-default-500 text-right text-sm">{score.mods?.map(m => <Mod key={m} mod={m}/>)}</div>
+        <div className="flex-none text-default-500 text-center text-sm">{(score.accuracy * 100)?.toFixed(2) ?? (<>- </>)}%</div>
+        <div className="flex-none text-primary-300 items-center text-center w-20 text-lg font-semibold">{score.pp?.toFixed(0) ?? (<>- </>)}pp</div>
       </CardFooter>
     </Card>
   );

@@ -1,18 +1,16 @@
 import { Navbar as NextUINavbar, NavbarContent, NavbarMenu, NavbarMenuToggle, NavbarBrand, NavbarItem, NavbarMenuItem } from "@nextui-org/navbar";
 import { link as linkStyles } from "@nextui-org/theme";
 import NextLink from "next/link";
+import Image from "next/image";
 import clsx from "clsx";
-
 import { siteConfig } from "@/config/site";
 import { ThemeSwitch } from "@/components/theme-switch";
-import Image from 'next/image'
 
 export const Navbar = () => {
-
   return (
     <NextUINavbar maxWidth="xl" position="sticky">
       <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
-        <NavbarMenuToggle className="md:hidden"/>
+        <NavbarMenuToggle className="md:hidden" />
         {/* logo */}
         <NavbarBrand as="li" className="gap-3 max-w-fit">
           <NextLink className="flex justify-center items-center gap-3 ml-3" href="/">
@@ -21,7 +19,6 @@ export const Navbar = () => {
             <p className="font-bold text-primary-400 text-inherit">Relaxation Vault</p>
           </NextLink>
         </NavbarBrand>
-
         {/* normal */}
         <ul className="hidden md:flex gap-4 justify-start ml-2">
           {siteConfig.navItems.map((item) => (
@@ -40,7 +37,6 @@ export const Navbar = () => {
           ))}
         </ul>
       </NavbarContent>
- 
       <NavbarContent className="basis-1 pl-4" justify="end">
         {/*<Input
           classNames={{
@@ -55,10 +51,9 @@ export const Navbar = () => {
         />*/}
         <ThemeSwitch />
       </NavbarContent>
-
       <NavbarMenu>
         <div className="mx-4 mt-2 flex flex-col gap-2">
-          {siteConfig.navItems.map((item, index) => (
+          {siteConfig.navItems.map((item, _) => (
             <NavbarMenuItem key={item.href}>
               <NextLink
                 className={clsx(linkStyles({ color: "foreground" }),

@@ -1,4 +1,4 @@
-/* eslint-disable react/no-unknown-property */ 
+/* eslint-disable react/no-unknown-property */
 import "@/styles/globals.css";
 import { Metadata, Viewport } from "next";
 import { Link } from "@nextui-org/link";
@@ -59,28 +59,27 @@ export default function RootLayout({ children, }: { children: React.ReactNode; }
             </section>
             </main>
             <footer className="w-full flex items-center justify-center py-3">
-
-            <p className="text-default-300 text-sm">
-              <Link
+              <p className="text-default-300 text-sm">
+                <Link
+                  isExternal
+                  size="sm"
+                  className="gap-1 text-current"
+                  href="https://osu.ppy.sh/users/7217455"
+                  title="osu! profile"
+                >Made by StanR</Link> | <Link
+                  isExternal
+                  size="sm"
+                  className="gap-1 text-current"
+                  href="https://github.com/stanriders/rxleaderboard"
+                  title="GitHub"
+                >Source code</Link> | <Link
                 isExternal
                 size="sm"
                 className="gap-1 text-current"
-                href="https://osu.ppy.sh/users/7217455"
-                title="osu! profile"
-              >Made by StanR</Link> | <Link
-                isExternal
-                size="sm"
-                className="gap-1 text-current"
-                href="https://github.com/stanriders/rxleaderboard"
-                title="GitHub"
-              >Source code</Link> | <Link
-              isExternal
-              size="sm"
-              className="gap-1 text-current"
-              href="https://ko-fi.com/stanr"
-              title="Ko-fi"
-            >Donate ❤</Link>
-            </p>
+                href="https://ko-fi.com/stanr"
+                title="Ko-fi"
+              >Donate ❤</Link>
+              </p>
             </footer>
           </div>
         </Providers>

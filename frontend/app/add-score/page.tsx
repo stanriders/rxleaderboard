@@ -7,8 +7,8 @@ export const metadata: Metadata = {
 
 export default async function AddScorePage() {
   return (
-  <>
-    <ScoreForm/>
-  </>
+    <>
+      <ScoreForm />
+    </>
   );
 }
