@@ -3,8 +3,6 @@ import { Score } from "@/components/score";
 import { ScoreModel } from "@/api/types";
 import { Spacer } from "@nextui-org/spacer";
 import { ApiBase } from "@/api/address";
-import { notFound } from "next/navigation";
-import { error } from "console";
 
 export const metadata: Metadata = {
   title: 'Top scores'
