@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: siteConfig.name,
       type: "website",
       description: `#${player.rank ?? "-"} - ${player.totalPp?.toFixed(2) ?? "-"}pp`,
-      images: [`https://a.ppy.sh/${player.id}`, "https://rx.stanr.info/rv-yellowlight-192.png"]
+      images: [`https://a.ppy.sh/${player.id}`]
     },
   }
 }
