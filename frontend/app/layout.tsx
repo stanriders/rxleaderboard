@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   openGraph: {
     siteName: siteConfig.name,
     type: "website",
-    images: ["https://rx.stanr.info/rv-yellowlight.png"]
+    images: ["https://rx.stanr.info/rv-yellowlight-192.png"]
   },
 };
 

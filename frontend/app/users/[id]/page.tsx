@@ -9,6 +9,7 @@ import { Link } from "@nextui-org/link";
 import type { Metadata } from 'next'
 import { ApiBase } from "@/api/address";
 import { notFound } from "next/navigation";
+import { siteConfig } from "@/config/site";
 
 type Props = {
   params: { id: number }
@@ -22,7 +23,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: player.username,
     openGraph: {
-      description: `#${player.rank ?? "-"} - ${player.totalPp?.toFixed(2) ?? "-"}pp`
+      siteName: siteConfig.name,
+      type: "website",
+      description: `#${player.rank ?? "-"} - ${player.totalPp?.toFixed(2) ?? "-"}pp`,
+      images: [`https://a.ppy.sh/${player.id}`, "https://rx.stanr.info/rv-yellowlight-192.png"]
     },
   }
 }
