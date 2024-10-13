@@ -39,6 +39,7 @@ services:
     build: ./frontend/.
     depends_on:
       - backend
+      - postgres
     ports:
       - "127.0.0.1:3550:3000"
     volumes:

@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unknown-property */ 
 import "@/styles/globals.css";
 import { Metadata, Viewport } from "next";
 import { Link } from "@nextui-org/link";
@@ -17,13 +18,13 @@ export const metadata: Metadata = {
   description: siteConfig.description,
   icons: {
     icon: "/favicon.ico",
-    apple: "/rv-yellowlight.png"
+    apple: "/rv-yellowlight.png",
   },
   manifest: "/site.webmanifest",
   openGraph: {
     siteName: siteConfig.name,
     type: "website",
-    images: ["https://rx.stanr.info/rv-yellowlight-192.png"]
+    images: ["https://rx.stanr.info/rv-yellowlight-192.png"],
   },
 };
 
