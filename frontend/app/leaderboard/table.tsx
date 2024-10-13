@@ -51,7 +51,7 @@ export default function LeaderboardTable() {
               isCompact
               showControls
               showShadow
-              color="secondary"
+              color="primary"
               page={page}
               total={pages}
               onChange={(page) => {setPage(page)}}
@@ -67,10 +67,10 @@ export default function LeaderboardTable() {
         <TableBody>
           {players.map((row: UserModel, index: number) => (
           <TableRow key={row.id}>
-            <TableCell>#{offset+index+1}</TableCell>
+            <TableCell className="text-default-500">#{offset+index+1}</TableCell>
             <TableCell><User user={row}/></TableCell>
             <TableCell><p className="text-default-400">{row.totalAccuracy === null ? "-" : row.totalAccuracy?.toFixed(2)}%</p></TableCell>
-            <TableCell>{row.totalPp === null ? "-" : row.totalPp?.toFixed(0)}</TableCell>
+            <TableCell className="text-primary-300 font-semibold">{row.totalPp === null ? "-" : row.totalPp?.toFixed(0)}</TableCell>
           </TableRow>
           ))}
         </TableBody>

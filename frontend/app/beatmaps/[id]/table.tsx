@@ -30,7 +30,7 @@ export const BeatmapPageTable: FC<Props> = ( props ) => {
       <TableBody>
         {props.scores.map((row: ScoreModel, index: number) => (
         <TableRow key={row.id}>
-          <TableCell>#{index+1}</TableCell>
+          <TableCell className="text-default-500">#{index+1}</TableCell>
           <TableCell>{row.grade}</TableCell>
           <TableCell><p className="text-default-500">{row.totalScore}</p></TableCell>
           <TableCell><User user={row.user as UserModel}/></TableCell>
@@ -40,8 +40,8 @@ export const BeatmapPageTable: FC<Props> = ( props ) => {
           <TableCell><p className="text-default-400">{row.count50}</p></TableCell>
           <TableCell><p className="text-default-400">{row.countMiss}</p></TableCell>
           <TableCell><p className="text-default-500">{row.mods?.map(m => <Mod key={m} mod={m}/>)}</p></TableCell>
-          <TableCell><p className="text-default-400">{(row.accuracy * 100)?.toFixed(2) ?? (<>-</>)}%</p></TableCell>
-          <TableCell>{row.pp === null ? "-" : row.pp?.toFixed(1)}</TableCell>
+          <TableCell><p className="text-default-500">{(row.accuracy * 100)?.toFixed(2) ?? (<>-</>)}%</p></TableCell>
+          <TableCell className="text-primary-300 font-semibold">{row.pp === null ? "-" : row.pp?.toFixed(1)}</TableCell>
         </TableRow>
         ))}
       </TableBody>

@@ -10,6 +10,6 @@ type Props = { user: UserModel }
 export const User: FC<Props> = ( props ) => {
   const user = props.user;
   return (
-    <Link className="text-secondary-700" size="sm" href={`/users/${user.id}`}><Flag country={user.countryCode} width={20}/><Spacer x={1} />{user.username}</Link>
+    <Link className="text-primary-500" size="sm" href={`/users/${user.id}`}><Flag country={user.countryCode} width={20}/><Spacer x={1} />{user.username}</Link>
   );
 };

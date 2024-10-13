@@ -5,6 +5,10 @@ export const siteConfig = {
   description: "Leaderboard of osu!lazer relax scores",
   navItems: [
     {
+      label: "FAQ",
+      href: "/faq",
+    },
+    {
       label: "Leaderboard",
       href: "/leaderboard",
     },

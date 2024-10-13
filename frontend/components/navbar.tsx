@@ -5,7 +5,7 @@ import clsx from "clsx";
 
 import { siteConfig } from "@/config/site";
 import { ThemeSwitch } from "@/components/theme-switch";
-import { Input } from "@nextui-org/input";
+import Image from 'next/image'
 
 export const Navbar = () => {
 
@@ -15,8 +15,10 @@ export const Navbar = () => {
         <NavbarMenuToggle className="md:hidden"/>
         {/* logo */}
         <NavbarBrand as="li" className="gap-3 max-w-fit">
-          <NextLink className="flex justify-start items-center gap-1" href="/">
-            <p className="font-bold text-inherit">Relaxation Vault</p>
+          <NextLink className="flex justify-center items-center gap-3 ml-3" href="/">
+            <Image className="dark:hidden block flex-none" src="/rv-yellowdark.svg" width={32} height={32} alt="Relaxation Vault"/>
+            <Image className="hidden dark:block flex-none" src="/rv-yellowlight.svg" width={32} height={32} alt="Relaxation Vault"/>
+            <p className="font-bold text-primary-400 text-inherit">Relaxation Vault</p>
           </NextLink>
         </NavbarBrand>
 

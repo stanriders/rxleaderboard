@@ -36,8 +36,8 @@ export default async function BeatmapPage({ params }: Props) {
       <CardHeader className="absolute z-10 top-1 flex-col !items-start md:h-52 xs:h-32">
         <Card>
           <CardBody>
-            <Link isExternal href={`https://osu.ppy.sh/beatmaps/${beatmap.id}`} className="text-secondary-800 text-xl">{beatmap.artist} - {beatmap.title}</Link>
-            <p className="text-secondary-900 text-sm">{beatmap.difficultyName}</p>
+            <Link isExternal href={`https://osu.ppy.sh/beatmaps/${beatmap.id}`} className="text-primary-500 text-xl">{beatmap.artist} - {beatmap.title}</Link>
+            <p className="text-primary-300 text-sm">{beatmap.difficultyName}</p>
           </CardBody>
         </Card>
       </CardHeader>
