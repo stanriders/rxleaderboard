@@ -22,6 +22,7 @@ export const metadata: Metadata = {
   manifest: "/site.webmanifest",
   openGraph: {
     siteName: siteConfig.name,
+    type: "website",
     images: ["https://rx.stanr.info/rv-yellowlight.png"]
   },
 };
