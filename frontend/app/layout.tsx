@@ -17,10 +17,12 @@ export const metadata: Metadata = {
   description: siteConfig.description,
   icons: {
     icon: "/favicon.ico",
+    apple: "/rv-yellowlight.png"
   },
   manifest: "/site.webmanifest",
   openGraph: {
-    images: ["/rv-yellowlight.svg"]
+    siteName: siteConfig.name,
+    images: ["https://rx.stanr.info/rv-yellowlight.png"]
   },
 };
 

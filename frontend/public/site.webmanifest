@@ -2,9 +2,9 @@
   "name": "Relaxation Vault",
   "short_name": "Relaxation Vault",
   "icons": [{
-    "src": "/rv-yellowlight.svg",
+    "src": "/rv-yellowlight.png",
     "sizes": "512x512",
-    "type": "image/svg+xml"
+    "type": "image/png"
   }],
   "theme_color": "#FFD857",
   "background_color": "#121212",
