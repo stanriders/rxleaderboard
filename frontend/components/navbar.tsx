@@ -1,3 +1,4 @@
+"use client";
 import { Navbar as NextUINavbar, NavbarContent, NavbarMenu, NavbarMenuToggle, NavbarBrand, NavbarItem, NavbarMenuItem } from "@nextui-org/navbar";
 import { link as linkStyles } from "@nextui-org/theme";
 import NextLink from "next/link";
@@ -5,8 +6,11 @@ import Image from "next/image";
 import clsx from "clsx";
 import { siteConfig } from "@/config/site";
 import { ThemeSwitch } from "@/components/theme-switch";
+import { usePathname } from 'next/navigation';
 
 export const Navbar = () => {
+  const pathname = usePathname();
+
   return (
     <NextUINavbar maxWidth="xl" position="sticky">
       <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
@@ -26,7 +30,7 @@ export const Navbar = () => {
               <NextLink
                 className={clsx(
                   linkStyles({ color: "foreground" }),
-                  "data-[active=true]:text-primary data-[active=true]:font-medium",
+                  pathname === item.href ? "text-primary" : ""
                 )}
                 color="foreground"
                 href={item.href}
@@ -56,9 +60,10 @@ export const Navbar = () => {
           {siteConfig.navItems.map((item, _) => (
             <NavbarMenuItem key={item.href}>
               <NextLink
-                className={clsx(linkStyles({ color: "foreground" }),
-                          "data-[active=true]:text-primary data-[active=true]:font-medium",
-                          )}
+                className={clsx(
+                  linkStyles({ color: "foreground" }),
+                  pathname === item.href ? "text-primary" : ""
+                )}
                 color="foreground"
                 href={item.href}
               >
