@@ -15,10 +15,13 @@ export const metadata: Metadata = {
     default: siteConfig.name,
     template: `%s - ${siteConfig.name}`,
   },
+  applicationName: siteConfig.name,
+  authors: [{name: "StanR", url: "https://osu.ppy.sh/users/7217455"}],
   description: siteConfig.description,
   icons: {
     icon: "/favicon.ico",
-    apple: "/rv-yellowlight.png",
+    shortcut: "/favicon.ico",
+    apple: "/rv-yellowlight-192.png",
   },
   manifest: "/site.webmanifest",
   openGraph: {
@@ -26,6 +29,9 @@ export const metadata: Metadata = {
     type: "website",
     images: ["https://rx.stanr.info/rv-yellowlight-192.png"],
   },
+  twitter: {
+    card: 'summary'
+  }
 };
 
 // all fetch request should be cached for 1 minute unless specified otherwise
