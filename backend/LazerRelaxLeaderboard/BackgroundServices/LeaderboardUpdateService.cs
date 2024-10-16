@@ -3,6 +3,7 @@ using LazerRelaxLeaderboard.OsuApi.Interfaces;
 using LazerRelaxLeaderboard.OsuApi.Models;
 using Microsoft.EntityFrameworkCore;
 using osu.Game.Beatmaps;
+using osu.Game.Online.API;
 using osu.Game.Rulesets;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Osu.Mods;
@@ -155,7 +156,8 @@ public class LeaderboardUpdateService : BackgroundService
                     continue;
                 }
 
-                var filteredScores = scores.Scores.Where(s => s.Mods.All(m => m.Settings.Count == 0));
+                // only allow scores w/o settings AND rate changes
+                var filteredScores = scores.Scores.Where(s => s.Mods.All(m => m.Settings.Count == 0 || m.Settings.Keys.All(x=> x == "speed_change")));
                 foreach (var score in filteredScores)
                 {
                     if (await databaseContext.Scores.FindAsync(score.Id) != null)
@@ -198,7 +200,7 @@ public class LeaderboardUpdateService : BackgroundService
                         LegacySliderEnds = score.Statistics.LegacySliderEnds,
                         Date = score.Date,
                         Grade = score.Grade,
-                        Mods = score.Mods.Select(x => x.Acronym).ToArray(),
+                        Mods = score.Mods.Select(ModToString).ToArray(),
                         TotalScore = score.TotalScore,
                         UserId = score.User.Id,
                     });
@@ -427,18 +429,30 @@ public class LeaderboardUpdateService : BackgroundService
 
     private Mod[] GetMods(Ruleset ruleset, string[] modNames)
     {
-        var availableMods = ruleset.CreateAllMods().ToList();
         var mods = new List<Mod>();
 
-        foreach (var modString in modNames)
+        foreach (var modName in modNames)
         {
-            var newMod = availableMods.First(m => string.Equals(m.Acronym, modString, StringComparison.OrdinalIgnoreCase));
-            if (newMod == null)
+            var mod = ruleset.CreateModFromAcronym(modName);
+            if (mod == null)
             {
-                throw new ArgumentException($"Invalid mod provided: {modString}");
-            }
+                var modNameSplit = modName.Split("x");
 
-            mods.Add(newMod);
+                mod = ruleset.CreateModFromAcronym(modNameSplit[0]);
+                if (mod is ModRateAdjust speedAdjustMod)
+                {
+                    speedAdjustMod.SpeedChange.Value = double.Parse(modNameSplit[1]);
+                    mods.Add(speedAdjustMod);
+                }
+                else
+                {
+                    throw new ArgumentException($"Invalid mod provided: {modName}");
+                }
+            }
+            else
+            {
+                mods.Add(mod);
+            }
         }
 
         return mods.ToArray();
@@ -455,4 +469,18 @@ public class LeaderboardUpdateService : BackgroundService
 
         return combinations;
     }
+
+    private string ModToString(APIMod mod)
+    {
+        if (mod.Settings.ContainsKey("speed_change"))
+        {
+            var rateChange = mod.Settings.First(x => x.Key == "speed_change");
+            var rateChangeValue = (double) rateChange.Value;
+
+            return $"{mod.Acronym}x{rateChangeValue}";
+        }
+
+        return mod.Acronym;
+    }
+    
 }
