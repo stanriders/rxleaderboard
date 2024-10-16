@@ -10,6 +10,7 @@ using osu.Game.Rulesets.Osu.Mods;
 using osu.Game.Rulesets.Osu;
 using osu.Game.Rulesets.Scoring;
 using osu.Game.Scoring;
+using System.Text.Json;
 
 namespace LazerRelaxLeaderboard.BackgroundServices;
 
@@ -475,12 +476,11 @@ public class LeaderboardUpdateService : BackgroundService
         if (mod.Settings.ContainsKey("speed_change"))
         {
             var rateChange = mod.Settings.First(x => x.Key == "speed_change");
-            var rateChangeValue = (double) rateChange.Value;
+            var rateChangeValue = (JsonElement) rateChange.Value;
 
-            return $"{mod.Acronym}x{rateChangeValue}";
+            return $"{mod.Acronym}x{rateChangeValue.GetDouble()}";
         }
 
         return mod.Acronym;
     }
-    
 }
