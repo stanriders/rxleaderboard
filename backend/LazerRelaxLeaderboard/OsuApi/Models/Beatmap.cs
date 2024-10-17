@@ -46,5 +46,8 @@ namespace LazerRelaxLeaderboard.OsuApi.Models
 
         [JsonPropertyName("max_combo")]
         public int MaxCombo { get; set; }
+
+        [JsonPropertyName("mode_int")]
+        public Mode Mode { get; set; }
     }
 }

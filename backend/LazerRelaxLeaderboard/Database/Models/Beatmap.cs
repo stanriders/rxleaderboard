@@ -40,8 +40,8 @@ namespace LazerRelaxLeaderboard.Database.Models
 
         public DateTime ScoresUpdatedOn { get; set; }
 
-        // TODO: these should be populated and denullified
-        public required BeatmapStatus? Status { get; set; }
-        public required int? MaxCombo { get; set; }
+        public required BeatmapStatus Status { get; set; }
+
+        public required int MaxCombo { get; set; }
     }
 }

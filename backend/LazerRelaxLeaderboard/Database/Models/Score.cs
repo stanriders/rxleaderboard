@@ -37,8 +37,7 @@ namespace LazerRelaxLeaderboard.Database.Models
         public required int Count300 { get; set; }
 
         public required int CountMiss { get; set; }
-
-        // TODO: these should be populated and probably denullified
+        
         public required int? SpinnerBonus { get; set; }
         
         public required int? SpinnerSpins { get; set; }
