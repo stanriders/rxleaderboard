@@ -58,12 +58,15 @@ public class LeaderboardUpdateService : BackgroundService
                     .ToArray();*/
 
                 var existingMaps = await context.Scores.AsNoTracking()
+                    .Include(x => x.Beatmap)
+                    .Where(x => x.Beatmap != null && x.Beatmap.ScoresUpdatedOn < DateTime.UtcNow.AddDays(-7))
                     .GroupBy(x=> x.BeatmapId)
                     .OrderByDescending(x=> x.Count())
                     .Select(x => x.Key)
                     .ToArrayAsync(cancellationToken: stoppingToken);
 
                 var scorelessMaps = await context.Beatmaps.AsNoTracking()
+                    .Where(x => x.ScoresUpdatedOn < DateTime.UtcNow.AddDays(-7))
                     .Select(x => x.Id)
                     .Where(x => !existingMaps.Contains(x))
                     .ToArrayAsync(cancellationToken: stoppingToken);
