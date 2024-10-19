@@ -16,6 +16,7 @@ public class OsuApiProvider : IOsuApiProvider
     private const string api_beatmap_link = "api/v2/beatmaps/{0}";
     private const string api_score_link = "api/v2/scores/{0}";
     private const string api_token_link = "oauth/token";
+    private const string map_download_link = "osu/{0}";
 
     private readonly HttpClient _httpClient;
     private readonly OsuApiConfig _config;
@@ -103,6 +104,25 @@ public class OsuApiProvider : IOsuApiProvider
         response.EnsureSuccessStatusCode();
 
         return await response.Content.ReadFromJsonAsync<Score>();
+    }
+
+    public async Task<bool> DownloadMap(int id, string path)
+    {
+        var requestMessage = new HttpRequestMessage
+        {
+            Method = HttpMethod.Get,
+            RequestUri = new Uri(osu_base + string.Format(map_download_link, id))
+        };
+
+        var response = await _httpClient.SendAsync(requestMessage);
+        if (!response.IsSuccessStatusCode)
+        {
+            return false;
+        }
+
+        await File.WriteAllBytesAsync(path, await response.Content.ReadAsByteArrayAsync());
+
+        return true;
     }
 
     private async Task RefreshUserlessToken()

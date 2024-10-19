@@ -20,6 +20,7 @@ namespace LazerRelaxLeaderboard.Controllers
         private readonly IOsuApiProvider _osuApiProvider;
         private readonly IPpService _ppService;
         private readonly int _apiRequestInterval;
+        private readonly string _beatmapCachePath;
 
         public ApiController(DatabaseContext databaseContext, IConfiguration configuration, IOsuApiProvider osuApiProvider, IPpService ppService)
         {
@@ -27,6 +28,7 @@ namespace LazerRelaxLeaderboard.Controllers
             _osuApiProvider = osuApiProvider;
             _ppService = ppService;
             _apiRequestInterval = int.Parse(configuration["ScoreQueryInterval"]!);
+            _beatmapCachePath = configuration["BeatmapCachePath"]!;
         }
 
         [HttpGet("/scores")]
@@ -194,6 +196,12 @@ namespace LazerRelaxLeaderboard.Controllers
                     osuBeatmap.Status != BeatmapStatus.Loved)
                 {
                     return BadRequest("Only scores on ranked/loved maps are supported");
+                }
+
+                var mapPath = $"{_beatmapCachePath}/{osuBeatmap.Id}.osu";
+                if (!System.IO.File.Exists(mapPath))
+                {
+                    await _osuApiProvider.DownloadMap(osuBeatmap.Id, mapPath);
                 }
 
                 dbBeatmap = new Beatmap
