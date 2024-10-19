@@ -1,7 +1,6 @@
-﻿namespace LazerRelaxLeaderboard.Services
+﻿namespace LazerRelaxLeaderboard.Services;
+
+public interface IKeyAuthService
 {
-    public interface IKeyAuthService
-    {
-        bool Authorize(HttpContext context);
-    }
+    bool Authorize(HttpContext context);
 }

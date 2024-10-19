@@ -48,6 +48,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient<OsuApiProvider>();
 builder.Services.AddSingleton<IOsuApiProvider, OsuApiProvider>();
 builder.Services.AddTransient<IKeyAuthService, KeyAuthService>();
+builder.Services.AddTransient<IPpService, PpService>();
 builder.Services.AddHostedService<LeaderboardUpdateService>();
 
 builder.Services.AddControllers((options =>
