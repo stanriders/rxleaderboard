@@ -56,7 +56,7 @@ builder.Services.AddHostedService<LeaderboardUpdateService>();
 builder.Services.AddRateLimiter(_ => _
     .AddTokenBucketLimiter(policyName: "token", options =>
     {
-        options.TokenLimit = 5;
+        options.TokenLimit = 3;
         options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
         options.QueueLimit = 2;
         options.ReplenishmentPeriod = TimeSpan.FromSeconds(5);
