@@ -20,7 +20,7 @@ export default async function TopscoresPage() {
 
   return (
     <>
-      {scores.map((row) => (<><Score score={row} showPlayer={true} key={row.id}/><Spacer y={1} /></>))}
+      {scores.map((row) => (<><Score score={row} showPlayer={true} key={row.id}/><Spacer y={1} key={row.id}/></>))}
     </>
   );
 }

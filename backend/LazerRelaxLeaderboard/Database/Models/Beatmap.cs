@@ -43,5 +43,7 @@ namespace LazerRelaxLeaderboard.Database.Models
         public required BeatmapStatus Status { get; set; }
 
         public required int MaxCombo { get; set; }
+
+        public List<Score> Scores { get; set; } = null!;
     }
 }
