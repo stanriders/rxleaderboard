@@ -4,9 +4,7 @@ import { Metadata, Viewport } from "next";
 import Image from "next/image";
 import { Link } from "@nextui-org/link";
 import clsx from "clsx";
-
 import { Providers } from "./providers";
-
 import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
 import { Navbar } from "@/components/navbar";
@@ -20,6 +18,7 @@ export const metadata: Metadata = {
   applicationName: siteConfig.name,
   authors: [{name: "StanR", url: "https://osu.ppy.sh/users/7217455"}],
   description: siteConfig.description,
+  keywords: ["rx", "osu", "relax", "leaderboard", "osu!", "osu!lazer", "lazer"],
   icons: {
     icon: "/favicon.ico",
     shortcut: "/favicon.ico",
@@ -37,7 +36,7 @@ export const metadata: Metadata = {
 };
 
 // all fetch request should be cached for 1 minute unless specified otherwise
-export const revalidate = 60;
+export const revalidate = 15;
 
 export const viewport: Viewport = {
   themeColor: [
