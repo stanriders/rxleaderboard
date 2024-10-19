@@ -176,7 +176,8 @@ public class LeaderboardUpdateService : BackgroundService
                         Spinners = osuBeatmap.Spinners,
                         StarRatingNormal = osuBeatmap.StarRating,
                         MaxCombo = osuBeatmap.MaxCombo,
-                        Status = osuBeatmap.Status
+                        Status = osuBeatmap.Status,
+                        ScoresUpdatedOn = DateTime.UtcNow
                     });
                 }
 
@@ -192,7 +193,7 @@ public class LeaderboardUpdateService : BackgroundService
                 .ToArrayAsync();
 
             var allowedMods = new[] { "HD", "DT", "HR" };
-            var modCombos = CreateCombinations(0, Array.Empty<string>(), allowedMods);
+            var modCombos = Utils.CreateCombinations(0, Array.Empty<string>(), allowedMods);
             modCombos.Add(new[] { string.Empty });
 
             foreach (var modCombo in modCombos)
@@ -258,17 +259,5 @@ public class LeaderboardUpdateService : BackgroundService
 
             await databaseContext.SaveChangesAsync();
         }
-    }
-
-    private static List<string[]> CreateCombinations(int startIndex, string[] pair, string[] initialArray)
-    {
-        var combinations = new List<string[]>();
-        for (int i = startIndex; i < initialArray.Length; i++)
-        {
-            combinations.Add(pair.Append(initialArray[i]).ToArray());
-            combinations.AddRange(CreateCombinations(i + 1, pair.Append(initialArray[i]).ToArray(), initialArray));
-        }
-
-        return combinations;
     }
 }

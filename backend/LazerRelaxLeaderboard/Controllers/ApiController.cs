@@ -6,7 +6,6 @@ using LazerRelaxLeaderboard.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
-using osu.Game.Rulesets.Osu.Beatmaps;
 using Beatmap = LazerRelaxLeaderboard.Database.Models.Beatmap;
 using Score = LazerRelaxLeaderboard.Database.Models.Score;
 using User = LazerRelaxLeaderboard.Database.Models.User;
@@ -267,7 +266,11 @@ namespace LazerRelaxLeaderboard.Controllers
         public async Task<StatsResponse> GetStats()
         {
             var beatmaps = await _databaseContext.Beatmaps.CountAsync();
-            const int queries = 9; // there are 8 mod combos + 1 beatmap request
+
+            var allowedMods = new[] { "HD", "DT", "HR" };
+            var modCombos = Utils.CreateCombinations(0, Array.Empty<string>(), allowedMods);
+
+            var queries = modCombos.Count + 1; // mod combos + beatmap request
 
             return new StatsResponse
             {

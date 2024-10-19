@@ -38,7 +38,7 @@ namespace LazerRelaxLeaderboard.Database.Models
 
         public double? StarRating { get; set; }
 
-        public DateTime ScoresUpdatedOn { get; set; }
+        public required DateTime ScoresUpdatedOn { get; set; }
 
         public required BeatmapStatus Status { get; set; }
 
