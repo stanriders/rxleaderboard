@@ -310,6 +310,8 @@ public class PpService : IPpService
             score.Pp = performanceAttributes.Total;
             _databaseContext.Scores.Update(score);
         }
+
+        await _databaseContext.SaveChangesAsync();
     }
 
     public async Task CleanupScores()

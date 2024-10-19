@@ -1,7 +1,10 @@
 using LazerRelaxLeaderboard.Contracts;
 using LazerRelaxLeaderboard.Database;
 using LazerRelaxLeaderboard.Database.Models;
+using LazerRelaxLeaderboard.OsuApi.Interfaces;
+using LazerRelaxLeaderboard.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
 namespace LazerRelaxLeaderboard.Controllers
@@ -11,11 +14,15 @@ namespace LazerRelaxLeaderboard.Controllers
     public class ApiController : ControllerBase
     {
         private readonly DatabaseContext _databaseContext;
+        private readonly IOsuApiProvider _osuApiProvider;
+        private readonly IPpService _ppService;
         private readonly int _apiRequestInterval;
 
-        public ApiController(DatabaseContext databaseContext, IConfiguration configuration)
+        public ApiController(DatabaseContext databaseContext, IConfiguration configuration, IOsuApiProvider osuApiProvider, IPpService ppService)
         {
             _databaseContext = databaseContext;
+            _osuApiProvider = osuApiProvider;
+            _ppService = ppService;
             _apiRequestInterval = int.Parse(configuration["ScoreQueryInterval"]!);
         }
 
@@ -123,6 +130,118 @@ namespace LazerRelaxLeaderboard.Controllers
                 .OrderByDescending(x => x.Pp)
                 .Take(100)
                 .ToListAsync();
+        }
+
+        [HttpPost("/scores/add")]
+        [EnableRateLimiting("token")]
+        public async Task<IActionResult> AddScore(long id)
+        {
+            if (await _databaseContext.Scores.AnyAsync(x => x.Id == id))
+            {
+                return BadRequest("Score already exists");
+            }
+
+            var osuScore = await _osuApiProvider.GetScore(id);
+            if (osuScore == null)
+            {
+                return BadRequest("Invalid score ID");
+            }
+
+            var allowedMods = new[] { "HD", "DT", "HR", "CL", "MR", "TC", "RX" };
+
+            if (!osuScore.Mods.Any(x=> x.Acronym == "RX"))
+            {
+                return BadRequest("Score doesn't have RX enabled");
+            }
+
+            if (!osuScore.Mods.All(x => allowedMods.Contains(x.Acronym)))
+            {
+                return BadRequest("Score has unsupported mods");
+            }
+
+            if (!await _databaseContext.Beatmaps.AnyAsync(x => x.Id == osuScore.BeatmapId))
+            {
+                var osuBeatmap = await _osuApiProvider.GetBeatmap(osuScore.BeatmapId);
+                if (osuBeatmap == null)
+                {
+                    return BadRequest("Score has invalid map ID");
+                }
+
+                if (osuBeatmap.Mode != OsuApi.Models.Mode.Osu)
+                {
+                    return BadRequest("Unsupported gamemode");
+                }
+
+                await _databaseContext.Beatmaps.AddAsync(new Beatmap
+                {
+                    Id = osuBeatmap.Id,
+                    ApproachRate = osuBeatmap.ApproachRate,
+                    Artist = osuBeatmap.BeatmapSet.Artist,
+                    BeatmapSetId = osuBeatmap.BeatmapSet.Id,
+                    BeatsPerMinute = osuBeatmap.BeatsPerMinute,
+                    CircleSize = osuBeatmap.CircleSize,
+                    Circles = osuBeatmap.Circles,
+                    CreatorId = osuBeatmap.BeatmapSet.CreatorId,
+                    DifficultyName = osuBeatmap.Version,
+                    HealthDrain = osuBeatmap.HealthDrain,
+                    Title = osuBeatmap.BeatmapSet.Title,
+                    OverallDifficulty = osuBeatmap.OverallDifficulty,
+                    Sliders = osuBeatmap.Sliders,
+                    Spinners = osuBeatmap.Spinners,
+                    StarRatingNormal = osuBeatmap.StarRating,
+                    MaxCombo = osuBeatmap.MaxCombo,
+                    Status = osuBeatmap.Status
+                });
+
+                await _databaseContext.SaveChangesAsync();
+            }
+
+            var user = await _databaseContext.Users.FindAsync(osuScore.User.Id);
+            if (user != null)
+            {
+                user.CountryCode = osuScore.User.CountryCode;
+                user.UpdatedAt = DateTime.UtcNow;
+                user.Username = osuScore.User.Username;
+            }
+            else
+            {
+                await _databaseContext.Users.AddAsync(new User
+                {
+                    Id = osuScore.User.Id,
+                    CountryCode = osuScore.User.CountryCode,
+                    UpdatedAt = DateTime.UtcNow,
+                    Username = osuScore.User.Username
+                });
+            }
+
+            await _databaseContext.Scores.AddAsync(new Score
+            {
+                Id = osuScore.Id,
+                Accuracy = osuScore.Accuracy,
+                BeatmapId = osuScore.BeatmapId,
+                Combo = osuScore.Combo,
+                Count100 = osuScore.Statistics.Count100,
+                Count300 = osuScore.Statistics.Count300,
+                Count50 = osuScore.Statistics.Count50,
+                CountMiss = osuScore.Statistics.CountMiss,
+                SliderEnds = osuScore.Statistics.SliderEnds,
+                SliderTicks = osuScore.Statistics.SliderTicks,
+                SpinnerBonus = osuScore.Statistics.SpinnerBonus,
+                SpinnerSpins = osuScore.Statistics.SpinnerSpins,
+                LegacySliderEnds = osuScore.Statistics.LegacySliderEnds,
+                Date = osuScore.Date,
+                Grade = osuScore.Grade,
+                Mods = osuScore.Mods.Select(Utils.ModToString).ToArray(),
+                TotalScore = osuScore.TotalScore,
+                UserId = osuScore.User.Id,
+            });
+
+            await _databaseContext.SaveChangesAsync();
+
+            await _ppService.PopulateScorePp(id);
+            await _ppService.RecalculatePlayerPp(osuScore.User.Id);
+
+            return Ok(await _databaseContext.Scores.FindAsync(id));
         }
 
         [HttpGet("/stats")]

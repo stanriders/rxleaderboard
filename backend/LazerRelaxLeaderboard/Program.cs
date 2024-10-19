@@ -1,3 +1,4 @@
+using System.Threading.RateLimiting;
 using LazerRelaxLeaderboard.BackgroundServices;
 using LazerRelaxLeaderboard.Config;
 using LazerRelaxLeaderboard.Database;
@@ -6,6 +7,7 @@ using LazerRelaxLeaderboard.OsuApi.Interfaces;
 using LazerRelaxLeaderboard.Services;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Npgsql;
@@ -50,6 +52,17 @@ builder.Services.AddSingleton<IOsuApiProvider, OsuApiProvider>();
 builder.Services.AddTransient<IKeyAuthService, KeyAuthService>();
 builder.Services.AddTransient<IPpService, PpService>();
 builder.Services.AddHostedService<LeaderboardUpdateService>();
+
+builder.Services.AddRateLimiter(_ => _
+    .AddTokenBucketLimiter(policyName: "token", options =>
+    {
+        options.TokenLimit = 5;
+        options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        options.QueueLimit = 2;
+        options.ReplenishmentPeriod = TimeSpan.FromSeconds(5);
+        options.TokensPerPeriod = 1;
+        options.AutoReplenishment = true;
+    }));
 
 builder.Services.AddControllers((options =>
 {
@@ -101,6 +114,7 @@ if (app.Environment.IsStaging() || app.Environment.IsProduction())
 
 app.UsePathBase(basePath);
 app.MapControllers();
+app.UseRateLimiter();
 
 using (var scope = app.Services.CreateScope())
 {

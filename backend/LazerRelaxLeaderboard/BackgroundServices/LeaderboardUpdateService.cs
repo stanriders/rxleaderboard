@@ -247,7 +247,7 @@ public class LeaderboardUpdateService : BackgroundService
                         LegacySliderEnds = score.Statistics.LegacySliderEnds,
                         Date = score.Date,
                         Grade = score.Grade,
-                        Mods = score.Mods.Select(ModToString).ToArray(),
+                        Mods = score.Mods.Select(Utils.ModToString).ToArray(),
                         TotalScore = score.TotalScore,
                         UserId = score.User.Id,
                     });
@@ -270,18 +270,5 @@ public class LeaderboardUpdateService : BackgroundService
         }
 
         return combinations;
-    }
-
-    private string ModToString(APIMod mod)
-    {
-        if (mod.Settings.ContainsKey("speed_change"))
-        {
-            var rateChange = mod.Settings.First(x => x.Key == "speed_change");
-            var rateChangeValue = (JsonElement) rateChange.Value;
-
-            return $"{mod.Acronym}x{rateChangeValue.GetDouble()}";
-        }
-
-        return mod.Acronym;
     }
 }
