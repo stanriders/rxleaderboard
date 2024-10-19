@@ -1,14 +1,12 @@
 /* eslint-disable react/no-unknown-property */
 import "@/styles/globals.css";
 import { Metadata, Viewport } from "next";
-import Image from "next/image";
 import { Link } from "@nextui-org/link";
 import clsx from "clsx";
 import { Providers } from "./providers";
 import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
 import { Navbar } from "@/components/navbar";
-import { ApiBase } from "@/api/address";
 
 export const metadata: Metadata = {
   title: {
@@ -46,33 +44,6 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children, }: { children: React.ReactNode; }) {
-  if (ApiBase == "https://rx.stanr.info/api")
-    return (<html suppressHydrationWarning lang="en" prefix="og: http://ogp.me/ns#">
-      <head />
-      <body
-        className={clsx(
-          "min-h-screen bg-background font-sans antialiased",
-          fontSans.variable,
-        )}
-      >
-        <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
-          <div className="relative flex flex-col h-screen">
-            <main className="container mx-auto max-w-7xl pt-2 px-1 md:px-6 flex-grow">
-            <section className="flex flex-col items-center justify-center gap-4 py-4">
-              <div className="inline-block w-full text-center justify-center">
-                <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10 text-xl">
-                  <Image src="/rv-yellowlight.svg" alt="Relaxation vault" width={256} height={256}/>
-                  Sorry, this website is not ready yet!
-                </section>
-              </div>
-            </section>
-            </main>
-          </div>
-        </Providers>
-        <script defer src="https://umami.stanr.info/script.js" data-website-id="516606cb-17b7-4166-8315-c47fef8d73dd"></script>
-      </body>
-    </html>);
-
   return (
     <html suppressHydrationWarning lang="en" prefix="og: http://ogp.me/ns#">
       <head />
