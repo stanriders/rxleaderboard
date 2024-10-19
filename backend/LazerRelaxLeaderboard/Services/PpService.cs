@@ -1,11 +1,13 @@
 ﻿using System.Collections.Concurrent;
 using LazerRelaxLeaderboard.Database;
+using LazerRelaxLeaderboard.OsuApi.Interfaces;
 using LazerRelaxLeaderboard.OsuApi.Models;
 using Microsoft.EntityFrameworkCore;
 using osu.Game.Beatmaps;
 using osu.Game.Rulesets;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Osu;
+using osu.Game.Rulesets.Osu.Beatmaps;
 using osu.Game.Rulesets.Osu.Mods;
 using osu.Game.Rulesets.Scoring;
 using osu.Game.Scoring;
@@ -15,13 +17,15 @@ namespace LazerRelaxLeaderboard.Services;
 public class PpService : IPpService
 {
     private readonly DatabaseContext _databaseContext;
+    private readonly IOsuApiProvider _osuApiProvider;
     private readonly ILogger<IPpService> _logger;
     private readonly string _cachePath;
 
-    public PpService(DatabaseContext databaseContext, ILogger<IPpService> logger, IConfiguration configuration)
+    public PpService(DatabaseContext databaseContext, ILogger<IPpService> logger, IConfiguration configuration, IOsuApiProvider osuApiProvider)
     {
         _databaseContext = databaseContext;
         _logger = logger;
+        _osuApiProvider = osuApiProvider;
         _cachePath = configuration["BeatmapCachePath"]!;
     }
 
@@ -145,9 +149,9 @@ public class PpService : IPpService
             var mapPath = $"{_cachePath}/{map.Id}.osu";
             if (!File.Exists(mapPath))
             {
-                _logger.LogError("Couldn't populate beatmap {Id} sr - map file doesn't exist!", map.Id);
-
-                continue;
+                _logger.LogWarning("Downloading beatmap {Id}...", map.Id);
+                await _osuApiProvider.DownloadMap(map.Id, mapPath);
+                await Task.Delay(1000); // wait for some time in case of multiple missing maps
             }
 
             var workingBeatmap = new FlatWorkingBeatmap(mapPath);
