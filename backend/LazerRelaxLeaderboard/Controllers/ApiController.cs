@@ -265,19 +265,34 @@ namespace LazerRelaxLeaderboard.Controllers
         [HttpGet("/stats")]
         public async Task<StatsResponse> GetStats()
         {
-            var beatmaps = await _databaseContext.Beatmaps.CountAsync();
-
             var allowedMods = new[] { "HD", "DT", "HR" };
             var modCombos = Utils.CreateCombinations(0, Array.Empty<string>(), allowedMods);
 
-            var queries = modCombos.Count + 1; // mod combos + beatmap request
+            var queries = modCombos.Count + 2; // mod combos + flat RX + beatmap request
+
+            var existingMaps = await _databaseContext.Scores.AsNoTracking()
+                .Include(x => x.Beatmap)
+                .Where(x => x.Beatmap != null && x.Beatmap.ScoresUpdatedOn < DateTime.UtcNow.AddDays(-7))
+                .GroupBy(x => x.BeatmapId)
+                .OrderByDescending(x => x.Count())
+                .Select(x => x.Key)
+                .ToArrayAsync();
+
+            var scorelessMaps = await _databaseContext.Beatmaps.AsNoTracking()
+                .Where(x => x.ScoresUpdatedOn < DateTime.UtcNow.AddDays(-7))
+                .Select(x => x.Id)
+                .Where(x => !existingMaps.Contains(x))
+                .ToArrayAsync();
+
+            var totalMaps = existingMaps.Concat(scorelessMaps).Count();
 
             return new StatsResponse
             {
-                BeatmapsTotal = beatmaps,
+                BeatmapsTotal = await _databaseContext.Beatmaps.CountAsync(),
+                BeatmapsToUpdate = totalMaps,
                 ScoresTotal = await _databaseContext.Scores.CountAsync(),
                 UsersTotal = await _databaseContext.Users.CountAsync(),
-                UpdateRunLengthEstimate = (beatmaps * queries) * (_apiRequestInterval / 1000.0) / 60.0 / 60.0 / 24.0
+                UpdateRunLengthEstimate = (totalMaps * queries) * (_apiRequestInterval / 1000.0) / 60.0 / 60.0 / 24.0
             };
         }
     }

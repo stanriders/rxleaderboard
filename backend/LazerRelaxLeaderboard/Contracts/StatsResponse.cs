@@ -5,5 +5,6 @@ public class StatsResponse
     public int ScoresTotal { get; set; }
     public int UsersTotal { get; set; }
     public int BeatmapsTotal { get; set; }
+    public int BeatmapsToUpdate { get; set; }
     public double UpdateRunLengthEstimate { get; set; }
 }
