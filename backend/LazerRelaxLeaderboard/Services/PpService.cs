@@ -174,7 +174,12 @@ public class PpService : IPpService
         var playerCount = await _databaseContext.Users.CountAsync();
         for (var i = 0; i < playerCount; i += 100)
         {
-            var players = await _databaseContext.Users.Skip(i).Take(100).ToListAsync();
+            var players = await _databaseContext.Users
+                .OrderBy(x => x.Id)
+                .Skip(i)
+                .Take(100)
+                .ToListAsync();
+
             foreach (var player in players)
             {
                 if (await RecalculatePlayerPp(player))
