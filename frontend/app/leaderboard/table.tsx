@@ -52,6 +52,7 @@ export default function LeaderboardTable() {
             placeholder="Search player..."
             size="sm"
             type="search"
+            value={debouncedSearch}
             disabled
           />
       </div>
