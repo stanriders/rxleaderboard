@@ -7,13 +7,14 @@ import { BeatmapPageTable } from "./table";
 import type { Metadata } from "next";
 import { ApiBase } from "@/api/address";
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 
 type Props = {
   params: { id: number };
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const beatmap : BeatmapModel = await fetch(`${ApiBase}/beatmaps/${params.id}`)
+  const beatmap : BeatmapModel = await fetch(`${ApiBase}/beatmaps/${params.id}`, {headers: Object.fromEntries(headers())})
     .then(result => result.json())
     .catch(error => console.log("Beatmap metadata fetch error: " + error));
 
@@ -26,14 +27,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function BeatmapPage({ params }: Props) {
-  const beatmap : BeatmapModel = await fetch(`${ApiBase}/beatmaps/${params.id}`, {next: {revalidate: 3600}})
+  const beatmap : BeatmapModel = await fetch(`${ApiBase}/beatmaps/${params.id}`, {next: {revalidate: 3600}, headers: Object.fromEntries(headers())})
     .then(result => result.json())
     .catch(error => console.log("Beatmap info fetch error: " + error));
 
   if(!beatmap)
     return notFound();
 
-  const scores : ScoreModel[] = await fetch(`${ApiBase}/beatmaps/${params.id}/scores`)
+  const scores : ScoreModel[] = await fetch(`${ApiBase}/beatmaps/${params.id}/scores`, {headers: Object.fromEntries(headers())})
     .then(result => result.json())
     .catch(error => console.log("Beatmap scores fetch error: " + error));
 

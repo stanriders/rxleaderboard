@@ -9,13 +9,14 @@ import type { Metadata } from "next";
 import { ApiBase } from "@/api/address";
 import { notFound } from "next/navigation";
 import { siteConfig } from "@/config/site";
+import { headers } from "next/headers";
 
 type Props = {
   params: { id: number };
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const player : ExtendedUserModel = await fetch(`${ApiBase}/players/${params.id}`)
+  const player : ExtendedUserModel = await fetch(`${ApiBase}/players/${params.id}`, {headers: Object.fromEntries(headers())})
     .then(result => result.json())
     .catch(error => console.log("User metadata fetch error: " + error));
 
@@ -34,14 +35,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function UserPage({ params }: Props) {
-  const player : ExtendedUserModel = await fetch(`${ApiBase}/players/${params.id}`)
+  const player : ExtendedUserModel = await fetch(`${ApiBase}/players/${params.id}`, {headers: Object.fromEntries(headers())})
     .then(result => result.json())
     .catch(error => console.log("User info fetch error: " + error));
 
   if(!player)
     return notFound();
 
-  const scores = await fetch(`${ApiBase}/players/${params.id}/scores`)
+  const scores = await fetch(`${ApiBase}/players/${params.id}/scores`, {headers: Object.fromEntries(headers())})
     .then(result => result.json())
     .catch(error => console.log("User scores fetch error: " + error));
 
