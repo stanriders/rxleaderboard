@@ -21,6 +21,7 @@
     <PackageReference Include="Serilog.Enrichers.ClientInfo" Version="2.1.2" />
     <PackageReference Include="Serilog.Sinks.Seq" Version="8.0.0" />
     <PackageReference Include="SerilogTracing.Instrumentation.AspNetCore" Version="2.2.0" />
+    <PackageReference Include="UAParser.Core" Version="4.0.4" />
   </ItemGroup>
 
   <ItemGroup>
