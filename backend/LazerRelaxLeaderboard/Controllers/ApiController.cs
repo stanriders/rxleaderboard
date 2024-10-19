@@ -117,6 +117,18 @@ namespace LazerRelaxLeaderboard.Controllers
                 .ToListAsync();
         }
 
+        [HttpGet("/beatmaps")]
+        public async Task<List<Beatmap>> GetBeatmaps(int page = 1)
+        {
+            const int take = 50;
+            
+            return await _databaseContext.Beatmaps.AsNoTracking()
+                .OrderByDescending(x => x.Scores.Count)
+                .Skip((page - 1) * take)
+                .Take(take)
+                .ToListAsync();
+        }
+
         [HttpGet("/beatmaps/{id}")]
         public async Task<Beatmap?> GetBeatmap(int id)
         {
