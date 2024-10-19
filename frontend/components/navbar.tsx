@@ -17,7 +17,7 @@ export const Navbar = () => {
       <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
         <NavbarMenuToggle className="md:hidden" />
         {/* logo */}
-        <NavbarBrand as="li" className="gap-3 max-w-fit">
+        <NavbarBrand as="li" className="gap-3 max-w-fit md:mx-2">
           <NextLink className="flex justify-center items-center gap-3 ml-3" href="/">
             <Image className="dark:hidden block flex-none" src="/rv-yellowdark.svg" width={32} height={32} alt="Relaxation Vault"/>
             <Image className="hidden dark:block flex-none" src="/rv-yellowlight.svg" width={32} height={32} alt="Relaxation Vault"/>
@@ -43,17 +43,6 @@ export const Navbar = () => {
         </ul>
       </NavbarContent>
       <NavbarContent className="basis-1 pl-4" justify="end">
-        {/*<Input
-          classNames={{
-            base: "md:max-w-48 max-w-[10rem] h-10",
-            mainWrapper: "h-full",
-            input: "text-small",
-            inputWrapper: "h-full font-normal text-default-500 bg-default-400/20 dark:bg-default-500/20",
-          }}
-          placeholder="Search player..."
-          size="sm"
-          type="search"
-        />*/}
         <ThemeSwitch />
       </NavbarContent>
       <NavbarMenu>

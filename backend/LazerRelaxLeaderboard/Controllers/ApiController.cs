@@ -1,11 +1,15 @@
 using LazerRelaxLeaderboard.Contracts;
 using LazerRelaxLeaderboard.Database;
-using LazerRelaxLeaderboard.Database.Models;
 using LazerRelaxLeaderboard.OsuApi.Interfaces;
+using LazerRelaxLeaderboard.OsuApi.Models;
 using LazerRelaxLeaderboard.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using osu.Game.Rulesets.Osu.Beatmaps;
+using Beatmap = LazerRelaxLeaderboard.Database.Models.Beatmap;
+using Score = LazerRelaxLeaderboard.Database.Models.Score;
+using User = LazerRelaxLeaderboard.Database.Models.User;
 
 namespace LazerRelaxLeaderboard.Controllers
 {
@@ -39,19 +43,35 @@ namespace LazerRelaxLeaderboard.Controllers
         }
 
         [HttpGet("/players")]
-        public async Task<PlayersResult> GetTopPlayers(int page = 1)
+        public async Task<PlayersResult> GetTopPlayers(int page = 1, string? search = null)
         {
             const int take = 50;
 
+            var query = _databaseContext.Users.AsNoTracking();
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                if (int.TryParse(search, out var id))
+                {
+                    query = query.Where(x => x.Id == id);
+                }
+                else
+                {
+                    query = query.Where(x => x.Username.ToUpper().StartsWith(search.ToUpper()));
+                }
+            }
+
+            var result = await query
+                .Where(x => x.TotalPp != null)
+                .OrderByDescending(x => x.TotalPp)
+                .Skip((page - 1) * take)
+                .Take(take)
+                .ToListAsync();
+
             return new PlayersResult
             {
-                Players = await _databaseContext.Users.AsNoTracking()
-                    .Where(x => x.TotalPp != null)
-                    .OrderByDescending(x => x.TotalPp)
-                    .Skip((page - 1) * take)
-                    .Take(take)
-                    .ToListAsync(),
-                Total = await _databaseContext.Users.AsNoTracking().CountAsync(x => x.TotalPp != null)
+                Players = result,
+                Total = await query.CountAsync(x => x.TotalPp != null)
             };
         }
 
@@ -85,21 +105,6 @@ namespace LazerRelaxLeaderboard.Controllers
                 };
             }
             return null;
-        }
-
-        [HttpGet("/players/search/{query}")]
-        public async Task<List<User>> GetPlayer(string query)
-        {
-            if (int.TryParse(query, out var id))
-            {
-                return await _databaseContext.Users.AsNoTracking()
-                    .Where(x => x.Id == id)
-                    .ToListAsync();
-            }
-
-            return await _databaseContext.Users.AsNoTracking()
-                .Where(x => x.Username.ToUpper().StartsWith(query.ToUpper()))
-                .ToListAsync();
         }
 
         [HttpGet("/players/{id}/scores")]
@@ -159,7 +164,8 @@ namespace LazerRelaxLeaderboard.Controllers
                 return BadRequest("Score has unsupported mods");
             }
 
-            if (!await _databaseContext.Beatmaps.AnyAsync(x => x.Id == osuScore.BeatmapId))
+            var dbBeatmap = await _databaseContext.Beatmaps.FindAsync(osuScore.BeatmapId);
+            if (dbBeatmap == null)
             {
                 var osuBeatmap = await _osuApiProvider.GetBeatmap(osuScore.BeatmapId);
                 if (osuBeatmap == null)
@@ -172,7 +178,14 @@ namespace LazerRelaxLeaderboard.Controllers
                     return BadRequest("Unsupported gamemode");
                 }
 
-                await _databaseContext.Beatmaps.AddAsync(new Beatmap
+                if (osuBeatmap.Status != BeatmapStatus.Ranked &&
+                    osuBeatmap.Status != BeatmapStatus.Approved &&
+                    osuBeatmap.Status != BeatmapStatus.Loved)
+                {
+                    return BadRequest("Only scores on ranked/loved maps are supported");
+                }
+
+                dbBeatmap = new Beatmap
                 {
                     Id = osuBeatmap.Id,
                     ApproachRate = osuBeatmap.ApproachRate,
@@ -190,8 +203,10 @@ namespace LazerRelaxLeaderboard.Controllers
                     Spinners = osuBeatmap.Spinners,
                     StarRatingNormal = osuBeatmap.StarRating,
                     MaxCombo = osuBeatmap.MaxCombo,
-                    Status = osuBeatmap.Status
-                });
+                    Status = osuBeatmap.Status,
+                    ScoresUpdatedOn = DateTime.MinValue
+                };
+                await _databaseContext.Beatmaps.AddAsync(dbBeatmap);
 
                 await _databaseContext.SaveChangesAsync();
             }
@@ -238,8 +253,12 @@ namespace LazerRelaxLeaderboard.Controllers
 
             await _databaseContext.SaveChangesAsync();
 
-            await _ppService.PopulateScorePp(id);
-            await _ppService.RecalculatePlayerPp(osuScore.User.Id);
+            // loved beatmaps dont affect pp
+            if (dbBeatmap.Status != BeatmapStatus.Loved)
+            {
+                await _ppService.PopulateScorePp(id);
+                await _ppService.RecalculatePlayerPp(osuScore.User.Id);
+            }
 
             return Ok(await _databaseContext.Scores.FindAsync(id));
         }

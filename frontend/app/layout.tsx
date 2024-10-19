@@ -87,11 +87,11 @@ export default function RootLayout({ children, }: { children: React.ReactNode; }
           <div className="relative flex flex-col h-screen">
             <Navbar />
             <main className="container mx-auto max-w-7xl pt-2 px-1 md:px-6 flex-grow">
-            <section className="flex flex-col items-center justify-center gap-4 py-4">
-              <div className="inline-block w-full text-center justify-center">
-                {children}
-              </div>
-            </section>
+              <section className="flex flex-col items-center justify-center gap-4 py-2">
+                <div className="inline-block w-full text-center justify-center">
+                  {children}
+                </div>
+              </section>
             </main>
             <footer className="w-full flex items-center justify-center py-3">
               <p className="text-default-300 text-sm">
