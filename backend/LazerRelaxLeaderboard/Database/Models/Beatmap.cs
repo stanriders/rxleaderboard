@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using LazerRelaxLeaderboard.OsuApi.Models;
 
 namespace LazerRelaxLeaderboard.Database.Models
@@ -40,6 +41,7 @@ namespace LazerRelaxLeaderboard.Database.Models
 
         public required DateTime ScoresUpdatedOn { get; set; }
 
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public required BeatmapStatus Status { get; set; }
 
         public required int MaxCombo { get; set; }

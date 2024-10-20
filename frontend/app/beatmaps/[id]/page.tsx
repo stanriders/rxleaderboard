@@ -41,11 +41,17 @@ export default async function BeatmapPage({ params }: Props) {
   return (
     <>
       <Card>
-        <CardHeader className="absolute z-10 top-1 flex-col !items-start md:h-52 xs:h-32">
-          <Card>
+        <CardHeader className="absolute z-10 top-1 flex-row !items-start md:h-52 xs:h-32">
+          <Card className="max-h-40 min-w-24 mr-4">
             <CardBody>
-              <Link isExternal href={`https://osu.ppy.sh/beatmaps/${beatmap.id}`} className="text-primary-500 text-xl">{beatmap.artist} - {beatmap.title}</Link>
+              <Link isExternal href={`https://osu.ppy.sh/beatmaps/${beatmap.id}`} className="text-primary-500 text-md md:text-xl text-ellipsis">{beatmap.artist} - {beatmap.title}</Link>
               <p className="text-primary-300 text-sm">{beatmap.difficultyName}</p>
+            </CardBody>
+          </Card>
+          <div className="flex-grow"/>
+          <Card className="min-w-20 justify-right">
+            <CardBody>
+              <p className="text-primary-300 text-center text-xs md:text-md">{beatmap.status}</p>
             </CardBody>
           </Card>
         </CardHeader>
@@ -64,7 +70,7 @@ export default async function BeatmapPage({ params }: Props) {
           </div>
           <div className="flex flex-col flex-auto basis-1/2">
             <p className="text-default-300 text-right">{beatmap.starRatingNormal?.toFixed(2)}*</p>
-            <p className="text-3xl text-right">{beatmap.starRating ? `${beatmap.starRating.toFixed(2)}*` : <>-</>}</p>
+            <p className="text-2xl md:text-3xl text-right">{beatmap.starRating ? `${beatmap.starRating.toFixed(2)}*` : <>-</>}</p>
           </div>
         </CardBody>
       </Card>
