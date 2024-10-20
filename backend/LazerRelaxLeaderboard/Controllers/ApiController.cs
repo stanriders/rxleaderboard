@@ -146,6 +146,7 @@ namespace LazerRelaxLeaderboard.Controllers
                 .Where(x => x.BeatmapId == id)
                 .Include(x => x.User)
                 .OrderByDescending(x => x.Pp)
+                .ThenByDescending(x => x.TotalScore)
                 .Take(100)
                 .ToListAsync();
         }
@@ -165,7 +166,7 @@ namespace LazerRelaxLeaderboard.Controllers
                 return BadRequest("Invalid score ID");
             }
 
-            var allowedMods = new[] { "HD", "DT", "HR", "CL", "MR", "TC", "RX" };
+            var allowedMods = new[] { "HD", "DT", "HR", "NC", "HT", "CL", "MR", "TC", "RX" };
 
             if (!osuScore.Mods.Any(x=> x.Acronym == "RX"))
             {
@@ -174,7 +175,12 @@ namespace LazerRelaxLeaderboard.Controllers
 
             if (!osuScore.Mods.All(x => allowedMods.Contains(x.Acronym)))
             {
-                return BadRequest("Score has unsupported mods");
+                return BadRequest($"Score has unsupported mods, only those mods are allowed: {string.Join(", ", allowedMods)}");
+            }
+
+            if (!osuScore.Mods.All(m => m.Settings.Count == 0 || m.Settings.Keys.All(x => x == "speed_change")))
+            {
+                return BadRequest("Score has unsupported mod settings");
             }
 
             var dbBeatmap = await _databaseContext.Beatmaps.FindAsync(osuScore.BeatmapId);
