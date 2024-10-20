@@ -136,7 +136,10 @@ public class LeaderboardUpdateService : BackgroundService
 
                         var scores = await databaseContext.Scores.Where(x=> x.BeatmapId == dbBeatmap.Id).ToListAsync();
                         if (scores.Any())
+                        {
+                            _logger.LogWarning("Removing beatmap {Id} scores...", mapId);
                             databaseContext.Scores.RemoveRange(scores);
+                        }
 
                         databaseContext.Beatmaps.Remove(dbBeatmap);
                         await databaseContext.SaveChangesAsync();
