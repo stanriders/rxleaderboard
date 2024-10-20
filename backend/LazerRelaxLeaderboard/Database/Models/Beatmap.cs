@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 using LazerRelaxLeaderboard.OsuApi.Models;
 
@@ -46,6 +47,8 @@ namespace LazerRelaxLeaderboard.Database.Models
 
         public required int MaxCombo { get; set; }
 
+        [InverseProperty(nameof(Score.Beatmap))]
+        [JsonIgnore]
         public List<Score> Scores { get; set; } = null!;
     }
 }
