@@ -153,6 +153,7 @@ namespace LazerRelaxLeaderboard.Controllers
 
         [HttpPost("/scores/add")]
         [EnableRateLimiting("token")]
+        [Produces<Score>]
         public async Task<IActionResult> AddScore(long id)
         {
             if (await _databaseContext.Scores.AnyAsync(x => x.Id == id))

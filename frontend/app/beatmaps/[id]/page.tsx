@@ -60,7 +60,7 @@ export default async function BeatmapPage({ params }: Props) {
             <p className="text-default-400 text-xs">Circe Size: {beatmap.circleSize}</p>
             <p className="text-default-400 text-xs">Approach Rate: {beatmap.approachRate}</p>
             <p className="text-default-400 text-xs">Overall Difficulty: {beatmap.overallDifficulty}</p>
-            <p className="text-default-400 text-xs">HP Drain: {beatmap.healthDrain}</p>
+            <p className="text-default-400 text-xs">BPM: {beatmap.beatsPerMinute}</p>
           </div>
           <div className="flex flex-col flex-auto basis-1/2">
             <p className="text-default-300 text-right">{beatmap.starRatingNormal?.toFixed(2)}*</p>

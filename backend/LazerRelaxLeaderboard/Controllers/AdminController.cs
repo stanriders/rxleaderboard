@@ -1,10 +1,12 @@
 ﻿using LazerRelaxLeaderboard.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace LazerRelaxLeaderboard.Controllers;
 
 [ApiController]
 [Route("[controller]")]
+[EnableRateLimiting("token")]
 public class AdminController : ControllerBase
 {
     private readonly IKeyAuthService _authService;

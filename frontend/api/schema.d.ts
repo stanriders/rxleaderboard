@@ -52,6 +52,7 @@ export interface paths {
             parameters: {
                 query?: {
                     page?: number;
+                    search?: string;
                 };
                 header?: never;
                 path?: never;
@@ -119,45 +120,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/players/search/{query}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    query: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["User"][];
-                        "application/json": components["schemas"]["User"][];
-                        "text/json": components["schemas"]["User"][];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/players/{id}/scores": {
         parameters: {
             query?: never;
@@ -185,6 +147,45 @@ export interface paths {
                         "text/plain": components["schemas"]["Score"][];
                         "application/json": components["schemas"]["Score"][];
                         "text/json": components["schemas"]["Score"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/beatmaps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    page?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["Beatmap"][];
+                        "application/json": components["schemas"]["Beatmap"][];
+                        "text/json": components["schemas"]["Beatmap"][];
                     };
                 };
             };
@@ -275,6 +276,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/scores/add": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: {
+                    id?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["Score"];
+                        "application/json": components["schemas"]["Score"];
+                        "text/json": components["schemas"]["Score"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/stats": {
         parameters: {
             query?: never;
@@ -347,8 +387,17 @@ export interface components {
             /** Format: double */
             starRating?: number | null;
             /** Format: date-time */
-            scoresUpdatedOn?: string;
+            scoresUpdatedOn: string;
+            status: components["schemas"]["BeatmapStatus"];
+            /** Format: int32 */
+            maxCombo: number;
+            scores?: components["schemas"]["Score"][] | null;
         };
+        /**
+         * Format: int32
+         * @enum {integer}
+         */
+        BeatmapStatus: 0 | 1 | 2 | 3 | 4 | 5 | 6;
         /**
          * Format: int32
          * @enum {integer}
@@ -400,6 +449,16 @@ export interface components {
             count300: number;
             /** Format: int32 */
             countMiss: number;
+            /** Format: int32 */
+            spinnerBonus: number | null;
+            /** Format: int32 */
+            spinnerSpins: number | null;
+            /** Format: int32 */
+            legacySliderEnds: number | null;
+            /** Format: int32 */
+            sliderTicks: number | null;
+            /** Format: int32 */
+            sliderEnds: number | null;
             /** Format: double */
             pp?: number | null;
         };
@@ -410,6 +469,8 @@ export interface components {
             usersTotal?: number;
             /** Format: int32 */
             beatmapsTotal?: number;
+            /** Format: int32 */
+            beatmapsToUpdate?: number;
             /** Format: double */
             updateRunLengthEstimate?: number;
         };

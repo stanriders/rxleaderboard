@@ -30,7 +30,7 @@ export const Score: FC<Props> = (props) => {
           <div className="hidden md:block flex-none text-default-400 text-center w-10 text-lg">{score.grade}</div>
           <div className="flex flex-col flex-auto min-w-1">
             <div className=""><Link href={`/beatmaps/${score.beatmapId}`} className="text-primary-500 text-sm" size="sm">{beatmap.artist} - {beatmap.title}<Spacer x={2}/><span className="text-primary-200 text-xs pr-3">{beatmap.difficultyName}</span></Link></div>
-            <div className="flex-auto truncate text-default-400 text-xs">{score.totalScore} / {score.combo}x ( {score.count300} / {score.count100} / {score.count50} / {score.countMiss} )</div>
+            <div className="flex-auto truncate text-default-400 text-xs">{score.totalScore} | {score.combo}/{beatmap.maxCombo}x ( {score.count300} / {score.count100} / {score.count50} / {score.countMiss} )</div>
             <div className="truncate text-default-300 text-xs">{formatDistance(new Date(score.date), new Date(), { addSuffix: true })}</div>
           </div>
           
