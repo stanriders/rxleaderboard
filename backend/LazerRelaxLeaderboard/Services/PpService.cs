@@ -379,16 +379,15 @@ public class PpService : IPpService
         var beforePp = player.TotalPp;
         var beforeAccuracy = player.TotalAccuracy;
 
-        // todo: one score per map
         var scores = await _databaseContext.Scores.AsNoTracking()
-            .Where(x => x.Beatmap != null)
-            .Include(x => x.Beatmap)
-            .Select(x => new { x.UserId, BeatmapStatus = x.Beatmap!.Status, x.Pp, x.Accuracy })
-            .Where(x => x.UserId == player.Id)
-            .Where(x => x.BeatmapStatus == BeatmapStatus.Ranked || x.BeatmapStatus == BeatmapStatus.Approved)
+            .Select(x => new { x.UserId, x.Pp, x.Accuracy, x.BeatmapId })
             .Where(x => x.Pp != null)
-            .OrderByDescending(x => x.Pp)
+            .Where(x => x.UserId == player.Id)
+            .GroupBy(i => i.BeatmapId)
+            .Select(g => g.OrderByDescending(i => i.Pp!).First())
             .ToArrayAsync();
+
+        scores = scores.OrderByDescending(i => i.Pp).Take(1000).ToArray();
 
         if (!scores.Any())
         {
