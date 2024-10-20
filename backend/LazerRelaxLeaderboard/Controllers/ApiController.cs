@@ -167,7 +167,14 @@ namespace LazerRelaxLeaderboard.Controllers
                 return BadRequest("Invalid score ID");
             }
 
-            var allowedMods = new[] { "HD", "DT", "HR", "NC", "HT", "CL", "MR", "TC", "RX" };
+            var allowedMods = new[]
+            {
+                "HD", "DT", "HR", "NC",
+                "HT", "DC", "EZ", "FL",
+                "SD", "PF", "CL", "MR",
+                "TC", "BL", "SO", "NF",
+                "RX"
+            };
 
             if (!osuScore.Mods.Any(x=> x.Acronym == "RX"))
             {
