@@ -21,7 +21,7 @@ export default function FAQ() {
               <span className="text-sm">osu! API only allows to get scores for one mod combination per query (i.e. HDRX) so with every added mod the time to go through all beatmaps grows exponentially. Currently with just these mods it&apos;s 7 times slower than if it was just RX and nothing else.</span>
             </AccordionItem>
             <AccordionItem key="4" aria-label="PP" title="Where are those pp values coming from?">
-              <span className="text-sm">Website uses <Link isExternal size="sm" href="https://github.com/ppy/osu/blob/master/osu.Game.Rulesets.Osu/Difficulty/OsuDifficultyCalculator.cs#L60">official</Link> <Link isExternal size="sm" href="https://github.com/ppy/osu/blob/master/osu.Game.Rulesets.Osu/Difficulty/OsuPerformanceCalculator.cs#L57">pp system</Link> with the newest changes merged in.</span>
+              <span className="text-sm">Website uses <Link isExternal size="sm" href="https://github.com/ppy/osu/blob/47aa2c2bfc57d1cba893d2a78a538cf739ae8329/osu.Game.Rulesets.Osu/Difficulty/OsuDifficultyCalculator.cs#L60">official</Link> <Link isExternal size="sm" href="https://github.com/ppy/osu/blob/47aa2c2bfc57d1cba893d2a78a538cf739ae8329/osu.Game.Rulesets.Osu/Difficulty/OsuPerformanceCalculator.cs#L99">pp system</Link> with the newest changes merged in.</span>
             </AccordionItem>
           </Accordion>
         </CardBody>
