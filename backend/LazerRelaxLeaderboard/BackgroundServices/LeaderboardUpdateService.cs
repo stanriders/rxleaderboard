@@ -15,6 +15,7 @@ public class LeaderboardUpdateService : BackgroundService
     private readonly ILogger<LeaderboardUpdateService> _logger;
     private readonly int _interval;
     private readonly int _batchSize;
+    private readonly string _cachePath;
 
     public LeaderboardUpdateService(IOsuApiProvider osuApiProvider, IConfiguration configuration, ILogger<LeaderboardUpdateService> logger, IServiceScopeFactory serviceScopeFactory)
     {
@@ -23,6 +24,7 @@ public class LeaderboardUpdateService : BackgroundService
         _serviceScopeFactory = serviceScopeFactory;
         _interval = int.Parse(configuration["ScoreQueryInterval"]!);
         _batchSize = int.Parse(configuration["ScoreQueryBatch"]!);
+        _cachePath = configuration["BeatmapCachePath"]!;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -51,7 +53,7 @@ public class LeaderboardUpdateService : BackgroundService
                     return;
                 }
 
-                var existingMaps = await context.Scores.AsNoTracking()
+                var scoredMaps = await context.Scores.AsNoTracking()
                     .Include(x => x.Beatmap)
                     .Where(x => x.Beatmap != null && x.Beatmap.ScoresUpdatedOn < DateTime.UtcNow.AddDays(-7))
                     .GroupBy(x=> x.BeatmapId)
@@ -62,23 +64,34 @@ public class LeaderboardUpdateService : BackgroundService
                 var scorelessMaps = await context.Beatmaps.AsNoTracking()
                     .Where(x => x.ScoresUpdatedOn < DateTime.UtcNow.AddDays(-7))
                     .Select(x => x.Id)
-                    .Where(x => !existingMaps.Contains(x))
+                    .Where(x => !scoredMaps.Contains(x))
                     .ToArrayAsync(cancellationToken: stoppingToken);
 
-                /*var newMaps = (await File.ReadAllLinesAsync($"{_cachePath}/list.txt", stoppingToken))
-                    .Select(x => int.Parse(x[..^4]))
-                    .ToArray();*/
+                var existingMaps = scoredMaps.Concat(scorelessMaps.OrderBy(_ => Random.Shared.Next())).ToArray();
 
-                var totalMaps = existingMaps.Concat(scorelessMaps.OrderBy(_ => Random.Shared.Next())).ToArray();
+                // todo: how long will it take to enumerate all new maps?..
+                //       how do we process broken maps?
+                //       how to prefilter minigames???
+                /*var newMaps = Directory.EnumerateFiles(_cachePath, "*.osu")
+                    .Select(x => int.Parse(x[..^4]))
+                    .Where(x => !existingMaps.Contains(x))
+                    .ToArray();
+
+                // process new maps first
+                var totalMaps = newMaps.Concat(existingMaps).ToArray();*/
+
+                var totalMaps = existingMaps;
 
                 for (var i = 0; i < totalMaps.Length; i += _batchSize)
                 {
                     _logger.LogInformation("Starting new batch of {BatchSize} ({Current}/{Total})", _batchSize, i, totalMaps.Length);
 
+                    var collectedScores = 0;
+
                     // we're catching score collection exceptions separately to run beatmap/pp population regardless of its fails
                     try
                     {
-                        await CollectScores(totalMaps.Skip(i).Take(_batchSize).ToArray(), context);
+                        collectedScores = await CollectScores(totalMaps.Skip(i).Take(_batchSize).ToArray(), context);
                     }
                     catch (Exception ex)
                     {
@@ -86,9 +99,14 @@ public class LeaderboardUpdateService : BackgroundService
                     }
 
                     await ppService.PopulateStarRatings();
-                    await ppService.PopulateScores();
-                    await ppService.CleanupScores();
-                    await ppService.RecalculatePlayersPp();
+
+                    // no real need to waste time on processing all these if we collected zero new scores
+                    if (collectedScores > 0)
+                    {
+                        await ppService.PopulateScores();
+                        await ppService.CleanupScores();
+                        await ppService.RecalculatePlayersPp();
+                    }
                 }
             }
             catch (Exception ex)
@@ -103,8 +121,10 @@ public class LeaderboardUpdateService : BackgroundService
 #endif
     }
 
-    public async Task CollectScores(int[] maps, DatabaseContext databaseContext)
+    public async Task<int> CollectScores(int[] maps, DatabaseContext databaseContext)
     {
+        var collectedScores = 0;
+
         foreach (var mapId in maps)
         {
             _logger.LogInformation("Processing {MapId}...", mapId);
@@ -255,6 +275,8 @@ public class LeaderboardUpdateService : BackgroundService
                         TotalScore = score.TotalScore,
                         UserId = score.User.Id,
                     });
+
+                    collectedScores++;
                 }
 
                 await Task.Delay(_interval);
@@ -262,5 +284,7 @@ public class LeaderboardUpdateService : BackgroundService
 
             await databaseContext.SaveChangesAsync();
         }
+
+        return collectedScores;
     }
 }
