@@ -2,8 +2,6 @@
 using LazerRelaxLeaderboard.OsuApi.Interfaces;
 using LazerRelaxLeaderboard.OsuApi.Models;
 using Microsoft.EntityFrameworkCore;
-using osu.Game.Online.API;
-using System.Text.Json;
 using LazerRelaxLeaderboard.Services;
 
 namespace LazerRelaxLeaderboard.BackgroundServices;
@@ -16,6 +14,7 @@ public class LeaderboardUpdateService : BackgroundService
     private readonly int _interval;
     private readonly int _batchSize;
     private readonly string _cachePath;
+    private readonly bool _enableProcessing;
 
     public LeaderboardUpdateService(IOsuApiProvider osuApiProvider, IConfiguration configuration, ILogger<LeaderboardUpdateService> logger, IServiceScopeFactory serviceScopeFactory)
     {
@@ -25,13 +24,18 @@ public class LeaderboardUpdateService : BackgroundService
         _interval = int.Parse(configuration["ScoreQueryInterval"]!);
         _batchSize = int.Parse(configuration["ScoreQueryBatch"]!);
         _cachePath = configuration["BeatmapCachePath"]!;
+        _enableProcessing = bool.Parse(configuration["EnableScoreProcessing"]!);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-#if DEBUG
-        _logger.LogWarning("LeaderboardUpdateService won't execute on DEBUG");
-#else
+        if (!_enableProcessing)
+        {
+            _logger.LogWarning("LeaderboardUpdateService is disabled");
+
+            return;
+        }
+
         while (!stoppingToken.IsCancellationRequested)
         {
             _logger.LogInformation("Starting LeaderboardUpdateService loop...");
@@ -260,10 +264,10 @@ public class LeaderboardUpdateService : BackgroundService
                         Accuracy = score.Accuracy,
                         BeatmapId = score.BeatmapId,
                         Combo = score.Combo,
-                        Count100 = score.Statistics.Count100,
+                        Count100 = score.Statistics.Count100 ?? 0,
                         Count300 = score.Statistics.Count300,
-                        Count50 = score.Statistics.Count50,
-                        CountMiss = score.Statistics.CountMiss,
+                        Count50 = score.Statistics.Count50 ?? 0,
+                        CountMiss = score.Statistics.CountMiss ?? 0,
                         SliderEnds = score.Statistics.SliderEnds,
                         SliderTicks = score.Statistics.SliderTicks,
                         SpinnerBonus = score.Statistics.SpinnerBonus,
