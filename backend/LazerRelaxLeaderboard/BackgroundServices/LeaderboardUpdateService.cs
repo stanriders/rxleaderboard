@@ -136,6 +136,7 @@ public class LeaderboardUpdateService : BackgroundService
             if (dbBeatmap != null)
             {
                 dbBeatmap.ScoresUpdatedOn = DateTime.UtcNow;
+                databaseContext.Beatmaps.Update(dbBeatmap);
                 // don't save here, only save the date together with scores
             }
             //else BRING BACK AFTER ALL MINIGAME MAPS ARE GONE
