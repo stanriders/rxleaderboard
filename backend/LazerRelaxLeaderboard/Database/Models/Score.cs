@@ -48,6 +48,10 @@ namespace LazerRelaxLeaderboard.Database.Models
         
         public required int? SliderEnds { get; set; }
 
+        public required int? LegacySliderEndMisses { get; set; }
+
+        public required int? SliderTickMisses { get; set; }
+
         public double? Pp { get; set; }
     }
 }

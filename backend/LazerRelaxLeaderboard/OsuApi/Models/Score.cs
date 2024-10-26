@@ -39,31 +39,37 @@ namespace LazerRelaxLeaderboard.OsuApi.Models
         public class ScoreStatistics
         {
             [JsonPropertyName("meh")]
-            public int Count50 { get; set; }
+            public int? Count50 { get; set; }
 
             [JsonPropertyName("ok")]
-            public int Count100 { get; set; }
+            public int? Count100 { get; set; }
 
             [JsonPropertyName("great")]
             public int Count300 { get; set; }
 
             [JsonPropertyName("miss")]
-            public int CountMiss { get; set; }
+            public int? CountMiss { get; set; }
 
             [JsonPropertyName("large_bonus")]
-            public int SpinnerBonus { get; set; }
+            public int? SpinnerBonus { get; set; }
 
             [JsonPropertyName("small_bonus")]
-            public int SpinnerSpins { get; set; }
+            public int? SpinnerSpins { get; set; }
 
             [JsonPropertyName("small_tick_hit")]
-            public int LegacySliderEnds { get; set; }
+            public int? LegacySliderEnds { get; set; }
+
+            [JsonPropertyName("small_tick_mss")]
+            public int? LegacySliderEndMisses { get; set; }
 
             [JsonPropertyName("large_tick_hit")]
-            public int SliderTicks { get; set; }
+            public int? SliderTicks { get; set; }
+
+            [JsonPropertyName("large_tick_miss")]
+            public int? SliderTickMisses { get; set; }
 
             [JsonPropertyName("slider_tail_hit")]
-            public int SliderEnds { get; set; }
+            public int? SliderEnds { get; set; }
         }
     }
 }

@@ -272,6 +272,8 @@ public class LeaderboardUpdateService : BackgroundService
                         SpinnerBonus = score.Statistics.SpinnerBonus,
                         SpinnerSpins = score.Statistics.SpinnerSpins,
                         LegacySliderEnds = score.Statistics.LegacySliderEnds,
+                        LegacySliderEndMisses = score.Statistics.LegacySliderEndMisses,
+                        SliderTickMisses = score.Statistics.SliderTickMisses,
                         Date = score.Date,
                         Grade = score.Grade,
                         Mods = score.Mods.Select(Utils.ModToString).ToArray(),

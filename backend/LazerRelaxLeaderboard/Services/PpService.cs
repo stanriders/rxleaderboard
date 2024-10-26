@@ -115,6 +115,16 @@ public class PpService : IPpService
                             scoreInfo.Statistics.Add(HitResult.SmallTickHit, score.LegacySliderEnds.Value);
                         }
 
+                        if (score.LegacySliderEndMisses != null)
+                        {
+                            scoreInfo.Statistics.Add(HitResult.SmallTickMiss, score.LegacySliderEndMisses.Value);
+                        }
+
+                        if (score.SliderTickMisses != null)
+                        {
+                            scoreInfo.Statistics.Add(HitResult.LargeTickMiss, score.SliderTickMisses.Value);
+                        }
+
                         var performanceAttributes = performanceCalculator.Calculate(scoreInfo, difficultyAttributes);
 
                         if (score.Pp != performanceAttributes.Total)
@@ -310,6 +320,16 @@ public class PpService : IPpService
         if (score.LegacySliderEnds != null)
         {
             scoreInfo.Statistics.Add(HitResult.SmallTickHit, score.LegacySliderEnds.Value);
+        }
+
+        if (score.LegacySliderEndMisses != null)
+        {
+            scoreInfo.Statistics.Add(HitResult.SmallTickMiss, score.LegacySliderEndMisses.Value);
+        }
+
+        if (score.SliderTickMisses != null)
+        {
+            scoreInfo.Statistics.Add(HitResult.LargeTickMiss, score.SliderTickMisses.Value);
         }
 
         var performanceAttributes = performanceCalculator.Calculate(scoreInfo, difficultyAttributes);
