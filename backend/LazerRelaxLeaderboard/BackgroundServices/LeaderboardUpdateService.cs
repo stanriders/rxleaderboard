@@ -122,7 +122,6 @@ public class LeaderboardUpdateService : BackgroundService
 
             await Task.Delay(5000, stoppingToken);
         }
-#endif
     }
 
     public async Task<int> CollectScores(int[] maps, DatabaseContext databaseContext)
