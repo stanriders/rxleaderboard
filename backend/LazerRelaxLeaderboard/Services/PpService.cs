@@ -2,7 +2,9 @@
 using LazerRelaxLeaderboard.Database;
 using LazerRelaxLeaderboard.OsuApi.Interfaces;
 using LazerRelaxLeaderboard.OsuApi.Models;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.EntityFrameworkCore;
+using NuGet.Common;
 using osu.Game.Beatmaps;
 using osu.Game.Rulesets;
 using osu.Game.Rulesets.Mods;
@@ -52,14 +54,13 @@ public class PpService : IPpService
             var batch = mapScores.Skip(i).Take(500).ToList();
 
             var queryBuilder = new ConcurrentBag<string>();
-            await Parallel.ForEachAsync(batch, (mapGroup, _) =>
+            await Parallel.ForEachAsync(batch, async (mapGroup, token) =>
             {
                 var mapPath = $"{_cachePath}/{mapGroup.Key}.osu";
                 if (!File.Exists(mapPath))
                 {
                     _logger.LogError("Couldn't populate score pp - map {Map} file doesn't exist!", mapGroup.Key);
-
-                    return ValueTask.CompletedTask;
+                    return;
                 }
 
                 var workingBeatmap = new FlatWorkingBeatmap(mapPath);
@@ -131,10 +132,23 @@ public class PpService : IPpService
                         {
                             queryBuilder.Add($"UPDATE \"Scores\" SET \"Pp\" = {performanceAttributes.Total} WHERE \"Id\" = {score.Id};");
                         }
+
+                        // todo: probably very slow??
+                        var bestScoreOnMap = await _databaseContext.Scores.AsNoTracking()
+                            .Where(x => x.BeatmapId == mapGroup.Key && x.UserId == score.UserId)
+                            .OrderByDescending(x => x.Pp)
+                            .FirstOrDefaultAsync(token);
+
+                        if (bestScoreOnMap != null)
+                        {
+                            queryBuilder.Add($"UPDATE \"Scores\" SET \"IsBest\" = {bestScoreOnMap.Pp <= performanceAttributes.Total} WHERE \"Id\" = {score.Id};");
+                        }
+                        else
+                        {
+                            queryBuilder.Add($"UPDATE \"Scores\" SET \"IsBest\" = true WHERE \"Id\" = {score.Id};");
+                        }
                     }
                 }
-
-                return ValueTask.CompletedTask;
             });
 
             _logger.LogInformation("Populating scores pp - saving batch of {Total} updates", queryBuilder.Count);
@@ -337,8 +351,23 @@ public class PpService : IPpService
         if (score.Pp != performanceAttributes.Total)
         {
             score.Pp = performanceAttributes.Total;
-            _databaseContext.Scores.Update(score);
         }
+        
+        var bestScoreOnMap = await _databaseContext.Scores.AsNoTracking()
+            .Where(x => x.BeatmapId == score.BeatmapId && x.UserId == score.UserId)
+            .OrderByDescending(x => x.Pp)
+            .FirstOrDefaultAsync();
+
+        if (bestScoreOnMap != null)
+        {
+            score.IsBest = bestScoreOnMap.Pp < score.Pp;
+        }
+        else
+        {
+            score.IsBest = true;
+        }
+
+        _databaseContext.Scores.Update(score);
 
         await _databaseContext.SaveChangesAsync();
     }

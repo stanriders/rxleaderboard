@@ -36,6 +36,7 @@ namespace LazerRelaxLeaderboard.Controllers
         {
             return await _databaseContext.Scores.AsNoTracking()
                 .Where(x => x.Pp != null)
+                .Where(x => x.IsBest)
                 .Include(x => x.Beatmap)
                 .Include(x => x.User)
                 .OrderByDescending(x => x.Pp)
@@ -267,7 +268,7 @@ namespace LazerRelaxLeaderboard.Controllers
                     Username = osuScore.User.Username
                 });
             }
-
+            
             await _databaseContext.Scores.AddAsync(new Score
             {
                 Id = osuScore.Id,
@@ -290,6 +291,7 @@ namespace LazerRelaxLeaderboard.Controllers
                 Mods = osuScore.Mods.Select(Utils.ModToString).ToArray(),
                 TotalScore = osuScore.TotalScore,
                 UserId = osuScore.User.Id,
+                IsBest = false
             });
 
             await _databaseContext.SaveChangesAsync();

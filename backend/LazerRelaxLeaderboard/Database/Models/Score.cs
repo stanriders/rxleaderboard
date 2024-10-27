@@ -53,5 +53,7 @@ namespace LazerRelaxLeaderboard.Database.Models
         public required int? SliderTickMisses { get; set; }
 
         public double? Pp { get; set; }
+
+        public required bool IsBest { get; set; }
     }
 }

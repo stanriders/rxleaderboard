@@ -280,6 +280,7 @@ public class LeaderboardUpdateService : BackgroundService
                         Mods = score.Mods.Select(Utils.ModToString).ToArray(),
                         TotalScore = score.TotalScore,
                         UserId = score.User.Id,
+                        IsBest = false
                     });
 
                     collectedScores++;
