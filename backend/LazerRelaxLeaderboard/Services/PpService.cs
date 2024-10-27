@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using LazerRelaxLeaderboard.Database;
 using LazerRelaxLeaderboard.OsuApi.Interfaces;
 using LazerRelaxLeaderboard.OsuApi.Models;
@@ -181,7 +182,8 @@ public class PpService : IPpService
 
     public async Task RecalculatePlayersPp()
     {
-        _logger.LogInformation("Recalculating all players pp...");
+        _logger.LogInformation("Recalculating all players total pp...");
+        var stopwatch = Stopwatch.StartNew();
 
         var playerCount = await _databaseContext.Users.CountAsync();
         for (var i = 0; i < playerCount; i += 100)
@@ -204,6 +206,9 @@ public class PpService : IPpService
         }
 
         await _databaseContext.SaveChangesAsync();
+
+        _logger.LogInformation("Recalculating all players total pp done! Took {Elapsed}", stopwatch.Elapsed);
+        
     }
 
     public async Task RecalculatePlayerPp(int id)
@@ -228,6 +233,7 @@ public class PpService : IPpService
         var maps = await _databaseContext.Beatmaps.ToListAsync();
 
         _logger.LogInformation("Recalculating all maps sr - {Total} maps total", maps.Count);
+        var stopwatch = Stopwatch.StartNew();
 
         await Parallel.ForEachAsync(maps, (map, cancellationToken) =>
         {
@@ -254,12 +260,13 @@ public class PpService : IPpService
 
         await _databaseContext.SaveChangesAsync();
 
-        _logger.LogInformation("Recalculating all maps sr done!");
+        _logger.LogInformation("Recalculating all maps sr done! Took {Elapsed}", stopwatch.Elapsed);
     }
 
     public async Task RecalculateBestScores()
     {
         _logger.LogInformation("Recalculating all best scores started...");
+        var stopwatch = Stopwatch.StartNew();
 
         var scoreGroups = await _databaseContext.Scores.GroupBy(x => new { x.BeatmapId, x.UserId }).ToArrayAsync();
         foreach (var scoreGroup in scoreGroups)
@@ -282,7 +289,8 @@ public class PpService : IPpService
 
         await _databaseContext.SaveChangesAsync();
 
-        _logger.LogInformation("Recalculating all best scores done!");
+        stopwatch.Stop();
+        _logger.LogInformation("Recalculating all best scores done! Took {Elapsed}", stopwatch.Elapsed);
     }
 
     public async Task PopulateScorePp(long id)
