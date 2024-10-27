@@ -41,6 +41,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/scores/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["Score"];
+                        "application/json": components["schemas"]["Score"];
+                        "text/json": components["schemas"]["Score"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/players": {
         parameters: {
             query?: never;
@@ -391,7 +430,6 @@ export interface components {
             status: components["schemas"]["BeatmapStatus"];
             /** Format: int32 */
             maxCombo: number;
-            scores?: components["schemas"]["Score"][] | null;
         };
         /**
          * Format: int32
@@ -459,8 +497,13 @@ export interface components {
             sliderTicks: number | null;
             /** Format: int32 */
             sliderEnds: number | null;
+            /** Format: int32 */
+            legacySliderEndMisses: number | null;
+            /** Format: int32 */
+            sliderTickMisses: number | null;
             /** Format: double */
             pp?: number | null;
+            isBest: boolean;
         };
         StatsResponse: {
             /** Format: int32 */
