@@ -132,4 +132,17 @@ public class AdminController : ControllerBase
 
         return Ok();
     }
+
+    [HttpPost("recalculateBestScores")]
+    public async Task<IActionResult> RecalculateBests()
+    {
+        if (!_authService.Authorize(HttpContext))
+        {
+            return Unauthorized();
+        }
+
+        await _ppService.RecalculateBestScores();
+
+        return Ok();
+    }
 }

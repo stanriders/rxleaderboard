@@ -54,13 +54,14 @@ public class PpService : IPpService
             var batch = mapScores.Skip(i).Take(500).ToList();
 
             var queryBuilder = new ConcurrentBag<string>();
-            await Parallel.ForEachAsync(batch, async (mapGroup, token) =>
+            await Parallel.ForEachAsync(batch, (mapGroup, _) =>
             {
                 var mapPath = $"{_cachePath}/{mapGroup.Key}.osu";
                 if (!File.Exists(mapPath))
                 {
                     _logger.LogError("Couldn't populate score pp - map {Map} file doesn't exist!", mapGroup.Key);
-                    return;
+
+                    return ValueTask.CompletedTask;
                 }
 
                 var workingBeatmap = new FlatWorkingBeatmap(mapPath);
@@ -132,23 +133,10 @@ public class PpService : IPpService
                         {
                             queryBuilder.Add($"UPDATE \"Scores\" SET \"Pp\" = {performanceAttributes.Total} WHERE \"Id\" = {score.Id};");
                         }
-
-                        // todo: probably very slow??
-                        var bestScoreOnMap = await _databaseContext.Scores.AsNoTracking()
-                            .Where(x => x.BeatmapId == mapGroup.Key && x.UserId == score.UserId)
-                            .OrderByDescending(x => x.Pp)
-                            .FirstOrDefaultAsync(token);
-
-                        if (bestScoreOnMap != null)
-                        {
-                            queryBuilder.Add($"UPDATE \"Scores\" SET \"IsBest\" = {bestScoreOnMap.Pp <= performanceAttributes.Total} WHERE \"Id\" = {score.Id};");
-                        }
-                        else
-                        {
-                            queryBuilder.Add($"UPDATE \"Scores\" SET \"IsBest\" = true WHERE \"Id\" = {score.Id};");
-                        }
                     }
                 }
+
+                return ValueTask.CompletedTask;
             });
 
             _logger.LogInformation("Populating scores pp - saving batch of {Total} updates", queryBuilder.Count);
@@ -269,6 +257,32 @@ public class PpService : IPpService
         _logger.LogInformation("Recalculating all maps sr done!");
     }
 
+    public async Task RecalculateBestScores()
+    {
+        _logger.LogInformation("Recalculating all best scores started...");
+
+        var scoreGroups = await _databaseContext.Scores.OrderByDescending(x=> x.Pp).GroupBy(x => new { x.BeatmapId, x.UserId }).ToArrayAsync();
+        foreach (var scoreGroup in scoreGroups)
+        {
+            var bestScore = scoreGroup.MaxBy(x => x.Pp);
+            if (bestScore != null)
+            {
+                bestScore.IsBest = true;
+                _databaseContext.Scores.Update(bestScore);
+            }
+
+            foreach (var notBestScore in scoreGroup.Skip(1))
+            {
+                notBestScore.IsBest = false;
+                _databaseContext.Scores.Update(notBestScore);
+            }
+        }
+
+        await _databaseContext.SaveChangesAsync();
+
+        _logger.LogInformation("Recalculating all best scores done!");
+    }
+
     public async Task PopulateScorePp(long id)
     {
         var score = await _databaseContext.Scores.FindAsync(id);
@@ -351,24 +365,9 @@ public class PpService : IPpService
         if (score.Pp != performanceAttributes.Total)
         {
             score.Pp = performanceAttributes.Total;
+            _databaseContext.Scores.Update(score);
         }
         
-        var bestScoreOnMap = await _databaseContext.Scores.AsNoTracking()
-            .Where(x => x.BeatmapId == score.BeatmapId && x.UserId == score.UserId)
-            .OrderByDescending(x => x.Pp)
-            .FirstOrDefaultAsync();
-
-        if (bestScoreOnMap != null)
-        {
-            score.IsBest = bestScoreOnMap.Pp < score.Pp;
-        }
-        else
-        {
-            score.IsBest = true;
-        }
-
-        _databaseContext.Scores.Update(score);
-
         await _databaseContext.SaveChangesAsync();
     }
 

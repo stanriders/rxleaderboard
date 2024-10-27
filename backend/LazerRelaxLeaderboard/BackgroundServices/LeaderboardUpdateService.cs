@@ -109,6 +109,7 @@ public class LeaderboardUpdateService : BackgroundService
                     {
                         await ppService.PopulateScores();
                         await ppService.CleanupScores();
+                        await ppService.RecalculateBestScores();
                         await ppService.RecalculatePlayersPp();
                     }
                 }
