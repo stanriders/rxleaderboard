@@ -43,6 +43,12 @@ namespace LazerRelaxLeaderboard.Controllers
                 .ToListAsync();
         }
 
+        [HttpGet("/scores/{id}")]
+        public async Task<Score?> GetScore(long id)
+        {
+            return await _databaseContext.Scores.AsNoTracking().FirstOrDefaultAsync(x=> x.Id == id);
+        }
+
         [HttpGet("/players")]
         public async Task<PlayersResult> GetTopPlayers(int page = 1, string? search = null)
         {
