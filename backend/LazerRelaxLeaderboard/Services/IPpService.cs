@@ -8,6 +8,7 @@ public interface IPpService
     Task RecalculatePlayerPp(int id);
     Task RecalculateStarRatings();
     Task RecalculateBestScores();
+    Task RecalculateBestScores(int mapId, int userId);
     Task PopulateScorePp(long id);
     Task CleanupScores();
 }

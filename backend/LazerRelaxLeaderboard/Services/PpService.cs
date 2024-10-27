@@ -3,14 +3,11 @@ using System.Diagnostics;
 using LazerRelaxLeaderboard.Database;
 using LazerRelaxLeaderboard.OsuApi.Interfaces;
 using LazerRelaxLeaderboard.OsuApi.Models;
-using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.EntityFrameworkCore;
-using NuGet.Common;
 using osu.Game.Beatmaps;
 using osu.Game.Rulesets;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Osu;
-using osu.Game.Rulesets.Osu.Beatmaps;
 using osu.Game.Rulesets.Osu.Mods;
 using osu.Game.Rulesets.Scoring;
 using osu.Game.Scoring;
@@ -291,6 +288,29 @@ public class PpService : IPpService
 
         stopwatch.Stop();
         _logger.LogInformation("Recalculating all best scores done! Took {Elapsed}", stopwatch.Elapsed);
+    }
+
+    public async Task RecalculateBestScores(int mapId, int userId)
+    {
+        var scores = await _databaseContext.Scores
+            .Where(x => x.UserId == userId && x.BeatmapId == mapId)
+            .OrderByDescending(x => x.Pp)
+            .ToArrayAsync();
+
+        var bestScore = scores.FirstOrDefault();
+        if (bestScore != null)
+        {
+            bestScore.IsBest = true;
+            _databaseContext.Scores.Update(bestScore);
+        }
+
+        foreach (var notBestScore in scores.Skip(1))
+        {
+            notBestScore.IsBest = false;
+            _databaseContext.Scores.Update(notBestScore);
+        }
+
+        await _databaseContext.SaveChangesAsync();
     }
 
     public async Task PopulateScorePp(long id)

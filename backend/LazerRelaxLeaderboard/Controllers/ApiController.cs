@@ -300,7 +300,7 @@ namespace LazerRelaxLeaderboard.Controllers
             if (dbBeatmap.Status != BeatmapStatus.Loved)
             {
                 await _ppService.PopulateScorePp(id);
-                await _ppService.RecalculateBestScores();
+                await _ppService.RecalculateBestScores(osuScore.BeatmapId, osuScore.User.Id);
                 await _ppService.RecalculatePlayerPp(osuScore.User.Id);
             }
 
