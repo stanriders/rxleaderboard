@@ -14,7 +14,7 @@ type Props = { score: ScoreModel, showPlayer: boolean };
 export const Score: FC<Props> = (props) => {
   const score = props.score;
   const beatmap = score.beatmap as BeatmapModel;
-
+  const opacity = score.isBest ? "opacity-100" : "opacity-30 hover:opacity-70";
   return (
     <Card className="min-w-72" fullWidth key={score.id}>
       {props.showPlayer ? (
@@ -26,7 +26,7 @@ export const Score: FC<Props> = (props) => {
         </>) : 
         <></>}
       
-      <CardBody className="p-2">
+      <CardBody className={`p-2 ${opacity}`}>
         <div className="flex gap-2 items-center justify-center">
           <div className="hidden md:block flex-none text-center w-10"><Link isExternal className="text-default-400 text-lg" href={`https://osu.ppy.sh/scores/${score.id}`}>{score.grade}</Link></div>
           <div className="flex flex-col flex-auto min-w-1">

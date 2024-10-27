@@ -261,17 +261,19 @@ public class PpService : IPpService
     {
         _logger.LogInformation("Recalculating all best scores started...");
 
-        var scoreGroups = await _databaseContext.Scores.OrderByDescending(x=> x.Pp).GroupBy(x => new { x.BeatmapId, x.UserId }).ToArrayAsync();
+        var scoreGroups = await _databaseContext.Scores.GroupBy(x => new { x.BeatmapId, x.UserId }).ToArrayAsync();
         foreach (var scoreGroup in scoreGroups)
         {
-            var bestScore = scoreGroup.MaxBy(x => x.Pp);
+            var sortedScores = scoreGroup.OrderByDescending(x => x.Pp).ToArray();
+
+            var bestScore = sortedScores.FirstOrDefault();
             if (bestScore != null)
             {
                 bestScore.IsBest = true;
                 _databaseContext.Scores.Update(bestScore);
             }
 
-            foreach (var notBestScore in scoreGroup.Skip(1))
+            foreach (var notBestScore in sortedScores.Skip(1))
             {
                 notBestScore.IsBest = false;
                 _databaseContext.Scores.Update(notBestScore);
