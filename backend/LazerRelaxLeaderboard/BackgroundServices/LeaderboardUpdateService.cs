@@ -50,13 +50,6 @@ public class LeaderboardUpdateService : BackgroundService
                     return;
                 }
 
-                var ppService = loopScope.ServiceProvider.GetService<IPpService>();
-                if (ppService == null)
-                {
-                    _logger.LogError("Couldn't get a pp service instance!");
-                    return;
-                }
-
                 var scoredMaps = await context.Scores.AsNoTracking()
                     .Include(x => x.Beatmap)
                     .Where(x => x.Beatmap != null && x.Beatmap.ScoresUpdatedOn < DateTime.UtcNow.AddDays(-7))
@@ -89,6 +82,14 @@ public class LeaderboardUpdateService : BackgroundService
                 for (var i = 0; i < totalMaps.Length; i += _batchSize)
                 {
                     _logger.LogInformation("Starting new batch of {BatchSize} ({Current}/{Total})", _batchSize, i, totalMaps.Length);
+
+                    using var batchScope = _serviceScopeFactory.CreateScope();
+                    var ppService = batchScope.ServiceProvider.GetService<IPpService>();
+                    if (ppService == null)
+                    {
+                        _logger.LogError("Couldn't get a pp service instance!");
+                        return;
+                    }
 
                     var collectedScores = 0;
 
