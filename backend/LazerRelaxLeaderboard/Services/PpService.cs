@@ -47,9 +47,9 @@ public class PpService : IPpService
 
         _logger.LogInformation("Populating pp - {Total} total maps", mapScores.Count);
 
-        for (var i = 0; i < mapScores.Count; i += 500)
+        for (var i = 0; i < mapScores.Count; i += 100)
         {
-            var batch = mapScores.Skip(i).Take(500).ToList();
+            var batch = mapScores.Skip(i).Take(100).ToList();
 
             var queryBuilder = new ConcurrentBag<string>();
             await Parallel.ForEachAsync(batch, (mapGroup, _) =>
