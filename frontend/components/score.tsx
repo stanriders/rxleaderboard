@@ -40,7 +40,7 @@ export const Score: FC<Props> = (props) => {
           <Tooltip showArrow={true} content={score.pp?.toFixed(4)} delay={300}><div className="hidden md:block flex-none text-primary-300 items-center text-center w-24 text-lg font-semibold">{score.pp?.toFixed(0) ?? (<>- </>)}pp</div></Tooltip>
         </div>
       </CardBody>
-      <CardFooter className="md:hidden flex gap-2 items-center justify-center">
+      <CardFooter className={`md:hidden flex gap-2 items-center justify-center ${opacity}`}>
         <div className="flex-none text-center w-10"><Link isExternal className="text-default-400 text-md" href={`https://osu.ppy.sh/scores/${score.id}`}>{score.grade}</Link></div>
         <div className="flex-auto text-default-500 text-right text-sm">{score.mods?.map(m => <Mod key={m} mod={m}/>)}</div>
         <div className="flex-none text-default-500 text-center text-sm">{(score.accuracy * 100)?.toFixed(2) ?? (<>- </>)}%</div>
