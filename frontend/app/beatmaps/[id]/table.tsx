@@ -5,6 +5,7 @@ import { User } from "@/components/user";
 import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "@nextui-org/table";
 import { Mod } from "@/components/mod";
 import { formatDistance } from "date-fns";
+import { Tooltip } from "@nextui-org/react";
 
 type Props = { scores: ScoreModel[] };
 
@@ -26,11 +27,11 @@ export const BeatmapPageTable: FC<Props> = (props) => {
           <TableColumn align="end">Mods</TableColumn>
           <TableColumn width={85} align="center">Accuracy</TableColumn>
           <TableColumn width={100} align="center">PP</TableColumn>
-          <TableColumn width={100} align="center">Date</TableColumn>
+          <TableColumn width={110} align="center">Date</TableColumn>
         </TableHeader>
         <TableBody>
           {props.scores.map((row: ScoreModel, index: number) => (
-            <TableRow key={row.id}>
+            <TableRow key={row.id} className={row.isBest ? "opacity-100" : "opacity-30 hover:opacity-70"}>
               <TableCell className="text-default-500">#{index+1}</TableCell>
               <TableCell>{row.grade}</TableCell>
               <TableCell><p className="text-default-500">{row.totalScore}</p></TableCell>
@@ -43,7 +44,7 @@ export const BeatmapPageTable: FC<Props> = (props) => {
               <TableCell><p className="text-default-500">{row.mods?.map(m => <Mod key={m} mod={m}/>)}</p></TableCell>
               <TableCell><p className="text-default-500">{(row.accuracy * 100)?.toFixed(2) ?? (<>-</>)}%</p></TableCell>
               <TableCell className="text-primary-300 font-semibold">{row.pp === null ? "-" : row.pp?.toFixed(1)}</TableCell>
-              <TableCell className="text-default-500">{formatDistance(new Date(row.date), new Date(), { addSuffix: true })}</TableCell>
+              <TableCell className="text-default-500 text-xs"><Tooltip showArrow content={new Date(row.date).toLocaleString()}>{formatDistance(new Date(row.date), new Date(), { addSuffix: true })}</Tooltip></TableCell>
             </TableRow>
           ))}
         </TableBody>
