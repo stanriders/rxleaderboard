@@ -11,6 +11,7 @@ using osu.Game.Rulesets.Osu;
 using osu.Game.Rulesets.Osu.Mods;
 using osu.Game.Rulesets.Scoring;
 using osu.Game.Scoring;
+using osu.Game.Screens.Play;
 
 namespace LazerRelaxLeaderboard.Services;
 
@@ -205,7 +206,35 @@ public class PpService : IPpService
         await _databaseContext.SaveChangesAsync();
 
         _logger.LogInformation("Recalculating all players total pp done! Took {Elapsed}", stopwatch.Elapsed);
-        
+    }
+
+    public async Task RecalculatePlayersPp(List<int> playerIds)
+    {
+        _logger.LogInformation("Recalculating {Count} players total pp...", playerIds.Count);
+        var stopwatch = Stopwatch.StartNew();
+
+        for (var i = 0; i < playerIds.Count; i += 100)
+        {
+            var players = await _databaseContext.Users
+                .Where(x=> playerIds.Contains(x.Id))
+                .Skip(i)
+                .Take(100)
+                .ToListAsync();
+
+            foreach (var player in players)
+            {
+                if (await RecalculatePlayerPp(player))
+                {
+                    _databaseContext.Users.Update(player);
+                }
+            }
+
+            await _databaseContext.SaveChangesAsync();
+        }
+
+        await _databaseContext.SaveChangesAsync();
+
+        _logger.LogInformation("Recalculating {Count} players total pp done! Took {Elapsed}", playerIds.Count, stopwatch.Elapsed);
     }
 
     public async Task RecalculatePlayerPp(int id)
@@ -288,6 +317,40 @@ public class PpService : IPpService
 
         stopwatch.Stop();
         _logger.LogInformation("Recalculating all best scores done! Took {Elapsed}", stopwatch.Elapsed);
+    }
+
+    public async Task RecalculateBestScores(List<int> players)
+    {
+        _logger.LogInformation("Recalculating {Count} players best scores started...", players.Count);
+        var stopwatch = Stopwatch.StartNew();
+
+        var scoreGroups = await _databaseContext.Scores
+            .Where(x=> players.Contains(x.UserId))
+            .GroupBy(x => new { x.BeatmapId, x.UserId })
+            .ToArrayAsync();
+
+        foreach (var scoreGroup in scoreGroups)
+        {
+            var sortedScores = scoreGroup.OrderByDescending(x => x.Pp).ToArray();
+
+            var bestScore = sortedScores.FirstOrDefault();
+            if (bestScore != null)
+            {
+                bestScore.IsBest = true;
+                _databaseContext.Scores.Update(bestScore);
+            }
+
+            foreach (var notBestScore in sortedScores.Skip(1))
+            {
+                notBestScore.IsBest = false;
+                _databaseContext.Scores.Update(notBestScore);
+            }
+        }
+
+        await _databaseContext.SaveChangesAsync();
+
+        stopwatch.Stop();
+        _logger.LogInformation("Recalculating {Count} players best scores done! Took {Elapsed}", players.Count, stopwatch.Elapsed);
     }
 
     public async Task RecalculateBestScores(int mapId, int userId)

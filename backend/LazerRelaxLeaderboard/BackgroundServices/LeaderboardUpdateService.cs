@@ -91,12 +91,12 @@ public class LeaderboardUpdateService : BackgroundService
                         return;
                     }
 
-                    var collectedScores = 0;
+                    (int collectedScores, List<int> affectedPlayers)? collectionResult = null;
 
                     // we're catching score collection exceptions separately to run beatmap/pp population regardless of its fails
                     try
                     {
-                        collectedScores = await CollectScores(totalMaps.Skip(i).Take(_batchSize).ToArray(), context);
+                        collectionResult = await CollectScores(totalMaps.Skip(i).Take(_batchSize).ToArray(), context);
                     }
                     catch (Exception ex)
                     {
@@ -106,12 +106,12 @@ public class LeaderboardUpdateService : BackgroundService
                     await ppService.PopulateStarRatings();
 
                     // no real need to waste time on processing all these if we collected zero new scores
-                    if (collectedScores > 0)
+                    if (collectionResult?.collectedScores > 0)
                     {
                         await ppService.PopulateScores();
                         await ppService.CleanupScores();
-                        await ppService.RecalculateBestScores();
-                        await ppService.RecalculatePlayersPp();
+                        await ppService.RecalculateBestScores(collectionResult.Value.affectedPlayers);
+                        await ppService.RecalculatePlayersPp(collectionResult.Value.affectedPlayers);
                     }
                 }
             }
@@ -126,9 +126,10 @@ public class LeaderboardUpdateService : BackgroundService
         }
     }
 
-    public async Task<int> CollectScores(int[] maps, DatabaseContext databaseContext)
+    public async Task<(int collectedScores, List<int> affectedPlayers)> CollectScores(int[] maps, DatabaseContext databaseContext)
     {
         var collectedScores = 0;
+        var affectedPlayers = new List<int>();
 
         foreach (var mapId in maps)
         {
@@ -285,6 +286,11 @@ public class LeaderboardUpdateService : BackgroundService
                         IsBest = false
                     });
 
+                    if (!affectedPlayers.Contains(score.User.Id))
+                    {
+                        affectedPlayers.Add(score.User.Id);
+                    }
+
                     collectedScores++;
                 }
 
@@ -294,6 +300,6 @@ public class LeaderboardUpdateService : BackgroundService
             await databaseContext.SaveChangesAsync();
         }
 
-        return collectedScores;
+        return (collectedScores, affectedPlayers);
     }
 }
