@@ -64,7 +64,7 @@ export default function RootLayout({ children, }: { children: React.ReactNode; }
               </section>
             </main>
             <footer className="w-full flex items-center justify-center py-3">
-              <p className="text-default-300 text-sm">
+              <p className="text-default-400 text-sm">
                 <Link
                   isExternal
                   size="sm"
@@ -72,6 +72,12 @@ export default function RootLayout({ children, }: { children: React.ReactNode; }
                   href="https://osu.ppy.sh/users/7217455"
                   title="osu! profile"
                 >Made by StanR</Link> | <Link
+                  isExternal
+                  size="sm"
+                  className="gap-1 text-current"
+                  href="https://discord.gg/rKyAMkmv"
+                  title="Discord server"
+                >Discord</Link> | <Link
                   isExternal
                   size="sm"
                   className="gap-1 text-current"
