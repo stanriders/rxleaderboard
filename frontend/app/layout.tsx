@@ -75,7 +75,7 @@ export default function RootLayout({ children, }: { children: React.ReactNode; }
                   isExternal
                   size="sm"
                   className="gap-1 text-current"
-                  href="https://discord.gg/rKyAMkmv"
+                  href="https://discord.gg/p5zqFpBUc2"
                   title="Discord server"
                 >Discord</Link> | <Link
                   isExternal

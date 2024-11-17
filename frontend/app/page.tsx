@@ -8,7 +8,7 @@ export default function Home() {
       <Image src="/rv-yellowlight.svg" alt="Relaxation vault" width={256} height={256}/>
       Relaxation vault - osu!lazer relax leaderboard.
       <Spacer y={12} />
-      <Link className="text-sm" isExternal href="https://discord.gg/rKyAMkmv">Join the Discord server!</Link>
+      <Link className="text-sm" isExternal href="https://discord.gg/p5zqFpBUc2">Join the Discord server!</Link>
     </section>
   );
 }
