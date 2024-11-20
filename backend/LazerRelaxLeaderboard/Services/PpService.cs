@@ -6,6 +6,7 @@ using LazerRelaxLeaderboard.OsuApi.Models;
 using Microsoft.EntityFrameworkCore;
 using osu.Game.Beatmaps;
 using osu.Game.Rulesets;
+using osu.Game.Rulesets.Difficulty;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Osu;
 using osu.Game.Rulesets.Osu.Mods;
@@ -20,13 +21,15 @@ public class PpService : IPpService
     private readonly DatabaseContext _databaseContext;
     private readonly IOsuApiProvider _osuApiProvider;
     private readonly ILogger<IPpService> _logger;
+    private readonly IDiscordService _discordService;
     private readonly string _cachePath;
 
-    public PpService(DatabaseContext databaseContext, ILogger<IPpService> logger, IConfiguration configuration, IOsuApiProvider osuApiProvider)
+    public PpService(DatabaseContext databaseContext, ILogger<IPpService> logger, IConfiguration configuration, IOsuApiProvider osuApiProvider, IDiscordService discordService)
     {
         _databaseContext = databaseContext;
         _logger = logger;
         _osuApiProvider = osuApiProvider;
+        _discordService = discordService;
         _cachePath = configuration["BeatmapCachePath"]!;
     }
 
@@ -47,6 +50,12 @@ public class PpService : IPpService
             .ToListAsync();
 
         _logger.LogInformation("Populating pp - {Total} total maps", mapScores.Count);
+
+        var currentBestPp = await _databaseContext.Scores.AsNoTracking()
+            .Where(x => x.Pp != null)
+            .Select(x => x.Pp)
+            .OrderByDescending(x => x)
+            .FirstOrDefaultAsync();
 
         for (var i = 0; i < mapScores.Count; i += 100)
         {
@@ -145,6 +154,16 @@ public class PpService : IPpService
                 await _databaseContext.Database.ExecuteSqlRawAsync(string.Join('\n', queryBuilder));
             }
         }
+
+        var newBestPp = await _databaseContext.Scores.AsNoTracking()
+            .Where(x => x.Pp != null)
+            .OrderByDescending(x => x.Pp)
+            .FirstOrDefaultAsync();
+
+        if (newBestPp?.Pp > currentBestPp)
+        {
+            await _discordService.PostBestScoreAnnouncement(newBestPp.Id);
+        }
     }
 
     public async Task PopulateStarRatings()
@@ -213,6 +232,12 @@ public class PpService : IPpService
         _logger.LogInformation("Recalculating {Count} players total pp...", playerIds.Count);
         var stopwatch = Stopwatch.StartNew();
 
+        var currentTopPlayerPp = await _databaseContext.Users.AsNoTracking()
+            .Where(x => x.TotalPp != null)
+            .Select(x => x.TotalPp)
+            .OrderByDescending(x => x)
+            .FirstOrDefaultAsync();
+
         for (var i = 0; i < playerIds.Count; i += 100)
         {
             var players = await _databaseContext.Users
@@ -234,6 +259,16 @@ public class PpService : IPpService
 
         await _databaseContext.SaveChangesAsync();
 
+        var newTopPlayer = await _databaseContext.Users.AsNoTracking()
+            .Where(x => x.TotalPp != null)
+            .OrderByDescending(x => x.TotalPp)
+            .FirstOrDefaultAsync();
+
+        if (newTopPlayer?.TotalPp > currentTopPlayerPp)
+        {
+            await _discordService.PostBestPlayerAnnouncement(newTopPlayer.Id);
+        }
+
         _logger.LogInformation("Recalculating {Count} players total pp done! Took {Elapsed}", playerIds.Count, stopwatch.Elapsed);
     }
 
@@ -246,11 +281,22 @@ public class PpService : IPpService
             return;
         }
 
+        var currentTopPlayerPp = await _databaseContext.Users.AsNoTracking()
+                .Where(x => x.TotalPp != null)
+                .Select(x=> x.TotalPp)
+                .OrderByDescending(x=> x)
+                .FirstOrDefaultAsync();
+
         if (await RecalculatePlayerPp(player))
         {
             _databaseContext.Users.Update(player);
 
             await _databaseContext.SaveChangesAsync();
+
+            if (player.TotalPp > currentTopPlayerPp)
+            {
+                await _discordService.PostBestPlayerAnnouncement(player.Id);
+            }
         }
     }
 
@@ -394,6 +440,12 @@ public class PpService : IPpService
             return;
         }
 
+        var currentBestPp = await _databaseContext.Scores.AsNoTracking()
+            .Where(x => x.Pp != null)
+            .Select(x=> x.Pp)
+            .OrderByDescending(x => x)
+            .FirstOrDefaultAsync();
+
         var workingBeatmap = new FlatWorkingBeatmap(mapPath);
 
         var ruleset = new OsuRuleset();
@@ -462,6 +514,11 @@ public class PpService : IPpService
         }
         
         await _databaseContext.SaveChangesAsync();
+
+        if (performanceAttributes.Total > currentBestPp)
+        {
+            await _discordService.PostBestScoreAnnouncement(score.Id);
+        }
     }
 
     public async Task CleanupScores()

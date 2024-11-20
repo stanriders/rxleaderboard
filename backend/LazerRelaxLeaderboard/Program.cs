@@ -1,5 +1,7 @@
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
+using Discord.WebSocket;
+using Discord;
 using LazerRelaxLeaderboard.BackgroundServices;
 using LazerRelaxLeaderboard.Config;
 using LazerRelaxLeaderboard.Database;
@@ -10,13 +12,13 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using Npgsql;
 using Serilog;
 using Serilog.Settings.Configuration;
 using SerilogTracing;
 using UAParser;
+using DiscordConfig = LazerRelaxLeaderboard.Config.DiscordConfig;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,6 +51,22 @@ builder.Services.AddDbContext<DatabaseContext>(options =>
     options.UseNpgsql(connectionString.ConnectionString));
 
 builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddOptions<DiscordConfig>()
+    .BindConfiguration(nameof(DiscordConfig))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
+builder.Services.AddHostedService<DiscordBackgroundService>();
+
+var config = new DiscordSocketConfig
+{
+    GatewayIntents = GatewayIntents.GuildMessages | GatewayIntents.GuildEmojis | GatewayIntents.Guilds
+};
+
+builder.Services.AddSingleton(config);
+builder.Services.AddSingleton<DiscordSocketClient>();
+builder.Services.AddTransient<IDiscordService, DiscordService>();
 
 builder.Services.AddHttpClient<OsuApiProvider>();
 builder.Services.AddSingleton<IOsuApiProvider, OsuApiProvider>();
