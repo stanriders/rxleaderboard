@@ -23,6 +23,7 @@ services:
       - osuApi__ClientId
       - osuApi__ClientSecret
       - osuApi__CallbackUrl=/oauth/callback
+      - DiscordConfig__Token
       - ScoreQueryInterval
       - Key
       - EnableScoreProcessing
