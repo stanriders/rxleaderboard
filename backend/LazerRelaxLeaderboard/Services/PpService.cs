@@ -285,7 +285,6 @@ public class PpService : IPpService
         var currentTopPlayer = await _databaseContext.Users.AsNoTracking()
                 .Where(x => x.TotalPp != null)
                 .OrderByDescending(x=> x.TotalPp)
-                .Select(x=> x.Id)
                 .FirstOrDefaultAsync();
 
         if (await RecalculatePlayerPp(player))
@@ -294,7 +293,9 @@ public class PpService : IPpService
 
             await _databaseContext.SaveChangesAsync();
 
-            if (player.Id != currentTopPlayer)
+            if (player.TotalPp != null &&
+                player.TotalPp > currentTopPlayer?.TotalPp &&
+                player.Id != currentTopPlayer.Id)
             {
                 await _discordService.PostBestPlayerAnnouncement(player.Id);
             }
