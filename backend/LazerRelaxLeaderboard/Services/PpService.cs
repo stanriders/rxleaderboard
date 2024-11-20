@@ -232,10 +232,10 @@ public class PpService : IPpService
         _logger.LogInformation("Recalculating {Count} players total pp...", playerIds.Count);
         var stopwatch = Stopwatch.StartNew();
 
-        var currentTopPlayerPp = await _databaseContext.Users.AsNoTracking()
+        var currentTopPlayer = await _databaseContext.Users.AsNoTracking()
             .Where(x => x.TotalPp != null)
-            .Select(x => x.TotalPp)
-            .OrderByDescending(x => x)
+            .OrderByDescending(x => x.TotalPp)
+            .Select(x => x.Id)
             .FirstOrDefaultAsync();
 
         for (var i = 0; i < playerIds.Count; i += 100)
@@ -262,11 +262,12 @@ public class PpService : IPpService
         var newTopPlayer = await _databaseContext.Users.AsNoTracking()
             .Where(x => x.TotalPp != null)
             .OrderByDescending(x => x.TotalPp)
+            .Select(x => x.Id)
             .FirstOrDefaultAsync();
 
-        if (newTopPlayer?.TotalPp > currentTopPlayerPp)
+        if (newTopPlayer != currentTopPlayer)
         {
-            await _discordService.PostBestPlayerAnnouncement(newTopPlayer.Id);
+            await _discordService.PostBestPlayerAnnouncement(newTopPlayer);
         }
 
         _logger.LogInformation("Recalculating {Count} players total pp done! Took {Elapsed}", playerIds.Count, stopwatch.Elapsed);
@@ -281,10 +282,10 @@ public class PpService : IPpService
             return;
         }
 
-        var currentTopPlayerPp = await _databaseContext.Users.AsNoTracking()
+        var currentTopPlayer = await _databaseContext.Users.AsNoTracking()
                 .Where(x => x.TotalPp != null)
-                .Select(x=> x.TotalPp)
-                .OrderByDescending(x=> x)
+                .OrderByDescending(x=> x.TotalPp)
+                .Select(x=> x.Id)
                 .FirstOrDefaultAsync();
 
         if (await RecalculatePlayerPp(player))
@@ -293,7 +294,7 @@ public class PpService : IPpService
 
             await _databaseContext.SaveChangesAsync();
 
-            if (player.TotalPp > currentTopPlayerPp)
+            if (player.Id != currentTopPlayer)
             {
                 await _discordService.PostBestPlayerAnnouncement(player.Id);
             }
