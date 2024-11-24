@@ -17,7 +17,6 @@ namespace LazerRelaxLeaderboard.Database.Models
         public required int BeatmapId { get; set; }
         public Beatmap? Beatmap { get; set; } = null!;
 
-        [JsonConverter(typeof(JsonStringEnumConverter))]
         public required Grade Grade { get; set; }
 
         public required double Accuracy { get; set; }

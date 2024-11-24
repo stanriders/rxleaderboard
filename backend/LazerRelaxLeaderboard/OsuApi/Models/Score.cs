@@ -15,7 +15,6 @@ namespace LazerRelaxLeaderboard.OsuApi.Models
         public int BeatmapId { get; set; }
         
         [JsonPropertyName("rank")]
-        [JsonConverter(typeof(JsonStringEnumConverter))]
         public Grade Grade { get; set; }
         
         [JsonPropertyName("accuracy")]

@@ -469,21 +469,15 @@ export interface components {
             /** Format: int32 */
             maxCombo: number;
         };
-        /**
-         * Format: int32
-         * @enum {integer}
-         */
-        BeatmapStatus: 0 | 1 | 2 | 3 | 4 | 5 | 6;
+        /** @enum {string} */
+        BeatmapStatus: "Graveyard" | "Wip" | "Pending" | "Ranked" | "Approved" | "Qualified" | "Loved";
         BeatmapsResponse: {
             beatmaps?: components["schemas"]["ListingBeatmap"][] | null;
             /** Format: int32 */
             total?: number;
         };
-        /**
-         * Format: int32
-         * @enum {integer}
-         */
-        Grade: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+        /** @enum {string} */
+        Grade: "F" | "D" | "C" | "B" | "A" | "S" | "SH" | "X" | "XH";
         ListingBeatmap: {
             /** Format: int32 */
             id: number;

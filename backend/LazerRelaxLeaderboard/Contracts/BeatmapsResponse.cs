@@ -25,7 +25,6 @@ namespace LazerRelaxLeaderboard.Contracts
 
         public double? StarRating { get; set; }
 
-        [JsonConverter(typeof(JsonStringEnumConverter))]
         public required BeatmapStatus Status { get; set; }
 
         public required int Playcount { get; set; }

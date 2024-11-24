@@ -42,7 +42,6 @@ namespace LazerRelaxLeaderboard.Database.Models
 
         public required DateTime ScoresUpdatedOn { get; set; }
 
-        [JsonConverter(typeof(JsonStringEnumConverter))]
         public required BeatmapStatus Status { get; set; }
 
         public required int MaxCombo { get; set; }
