@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { Spacer } from "@nextui-org/spacer";
 import { Link } from "@nextui-org/link";
-import RecentScoreTable from "./recentScores";
+import RecentScoreTable from "./recent-scores";
 
 export default function Home() {
   return (
