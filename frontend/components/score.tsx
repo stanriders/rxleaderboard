@@ -29,7 +29,7 @@ export const Score: FC<Props> = (props) => {
   }
 
   return (
-    <Card className="min-w-72 bg-default-200 dark:bg-default-50/70" fullWidth key={score.id}>
+    <Card className="min-w-72 bg-default-200 dark:bg-default-50/80" fullWidth key={score.id}>
       {props.showPlayer ? (
         <>
           <CardHeader className="pl-5 pt-2 pb-2">
