@@ -17,6 +17,10 @@ export const siteConfig = {
       href: "/topscores",
     },
     {
+      label: "Beatmaps",
+      href: "/beatmaps",
+    },
+    {
       label: "Add score",
       href: "/add-score",
     },

@@ -58,7 +58,7 @@ export default function LeaderboardTable() {
       </div>
       <Spacer y={2} />
       <Table isCompact fullWidth={true} bottomContent={
-        <div className="flex w-full justify-center"><Pagination isCompact showControls showShadow color="secondary" total={0} /></div>
+        <div className="flex w-full justify-center"><Pagination isCompact showControls isDisabled showShadow color="secondary" total={0} /></div>
         }>
         <TableHeader>
           <TableColumn width={55} align="start">{""}</TableColumn>

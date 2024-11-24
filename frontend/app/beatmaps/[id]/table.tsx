@@ -27,7 +27,7 @@ export const BeatmapPageTable: FC<Props> = (props) => {
           <TableColumn align="end">Mods</TableColumn>
           <TableColumn width={85} align="center">Accuracy</TableColumn>
           <TableColumn width={100} align="center">PP</TableColumn>
-          <TableColumn width={110} align="center">Date</TableColumn>
+          <TableColumn width={140} align="center">Date</TableColumn>
         </TableHeader>
         <TableBody>
           {props.scores.map((row: ScoreModel, index: number) => (

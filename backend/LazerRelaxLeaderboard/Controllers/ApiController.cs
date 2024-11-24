@@ -143,15 +143,50 @@ namespace LazerRelaxLeaderboard.Controllers
         }
 
         [HttpGet("/beatmaps")]
-        public async Task<List<Beatmap>> GetBeatmaps(int page = 1)
+        public async Task<BeatmapsResponse> GetBeatmaps(int page = 1, string? search = null)
         {
-            const int take = 50;
-            
-            return await _databaseContext.Beatmaps.AsNoTracking()
+            const int take = 30;
+
+            var query = _databaseContext.Beatmaps.AsNoTracking();
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                if (int.TryParse(search, out var id))
+                {
+                    query = query.Where(x => x.Id == id);
+                }
+                else
+                {
+                    // todo: definitely inefficient!!
+                    query = query.Where(x => x.Artist.ToUpper().StartsWith(search.ToUpper()) ||
+                                             x.Title.ToUpper().StartsWith(search.ToUpper()) ||
+                                             x.DifficultyName.ToUpper().StartsWith(search.ToUpper()));
+                }
+            }
+
+            var result = await query
                 .OrderByDescending(x => x.Scores.Count)
                 .Skip((page - 1) * take)
                 .Take(take)
+                .Select(x => new ListingBeatmap
+                {
+                    Id = x.Id,
+                    Artist = x.Artist,
+                    BeatmapSetId = x.BeatmapSetId,
+                    CreatorId = x.CreatorId,
+                    DifficultyName = x.DifficultyName,
+                    StarRating = x.StarRating,
+                    Status = x.Status,
+                    Title = x.Title,
+                    Playcount = x.Scores.Count
+                })
                 .ToListAsync();
+
+            return new BeatmapsResponse
+            {
+                Beatmaps = result,
+                Total = await query.CountAsync()
+            };
         }
 
         [HttpGet("/beatmaps/{id}")]

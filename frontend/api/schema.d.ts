@@ -41,6 +41,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/scores/recent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["Score"][];
+                        "application/json": components["schemas"]["Score"][];
+                        "text/json": components["schemas"]["Score"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/scores/{id}": {
         parameters: {
             query?: never;
@@ -209,6 +246,7 @@ export interface paths {
             parameters: {
                 query?: {
                     page?: number;
+                    search?: string;
                 };
                 header?: never;
                 path?: never;
@@ -222,9 +260,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["Beatmap"][];
-                        "application/json": components["schemas"]["Beatmap"][];
-                        "text/json": components["schemas"]["Beatmap"][];
+                        "text/plain": components["schemas"]["BeatmapsResponse"];
+                        "application/json": components["schemas"]["BeatmapsResponse"];
+                        "text/json": components["schemas"]["BeatmapsResponse"];
                     };
                 };
             };
@@ -436,11 +474,32 @@ export interface components {
          * @enum {integer}
          */
         BeatmapStatus: 0 | 1 | 2 | 3 | 4 | 5 | 6;
+        BeatmapsResponse: {
+            beatmaps?: components["schemas"]["ListingBeatmap"][] | null;
+            /** Format: int32 */
+            total?: number;
+        };
         /**
          * Format: int32
          * @enum {integer}
          */
         Grade: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+        ListingBeatmap: {
+            /** Format: int32 */
+            id: number;
+            artist: string | null;
+            title: string | null;
+            /** Format: int32 */
+            creatorId: number;
+            /** Format: int32 */
+            beatmapSetId: number;
+            difficultyName: string | null;
+            /** Format: double */
+            starRating?: number | null;
+            status: components["schemas"]["BeatmapStatus"];
+            /** Format: int32 */
+            playcount: number;
+        };
         PlayersDataResponse: {
             /** Format: int32 */
             id: number;
@@ -454,6 +513,14 @@ export interface components {
             updatedAt: string | null;
             /** Format: int32 */
             rank: number | null;
+            /** Format: int32 */
+            playcount: number;
+            /** Format: int32 */
+            countSS: number;
+            /** Format: int32 */
+            countS: number;
+            /** Format: int32 */
+            countA: number;
         };
         PlayersResult: {
             players?: components["schemas"]["User"][] | null;

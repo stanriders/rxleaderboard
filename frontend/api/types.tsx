@@ -5,3 +5,5 @@ export type ScoreModel = components["schemas"]["Score"];
 export type UserModel = components["schemas"]["User"];
 export type BeatmapModel = components["schemas"]["Beatmap"];
 export type ExtendedUserModel = components["schemas"]["PlayersDataResponse"];
+export type BeatmapsResponse = components["schemas"]["BeatmapsResponse"];
+export type ListingBeatmap = components["schemas"]["ListingBeatmap"];
