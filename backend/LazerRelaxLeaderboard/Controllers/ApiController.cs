@@ -231,7 +231,7 @@ namespace LazerRelaxLeaderboard.Controllers
                 "HT", "DC", "EZ", "FL",
                 "SD", "PF", "CL", "MR",
                 "TC", "BL", "SO", "NF",
-                "RX"
+                "TD", "RX"
             };
 
             if (!osuScore.Mods.Any(x=> x.Acronym == "RX"))
