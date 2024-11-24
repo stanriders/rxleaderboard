@@ -109,7 +109,6 @@ app.UseSerilogRequestLogging(options =>
     options.EnrichDiagnosticContext = (context, httpContext) =>
     {
         var parsedUserAgent = Parser.GetDefault()?.Parse(httpContext.Request.Headers.UserAgent);
-        context.Set("UserId", httpContext.User.Identity?.Name);
         context.Set("Browser", parsedUserAgent?.Browser.ToString());
         context.Set("Device", parsedUserAgent?.Device.ToString());
         context.Set("OS", parsedUserAgent?.OS.ToString());
