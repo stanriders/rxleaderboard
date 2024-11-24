@@ -10,7 +10,7 @@ export const RecentScoreTable: FC<Props> = (props) => {
     return <></>;
 
   return (
-    <div className="hidden md:block">
+    <div className="hidden md:block w-full lg:w-5/6">
         <h3>Recent scores</h3>
         <Spacer y={2} />
         <div className="flex flex-col gap-2">
