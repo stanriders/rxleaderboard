@@ -8,6 +8,7 @@ export const Mod: FC<Props> = (props) => {
   }
   else if (props.mod == "EZ" || 
             props.mod == "FL" || 
+            props.mod == "BL" || 
             props.mod == "HD" || 
             props.mod == "HR" || 
             props.mod?.startsWith("DT") || 
