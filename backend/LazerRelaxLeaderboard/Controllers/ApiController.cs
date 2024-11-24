@@ -44,6 +44,17 @@ namespace LazerRelaxLeaderboard.Controllers
                 .ToListAsync();
         }
 
+        [HttpGet("/scores/recent")]
+        public async Task<List<Score>> GetNewScores()
+        {
+            return await _databaseContext.Scores.AsNoTracking()
+                .Include(x => x.Beatmap)
+                .Include(x => x.User)
+                .OrderByDescending(x => x.Date)
+                .Take(5)
+                .ToListAsync();
+        }
+
         [HttpGet("/scores/{id}")]
         public async Task<Score?> GetScore(long id)
         {
@@ -101,6 +112,7 @@ namespace LazerRelaxLeaderboard.Controllers
                         .SingleOrDefaultAsync();
                 }
 
+                // todo: make sure this isn't too slow
                 return new PlayersDataResponse
                 {
                     Id = user.Id,
@@ -109,7 +121,11 @@ namespace LazerRelaxLeaderboard.Controllers
                     TotalAccuracy = user.TotalAccuracy,
                     Username = user.Username,
                     UpdatedAt = user.UpdatedAt,
-                    TotalPp = user.TotalPp
+                    TotalPp = user.TotalPp,
+                    Playcount = await _databaseContext.Scores.CountAsync(x=> x.UserId == user.Id),
+                    CountSS = await _databaseContext.Scores.Where(x => x.UserId == user.Id).CountAsync(x => x.Grade == Grade.X || x.Grade == Grade.XH),
+                    CountS = await _databaseContext.Scores.Where(x => x.UserId == user.Id).CountAsync(x => x.Grade == Grade.S || x.Grade == Grade.SH),
+                    CountA = await _databaseContext.Scores.Where(x => x.UserId == user.Id).CountAsync(x => x.Grade == Grade.A)
                 };
             }
             return null;
