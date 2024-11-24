@@ -79,7 +79,7 @@ export default function BeatmapListing() {
       <Spacer y={4} />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {response.beatmaps?.map((row: ListingBeatmap, index: number) => (
-            <BeatmapCard beatmap={row}/>
+            <BeatmapCard beatmap={row} key={row.id}/>
         ))}
       </div>
       <Spacer y={4} />
