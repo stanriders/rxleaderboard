@@ -29,7 +29,7 @@ export const Score: FC<Props> = (props) => {
   }
 
   return (
-    <Card className="min-w-72 bg-default-200 dark:bg-default-50/80" fullWidth key={score.id}>
+    <Card className="min-w-72 bg-default-100 dark:bg-default-50" fullWidth key={score.id}>
       {props.showPlayer ? (
         <>
           <CardHeader className="pl-5 pt-2 pb-2">
@@ -38,7 +38,7 @@ export const Score: FC<Props> = (props) => {
         </>) : 
         <></>}
       
-      <CardBody className={`p-2 ${opacity} bg-default-50 rounded-large`}>
+      <CardBody className={`p-2 ${opacity} bg-content1 rounded-large`}>
         <div className="flex gap-2 items-center justify-center">
           <div className="hidden md:block flex-none text-center w-10"><Link isExternal className="text-default-400 text-lg" href={`https://osu.ppy.sh/scores/${score.id}`}>{score.grade}</Link></div>
           <div className="flex flex-col flex-auto min-w-1">
