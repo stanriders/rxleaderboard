@@ -1,18 +1,12 @@
 import { Score } from "@/components/score";
 import { ScoreModel } from "@/api/types";
 import { Spacer } from "@nextui-org/spacer";
-import { ApiBase } from "@/api/address";
-import { headers } from "next/headers";
+import { FC } from "react";
 
-export default async function RecentScoreTable() {
-  const request = await fetch(`${ApiBase}/scores/recent`, { cache: 'no-store', headers: Object.fromEntries(headers()) })
-    .catch(error=> console.log(`Recent scores fetch failed, ${error}`));
+type Props = { scores: ScoreModel[] | null | undefined };
 
-  if (!request)
-    return <></>;
-
-  const scores : ScoreModel[] = await request.json();
-  if (!scores)
+export const RecentScoreTable: FC<Props> = (props) => {
+  if (!props.scores)
     return <></>;
 
   return (
@@ -20,7 +14,7 @@ export default async function RecentScoreTable() {
         <h3>Recent scores</h3>
         <Spacer y={2} />
         <div className="flex flex-col gap-2">
-            {scores.map((row) => (<><Score score={row} showPlayer={true} key={row.id}/></>))}
+            {props.scores.map((row) => (<><Score score={row} showPlayer={true} key={row.id}/></>))}
         </div>
     </div>
   );
