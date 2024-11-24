@@ -65,7 +65,7 @@ export default async function UserPage({ params }: Props) {
             <p className="text-md md:text-xl text-right">{player.totalPp?.toFixed(2)}pp</p>
           </div>
           <div className="flex-none px-2 md:px-5">
-            <p className="text-2xl md:text-3xl justify-center items-center font-semibold text-primary-300">#{player.rank ?? (<>-</>)}</p>
+            <p className="text-2xl md:text-3xl justify-center items-center font-semibold text-primary-400">#{player.rank ?? (<>-</>)}</p>
           </div>
         </CardBody>
         <CardFooter className="pl-4 pr-5 pb-1">

@@ -40,16 +40,16 @@ export const Score: FC<Props> = (props) => {
       
       <CardBody className={`p-2 ${opacity} bg-content1 rounded-large`}>
         <div className="flex gap-2 items-center justify-center">
-          <div className="hidden md:block flex-none text-center w-10"><Link isExternal className="text-default-400 text-lg" href={`https://osu.ppy.sh/scores/${score.id}`}>{score.grade}</Link></div>
+          <div className="hidden md:block flex-none text-center w-10"><Link isExternal className="text-default-500 text-lg" href={`https://osu.ppy.sh/scores/${score.id}`}>{score.grade}</Link></div>
           <div className="flex flex-col flex-auto min-w-1">
-            <div><Link href={`/beatmaps/${score.beatmapId}`} className="text-primary-500 text-sm" size="sm">{beatmap.artist} - {beatmap.title}<Spacer x={2}/><span className="text-primary-200 text-xs pr-3">{beatmap.difficultyName}</span></Link></div>
+            <div><Link href={`/beatmaps/${score.beatmapId}`} className="text-primary-500 text-sm" size="sm">{beatmap.artist} - {beatmap.title}<Spacer x={2}/><span className="text-primary-300 text-xs pr-3">{beatmap.difficultyName}</span></Link></div>
             <div className="flex-auto truncate text-default-400 text-xs">{score.totalScore} · {score.combo}x ( {score.count300} / {score.count100} / {score.count50} / {score.countMiss} )</div>
             <Tooltip showArrow content={new Date(score.date).toLocaleString()}><div className="w-fit truncate text-default-400 text-xs">{formatDistance(new Date(score.date), new Date(), { addSuffix: true })}</div></Tooltip>
           </div>
           
           <div className="hidden md:block flex-none text-sm">{score.mods?.map(m => <Mod key={m} mod={m}/>)}</div>
-          <div className="hidden md:block flex-none text-default-500 text-center text-sm w-16">{(score.accuracy * 100)?.toFixed(2) ?? (<>- </>)}%</div>
-          <div className="hidden md:block flex-none text-primary-300 items-center text-center w-24 text-lg font-semibold">{pp}</div>
+          <div className="hidden md:block flex-none text-default-600 text-center text-sm w-16">{(score.accuracy * 100)?.toFixed(2) ?? (<>- </>)}%</div>
+          <div className="hidden md:block flex-none text-primary-400 items-center text-center w-24 text-lg font-semibold">{pp}</div>
         </div>
       </CardBody>
       <CardFooter className={`md:hidden flex gap-2 items-center justify-center ${opacity}`}>

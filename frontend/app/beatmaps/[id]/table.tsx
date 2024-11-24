@@ -43,7 +43,7 @@ export const BeatmapPageTable: FC<Props> = (props) => {
               <TableCell><p className="text-default-400">{row.countMiss}</p></TableCell>
               <TableCell><p className="text-default-500">{row.mods?.map(m => <Mod key={m} mod={m}/>)}</p></TableCell>
               <TableCell><p className="text-default-500">{(row.accuracy * 100)?.toFixed(2) ?? (<>-</>)}%</p></TableCell>
-              <TableCell className="text-primary-300 font-semibold">{row.pp === null ? "-" : row.pp?.toFixed(1)}</TableCell>
+              <TableCell className="text-primary-400 font-semibold">{row.pp === null ? "-" : row.pp?.toFixed(1)}</TableCell>
               <TableCell className="text-default-500 text-xs"><Tooltip showArrow content={new Date(row.date).toLocaleString()}>{formatDistance(new Date(row.date), new Date(), { addSuffix: true })}</Tooltip></TableCell>
             </TableRow>
           ))}
