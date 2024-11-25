@@ -161,6 +161,8 @@ public class AdminController : ControllerBase
                 x.Status != BeatmapStatus.Loved)
             .ToListAsync();
 
+        _logger.LogInformation("Starting map statuses for {Count} maps fixup...", potentiallyBrokenMaps.Count);
+
         foreach (var beatmap in potentiallyBrokenMaps)
         {
             var osuBeatmap = await _osuApiProvider.GetBeatmap(beatmap.Id);
