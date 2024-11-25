@@ -1,5 +1,6 @@
 ﻿using LazerRelaxLeaderboard.Database;
 using LazerRelaxLeaderboard.OsuApi.Interfaces;
+using LazerRelaxLeaderboard.OsuApi.Models;
 using LazerRelaxLeaderboard.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -144,5 +145,38 @@ public class AdminController : ControllerBase
         await _ppService.RecalculateBestScores();
 
         return Ok();
+    }
+
+    [HttpPost("makeSureMapStatusesMakeSense")]
+    public async Task<IActionResult> Bruh()
+    {
+        if (!_authService.Authorize(HttpContext))
+        {
+            return Unauthorized();
+        }
+
+        var potentiallyBrokenMaps = await _databaseContext.Beatmaps.Where(x =>
+                x.Status != BeatmapStatus.Ranked &&
+                x.Status != BeatmapStatus.Approved &&
+                x.Status != BeatmapStatus.Loved)
+            .ToListAsync();
+
+        foreach (var beatmap in potentiallyBrokenMaps)
+        {
+            var osuBeatmap = await _osuApiProvider.GetBeatmap(beatmap.Id);
+            if (osuBeatmap == null)
+            {
+                _databaseContext.Beatmaps.Remove(beatmap);
+                continue;
+            }
+
+            beatmap.Status = osuBeatmap.Status;
+            _databaseContext.Beatmaps.Update(beatmap);
+
+            await Task.Delay(500);
+        }
+
+        var affected = await _databaseContext.SaveChangesAsync();
+        return Ok(affected);
     }
 }

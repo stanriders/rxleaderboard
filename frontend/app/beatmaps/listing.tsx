@@ -84,7 +84,7 @@ export default function BeatmapListing() {
       </div>
       <Spacer y={4} />
       <div className="flex w-full justify-center">
-            <Pagination
+          <Pagination
               isCompact
               showControls
               showShadow
@@ -93,7 +93,7 @@ export default function BeatmapListing() {
               total={pages}
               onChange={(page) => {setPage(page)}}
             />
-        </div>
+      </div>
     </>
   );
 }

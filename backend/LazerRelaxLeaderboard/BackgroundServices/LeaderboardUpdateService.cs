@@ -113,6 +113,12 @@ public class LeaderboardUpdateService : BackgroundService
                         await ppService.RecalculateBestScores(collectionResult.Value.affectedPlayers);
                         await ppService.RecalculatePlayersPp(collectionResult.Value.affectedPlayers);
                     }
+
+                    // recalculate all players pp every 10 batches just in case
+                    if (i % _batchSize * 10 == 0)
+                    {
+                        await ppService.RecalculatePlayersPp();
+                    }
                 }
             }
             catch (Exception ex)
