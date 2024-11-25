@@ -163,19 +163,26 @@ public class AdminController : ControllerBase
 
         _logger.LogInformation("Starting map statuses for {Count} maps fixup...", potentiallyBrokenMaps.Count);
 
-        foreach (var beatmap in potentiallyBrokenMaps)
+        for (var i = 0; i < potentiallyBrokenMaps.Count; i += 100)
         {
-            var osuBeatmap = await _osuApiProvider.GetBeatmap(beatmap.Id);
-            if (osuBeatmap == null)
+            foreach (var beatmap in potentiallyBrokenMaps.Skip(i).Take(100))
             {
-                _databaseContext.Beatmaps.Remove(beatmap);
-                continue;
+                var osuBeatmap = await _osuApiProvider.GetBeatmap(beatmap.Id);
+                if (osuBeatmap == null)
+                {
+                    _databaseContext.Beatmaps.Remove(beatmap);
+
+                    continue;
+                }
+
+                beatmap.Status = osuBeatmap.Status;
+                _databaseContext.Beatmaps.Update(beatmap);
+
+                await Task.Delay(500);
             }
 
-            beatmap.Status = osuBeatmap.Status;
-            _databaseContext.Beatmaps.Update(beatmap);
-
-            await Task.Delay(500);
+            _logger.LogInformation("Saving map statuses for 100 maps ({Current}/{Total})...", i, potentiallyBrokenMaps.Count);
+            await _databaseContext.SaveChangesAsync();
         }
 
         var affected = await _databaseContext.SaveChangesAsync();
