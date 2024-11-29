@@ -115,8 +115,9 @@ public class LeaderboardUpdateService : BackgroundService
                     }
 
                     // recalculate all players pp every 10 batches just in case
-                    if (i % (_batchSize * 10) == 0)
+                    if (i % (_batchSize * 50) == 0)
                     {
+                        await ppService.RecalculateBestScores();
                         await ppService.RecalculatePlayersPp();
                     }
                 }
