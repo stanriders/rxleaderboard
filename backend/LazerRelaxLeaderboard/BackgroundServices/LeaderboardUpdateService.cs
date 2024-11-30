@@ -150,7 +150,7 @@ public class LeaderboardUpdateService : BackgroundService
                 databaseContext.Beatmaps.Update(dbBeatmap);
                 // don't save here, only save the date together with scores
             }
-            //else BRING BACK AFTER ALL MINIGAME MAPS ARE GONE
+            else
             {
                 var osuBeatmap = await _osuApiProvider.GetBeatmap(mapId);
                 if (osuBeatmap == null)
