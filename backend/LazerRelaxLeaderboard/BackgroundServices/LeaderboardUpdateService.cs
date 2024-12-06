@@ -48,8 +48,8 @@ public class LeaderboardUpdateService : BackgroundService
         else
         {
             // catch up on the potentially missed scores while we were offline
-            // 100k scores is ~30 minutes of scores which is getting processed in ~2 minutes
-            currentCursor = cursorResponse.Scores.OrderByDescending(x => x.Id).First().Id - 100_000;
+            // 200k scores is ~an hour of scores which is getting processed in ~3.5 minutes
+            currentCursor = cursorResponse.Scores.OrderByDescending(x => x.Id).First().Id - 200_000;
         }
 
         await Task.Delay(_apiInterval, stoppingToken);
