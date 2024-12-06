@@ -349,10 +349,15 @@ public class PpService : IPpService
         _logger.LogInformation("Recalculating all best scores started...");
         var stopwatch = Stopwatch.StartNew();
 
-        var scoreGroups = await _databaseContext.Scores.GroupBy(x => new { x.BeatmapId, x.UserId }).ToArrayAsync();
+        var scoreGroups = await _databaseContext.Scores
+            .GroupBy(x => new { x.BeatmapId, x.UserId })
+            .ToArrayAsync();
+
         foreach (var scoreGroup in scoreGroups)
         {
-            var sortedScores = scoreGroup.OrderByDescending(x => x.Pp).ToArray();
+            var sortedScores = scoreGroup.OrderByDescending(x => x.Pp)
+                .ThenByDescending(x => x.TotalScore)
+                .ToArray();
 
             var bestScore = sortedScores.FirstOrDefault();
             if (bestScore != null)
@@ -385,7 +390,9 @@ public class PpService : IPpService
 
         foreach (var scoreGroup in scoreGroups)
         {
-            var sortedScores = scoreGroup.OrderByDescending(x => x.Pp).ToArray();
+            var sortedScores = scoreGroup.OrderByDescending(x => x.Pp)
+                .ThenByDescending(x => x.TotalScore)
+                .ToArray();
 
             var bestScore = sortedScores.FirstOrDefault();
             if (bestScore != null)
