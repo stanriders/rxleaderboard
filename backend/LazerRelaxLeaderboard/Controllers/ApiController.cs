@@ -19,7 +19,6 @@ namespace LazerRelaxLeaderboard.Controllers
         private readonly DatabaseContext _databaseContext;
         private readonly IOsuApiProvider _osuApiProvider;
         private readonly IPpService _ppService;
-        private readonly int _apiRequestInterval;
         private readonly string _beatmapCachePath;
 
         public ApiController(DatabaseContext databaseContext, IConfiguration configuration, IOsuApiProvider osuApiProvider, IPpService ppService)
@@ -27,7 +26,6 @@ namespace LazerRelaxLeaderboard.Controllers
             _databaseContext = databaseContext;
             _osuApiProvider = osuApiProvider;
             _ppService = ppService;
-            _apiRequestInterval = int.Parse(configuration["ScoreQueryInterval"]!);
             _beatmapCachePath = configuration["BeatmapCachePath"]!;
         }
 
@@ -142,6 +140,17 @@ namespace LazerRelaxLeaderboard.Controllers
                 .ToListAsync();
         }
 
+        [HttpGet("/players/{id}/scores/recent")]
+        public async Task<List<Score>> GetRecentPlayerScores(int id)
+        {
+            return await _databaseContext.Scores.AsNoTracking()
+                .Where(x => x.UserId == id)
+                .Include(x => x.Beatmap)
+                .OrderByDescending(x => x.Date)
+                .Take(10)
+                .ToListAsync();
+        }
+
         [HttpGet("/beatmaps")]
         public async Task<BeatmapsResponse> GetBeatmaps(int page = 1, string? search = null)
         {
@@ -200,191 +209,51 @@ namespace LazerRelaxLeaderboard.Controllers
         [HttpGet("/beatmaps/{id}/scores")]
         public async Task<List<Score>> GetBeatmapScores(int id)
         {
-            return await _databaseContext.Scores.AsNoTracking()
+            var fullTopHundred = await _databaseContext.Scores.AsNoTracking()
                 .Where(x => x.BeatmapId == id)
                 .Include(x => x.User)
                 .OrderByDescending(x => x.Pp)
                 .ThenByDescending(x => x.TotalScore)
                 .Take(100)
                 .ToListAsync();
-        }
 
-        [HttpPost("/scores/add")]
-        [EnableRateLimiting("token")]
-        [Produces<Score>]
-        public async Task<IActionResult> AddScore(long id)
-        {
-            if (await _databaseContext.Scores.AnyAsync(x => x.Id == id))
-            {
-                return BadRequest("Score already exists");
-            }
+            var nonBests = fullTopHundred.Count(x => !x.IsBest);
 
-            var osuScore = await _osuApiProvider.GetScore(id);
-            if (osuScore == null)
-            {
-                return BadRequest("Invalid score ID");
-            }
+            var additionalBestScores = await _databaseContext.Scores.AsNoTracking()
+                .Where(x => x.BeatmapId == id)
+                .Where(x => x.IsBest)
+                .Include(x => x.User)
+                .OrderByDescending(x => x.Pp)
+                .ThenByDescending(x => x.TotalScore)
+                .Skip(fullTopHundred.Count - nonBests)
+                .Take(nonBests)
+                .ToListAsync();
 
-            if (osuScore.Mode != Mode.Osu)
-            {
-                return BadRequest("Unsupported gamemode");
-            }
-
-            if (!osuScore.Mods.Any(x=> x.Acronym == "RX"))
-            {
-                return BadRequest("Score doesn't have RX enabled");
-            }
-
-            if (!Utils.CheckAllowedMods(osuScore.Mods))
-            {
-                return BadRequest($"Score has unsupported mods, only those mods are allowed: {string.Join(", ", Utils.AllowedMods)}");
-            }
-
-            if (!Utils.CheckAllowedModSettings(osuScore.Mods))
-            {
-                return BadRequest("Score has unsupported mod settings");
-            }
-
-            var dbBeatmap = await _databaseContext.Beatmaps.FindAsync(osuScore.BeatmapId);
-            if (dbBeatmap == null)
-            {
-                var osuBeatmap = await _osuApiProvider.GetBeatmap(osuScore.BeatmapId);
-                if (osuBeatmap == null)
-                {
-                    return BadRequest("Score has invalid map ID");
-                }
-
-                if (osuBeatmap.Mode != Mode.Osu)
-                {
-                    return BadRequest("Unsupported gamemode");
-                }
-
-                if (osuBeatmap.Status != BeatmapStatus.Ranked &&
-                    osuBeatmap.Status != BeatmapStatus.Approved &&
-                    osuBeatmap.Status != BeatmapStatus.Loved)
-                {
-                    return BadRequest("Only scores on ranked/loved maps are supported");
-                }
-
-                var mapPath = $"{_beatmapCachePath}/{osuBeatmap.Id}.osu";
-                if (!System.IO.File.Exists(mapPath))
-                {
-                    await _osuApiProvider.DownloadMap(osuBeatmap.Id, mapPath);
-                }
-
-                dbBeatmap = new Beatmap
-                {
-                    Id = osuBeatmap.Id,
-                    ApproachRate = osuBeatmap.ApproachRate,
-                    Artist = osuBeatmap.BeatmapSet.Artist,
-                    BeatmapSetId = osuBeatmap.BeatmapSet.Id,
-                    BeatsPerMinute = osuBeatmap.BeatsPerMinute,
-                    CircleSize = osuBeatmap.CircleSize,
-                    Circles = osuBeatmap.Circles,
-                    CreatorId = osuBeatmap.BeatmapSet.CreatorId,
-                    DifficultyName = osuBeatmap.Version,
-                    HealthDrain = osuBeatmap.HealthDrain,
-                    Title = osuBeatmap.BeatmapSet.Title,
-                    OverallDifficulty = osuBeatmap.OverallDifficulty,
-                    Sliders = osuBeatmap.Sliders,
-                    Spinners = osuBeatmap.Spinners,
-                    StarRatingNormal = osuBeatmap.StarRating,
-                    MaxCombo = osuBeatmap.MaxCombo,
-                    Status = osuBeatmap.Status,
-                    ScoresUpdatedOn = DateTime.MinValue
-                };
-                await _databaseContext.Beatmaps.AddAsync(dbBeatmap);
-
-                await _databaseContext.SaveChangesAsync();
-            }
-
-            var user = await _databaseContext.Users.FindAsync(osuScore.User!.Id);
-            if (user != null)
-            {
-                user.CountryCode = osuScore.User.CountryCode;
-                user.UpdatedAt = DateTime.UtcNow;
-                user.Username = osuScore.User.Username;
-            }
-            else
-            {
-                await _databaseContext.Users.AddAsync(new User
-                {
-                    Id = osuScore.User.Id,
-                    CountryCode = osuScore.User.CountryCode,
-                    UpdatedAt = DateTime.UtcNow,
-                    Username = osuScore.User.Username
-                });
-            }
-            
-            await _databaseContext.Scores.AddAsync(new Score
-            {
-                Id = osuScore.Id,
-                Accuracy = osuScore.Accuracy,
-                BeatmapId = osuScore.BeatmapId,
-                Combo = osuScore.Combo,
-                Count100 = osuScore.Statistics.Count100 ?? 0,
-                Count300 = osuScore.Statistics.Count300,
-                Count50 = osuScore.Statistics.Count50 ?? 0,
-                CountMiss = osuScore.Statistics.CountMiss ?? 0,
-                SliderEnds = osuScore.Statistics.SliderEnds,
-                SliderTicks = osuScore.Statistics.SliderTicks,
-                SpinnerBonus = osuScore.Statistics.SpinnerBonus,
-                SpinnerSpins = osuScore.Statistics.SpinnerSpins,
-                LegacySliderEnds = osuScore.Statistics.LegacySliderEnds,
-                LegacySliderEndMisses = osuScore.Statistics.LegacySliderEndMisses,
-                SliderTickMisses = osuScore.Statistics.SliderTickMisses,
-                Date = osuScore.Date,
-                Grade = osuScore.Grade,
-                Mods = osuScore.Mods.Select(Utils.ModToString).ToArray(),
-                TotalScore = osuScore.TotalScore,
-                UserId = osuScore.User.Id,
-                IsBest = false
-            });
-
-            await _databaseContext.SaveChangesAsync();
-
-            // loved beatmaps dont affect pp
-            if (dbBeatmap.Status != BeatmapStatus.Loved)
-            {
-                await _ppService.PopulateScorePp(id);
-                await _ppService.RecalculateBestScores(osuScore.BeatmapId, osuScore.User.Id);
-                await _ppService.RecalculatePlayerPp(osuScore.User.Id);
-            }
-
-            return Ok(await _databaseContext.Scores.FindAsync(id));
+            return fullTopHundred.Concat(additionalBestScores)
+                .OrderByDescending(x => x.Pp)
+                .ThenByDescending(x => x.TotalScore).ToList();
         }
 
         [HttpGet("/stats")]
         public async Task<StatsResponse> GetStats()
         {
-            var allowedMods = new[] { "HD", "DT", "HR" };
-            var modCombos = Utils.CreateCombinations(0, Array.Empty<string>(), allowedMods);
-
-            var queries = modCombos.Count + 2; // mod combos + flat RX + beatmap request
-
-            var existingMaps = await _databaseContext.Scores.AsNoTracking()
-                .Include(x => x.Beatmap)
-                .Where(x => x.Beatmap != null && x.Beatmap.ScoresUpdatedOn < DateTime.UtcNow.AddDays(-7))
-                .GroupBy(x => x.BeatmapId)
-                .OrderByDescending(x => x.Count())
-                .Select(x => x.Key)
-                .ToArrayAsync();
-
-            var scorelessMaps = await _databaseContext.Beatmaps.AsNoTracking()
-                .Where(x => x.ScoresUpdatedOn < DateTime.UtcNow.AddDays(-7))
-                .Select(x => x.Id)
-                .Where(x => !existingMaps.Contains(x))
-                .ToArrayAsync();
-
-            var totalMaps = existingMaps.Concat(scorelessMaps).Count();
-
             return new StatsResponse
             {
                 BeatmapsTotal = await _databaseContext.Beatmaps.CountAsync(),
-                BeatmapsToUpdate = totalMaps,
                 ScoresTotal = await _databaseContext.Scores.CountAsync(),
                 UsersTotal = await _databaseContext.Users.CountAsync(),
-                UpdateRunLengthEstimate = (totalMaps * queries) * (_apiRequestInterval / 1000.0) / 60.0 / 60.0 / 24.0
+                LatestScoreId = await _databaseContext.Scores.Select(x=> x.Id).OrderByDescending(x=> x).FirstAsync(),
+                ScoresToday = await _databaseContext.Scores.CountAsync(x=> x.Date > DateTime.UtcNow.AddDays(-1))
+            };
+        }
+
+        [HttpGet("/allowed-mods")]
+        public AllowedModsResponse GetAllowedMods()
+        {
+            return new AllowedModsResponse
+            {
+                Mods = Utils.AllowedMods,
+                ModSettings = Utils.AllowedModSettings
             };
         }
     }

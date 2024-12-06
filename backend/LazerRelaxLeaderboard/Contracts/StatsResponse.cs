@@ -2,9 +2,9 @@
 
 public class StatsResponse
 {
-    public int ScoresTotal { get; set; }
-    public int UsersTotal { get; set; }
-    public int BeatmapsTotal { get; set; }
-    public int BeatmapsToUpdate { get; set; }
-    public double UpdateRunLengthEstimate { get; set; }
+    public required int ScoresTotal { get; set; }
+    public required int UsersTotal { get; set; }
+    public required int BeatmapsTotal { get; set; }
+    public required long LatestScoreId { get; set; }
+    public required int ScoresToday { get; set; }
 }

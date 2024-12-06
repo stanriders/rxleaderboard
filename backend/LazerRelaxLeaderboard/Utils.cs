@@ -14,7 +14,7 @@ namespace LazerRelaxLeaderboard
             "TD", "RX"
         };
 
-        private static readonly string[] _allowedModSettings = new[]
+        public static readonly string[] AllowedModSettings = new[]
         {
             "speed_change",
             "adjust_pitch"
@@ -53,7 +53,7 @@ namespace LazerRelaxLeaderboard
         public static bool CheckAllowedModSettings(APIMod[] mods)
         {
             return mods.All(m =>
-                       m.Settings.Count == 0 || m.Settings.Keys.All(s => _allowedModSettings.Contains(s)));
+                       m.Settings.Count == 0 || m.Settings.Keys.All(s => AllowedModSettings.Contains(s)));
         }
     }
 }

@@ -19,10 +19,6 @@ export const siteConfig = {
     {
       label: "Beatmaps",
       href: "/beatmaps",
-    },
-    {
-      label: "Add score",
-      href: "/add-score",
-    },
+    }
   ]
 };

@@ -8,3 +8,4 @@ export type ExtendedUserModel = components["schemas"]["PlayersDataResponse"];
 export type BeatmapsResponse = components["schemas"]["BeatmapsResponse"];
 export type ListingBeatmap = components["schemas"]["ListingBeatmap"];
 export type BeatmapStatus = components["schemas"]["BeatmapStatus"];
+export type AllowedModsResponse = components["schemas"]["AllowedModsResponse"];

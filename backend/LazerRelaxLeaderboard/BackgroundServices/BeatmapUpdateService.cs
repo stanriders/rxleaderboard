@@ -25,7 +25,7 @@ public class BeatmapUpdateService : BackgroundService
         _interval = int.Parse(configuration["APIQueryInterval"]!);
         _batchSize = int.Parse(configuration["BeatmapQueryBatch"]!);
         _cachePath = configuration["BeatmapCachePath"]!;
-        _enableProcessing = bool.Parse(configuration["EnableScoreProcessing"]!);
+        _enableProcessing = bool.Parse(configuration["EnableBeatmapProcessing"]!);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
