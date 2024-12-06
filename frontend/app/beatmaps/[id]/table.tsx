@@ -11,6 +11,7 @@ type Props = { scores: ScoreModel[] };
 
 // this stupid thing exists because of the nextui bug that makes tables not work in ssr
 export const BeatmapPageTable: FC<Props> = (props) => {
+  let index = 0;
   return (
     <>
       <Table isStriped isCompact fullWidth={true}>
@@ -30,9 +31,12 @@ export const BeatmapPageTable: FC<Props> = (props) => {
           <TableColumn width={140} align="center">Date</TableColumn>
         </TableHeader>
         <TableBody>
-          {props.scores.map((row: ScoreModel, index: number) => (
+          {
+          props.scores.map((row: ScoreModel, i: number) => {
+            if (row.isBest) { index++;}
+            return (
             <TableRow key={row.id} className={row.isBest ? "opacity-100" : "opacity-30 hover:opacity-70"}>
-              <TableCell className="text-default-500">#{index+1}</TableCell>
+              <TableCell className="text-default-500 text-center">{row.isBest ? (<>#{index}</>) : <>-</>}</TableCell>
               <TableCell>{row.grade}</TableCell>
               <TableCell><p className="text-default-500">{row.totalScore}</p></TableCell>
               <TableCell><User user={row.user as UserModel}/></TableCell>
@@ -46,7 +50,7 @@ export const BeatmapPageTable: FC<Props> = (props) => {
               <TableCell className="text-primary-400 font-semibold">{row.pp === null ? "-" : row.pp?.toFixed(1)}</TableCell>
               <TableCell className="text-default-500 text-xs"><Tooltip showArrow content={new Date(row.date).toLocaleString()}>{formatDistance(new Date(row.date), new Date(), { addSuffix: true })}</Tooltip></TableCell>
             </TableRow>
-          ))}
+          )})}
         </TableBody>
       </Table>
     </>
