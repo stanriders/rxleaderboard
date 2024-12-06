@@ -72,7 +72,10 @@ builder.Services.AddHttpClient<OsuApiProvider>();
 builder.Services.AddSingleton<IOsuApiProvider, OsuApiProvider>();
 builder.Services.AddTransient<IKeyAuthService, KeyAuthService>();
 builder.Services.AddTransient<IPpService, PpService>();
+
+builder.Services.AddHostedService<BeatmapUpdateService>();
 builder.Services.AddHostedService<LeaderboardUpdateService>();
+builder.Services.AddHostedService<CleanupService>();
 
 builder.Services.AddRateLimiter(_ => _
     .AddTokenBucketLimiter(policyName: "token", options =>

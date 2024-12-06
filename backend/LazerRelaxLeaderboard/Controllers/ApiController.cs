@@ -225,26 +225,22 @@ namespace LazerRelaxLeaderboard.Controllers
                 return BadRequest("Invalid score ID");
             }
 
-            var allowedMods = new[]
+            if (osuScore.Mode != Mode.Osu)
             {
-                "HD", "DT", "HR", "NC",
-                "HT", "DC", "EZ", "FL",
-                "SD", "PF", "CL", "MR",
-                "TC", "BL", "SO", "NF",
-                "TD", "RX"
-            };
+                return BadRequest("Unsupported gamemode");
+            }
 
             if (!osuScore.Mods.Any(x=> x.Acronym == "RX"))
             {
                 return BadRequest("Score doesn't have RX enabled");
             }
 
-            if (!osuScore.Mods.All(x => allowedMods.Contains(x.Acronym)))
+            if (!Utils.CheckAllowedMods(osuScore.Mods))
             {
-                return BadRequest($"Score has unsupported mods, only those mods are allowed: {string.Join(", ", allowedMods)}");
+                return BadRequest($"Score has unsupported mods, only those mods are allowed: {string.Join(", ", Utils.AllowedMods)}");
             }
 
-            if (!osuScore.Mods.All(m => m.Settings.Count == 0 || m.Settings.Keys.All(x => x == "speed_change")))
+            if (!Utils.CheckAllowedModSettings(osuScore.Mods))
             {
                 return BadRequest("Score has unsupported mod settings");
             }
@@ -258,7 +254,7 @@ namespace LazerRelaxLeaderboard.Controllers
                     return BadRequest("Score has invalid map ID");
                 }
 
-                if (osuBeatmap.Mode != OsuApi.Models.Mode.Osu)
+                if (osuBeatmap.Mode != Mode.Osu)
                 {
                     return BadRequest("Unsupported gamemode");
                 }
@@ -302,7 +298,7 @@ namespace LazerRelaxLeaderboard.Controllers
                 await _databaseContext.SaveChangesAsync();
             }
 
-            var user = await _databaseContext.Users.FindAsync(osuScore.User.Id);
+            var user = await _databaseContext.Users.FindAsync(osuScore.User!.Id);
             if (user != null)
             {
                 user.CountryCode = osuScore.User.CountryCode;

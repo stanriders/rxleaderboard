@@ -1,6 +1,8 @@
 ﻿
+using System.Buffers.Text;
 using System.Net;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 using LazerRelaxLeaderboard.Config;
 using LazerRelaxLeaderboard.OsuApi.Interfaces;
@@ -12,9 +14,11 @@ namespace LazerRelaxLeaderboard.OsuApi;
 public class OsuApiProvider : IOsuApiProvider
 {
     private const string osu_base = "https://osu.ppy.sh/";
-    private const string api_scores_link = "api/v2/beatmaps/{0}/scores?mods[]=RX&mods[]={1}&mode=osu";
+    private const string api_beatmap_scores_link = "api/v2/beatmaps/{0}/scores?mods[]=RX&mods[]={1}&mode=osu";
     private const string api_beatmap_link = "api/v2/beatmaps/{0}";
     private const string api_score_link = "api/v2/scores/{0}";
+    private const string api_scores_link = "api/v2/scores?cursor_string={0}";
+    private const string api_user_link = "api/v2/users/{0}";
     private const string api_token_link = "oauth/token";
     private const string map_download_link = "osu/{0}";
 
@@ -34,7 +38,7 @@ public class OsuApiProvider : IOsuApiProvider
         RefreshUserlessToken().Wait();
     }
 
-    public async Task<BeatmapScores?> GetScores(int id, string[] mods)
+    public async Task<BeatmapScores?> GetBeatmapScores(int id, string[] mods)
     {
         await RefreshUserlessToken();
 
@@ -43,7 +47,7 @@ public class OsuApiProvider : IOsuApiProvider
         var requestMessage = new HttpRequestMessage
         {
             Method = HttpMethod.Get,
-            RequestUri = new Uri(osu_base + string.Format(api_scores_link, id, modsString)),
+            RequestUri = new Uri(osu_base + string.Format(api_beatmap_scores_link, id, modsString)),
             Headers = { Authorization = new AuthenticationHeaderValue("Bearer", _userlessToken!.AccessToken)}
         };
         requestMessage.Headers.Add("x-api-version", "99999999");
@@ -104,6 +108,49 @@ public class OsuApiProvider : IOsuApiProvider
         response.EnsureSuccessStatusCode();
 
         return await response.Content.ReadFromJsonAsync<Score>();
+    }
+
+    public async Task<ScoresResponse?> GetScores(long? cursor)
+    {
+        await RefreshUserlessToken();
+
+        var cursorString = cursor == null ? "" : Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"id\": {cursor}}}"));
+
+        var requestMessage = new HttpRequestMessage
+        {
+            Method = HttpMethod.Get,
+            RequestUri = new Uri(osu_base + string.Format(api_scores_link, cursorString)),
+            Headers = { Authorization = new AuthenticationHeaderValue("Bearer", _userlessToken!.AccessToken) }
+        };
+        requestMessage.Headers.Add("x-api-version", "99999999");
+
+        var response = await _httpClient.SendAsync(requestMessage);
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<ScoresResponse>();
+    }
+
+    public async Task<User?> GetUser(int id)
+    {
+        await RefreshUserlessToken();
+
+        var requestMessage = new HttpRequestMessage
+        {
+            Method = HttpMethod.Get,
+            RequestUri = new Uri(osu_base + string.Format(api_user_link, id)),
+            Headers = { Authorization = new AuthenticationHeaderValue("Bearer", _userlessToken!.AccessToken) }
+        };
+        requestMessage.Headers.Add("x-api-version", "99999999");
+
+        var response = await _httpClient.SendAsync(requestMessage);
+        if (response is { IsSuccessStatusCode: false, StatusCode: HttpStatusCode.NotFound })
+        {
+            return null;
+        }
+
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<User>();
     }
 
     public async Task<bool> DownloadMap(int id, string path)

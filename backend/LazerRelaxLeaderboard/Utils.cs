@@ -5,6 +5,21 @@ namespace LazerRelaxLeaderboard
 {
     public static class Utils
     {
+        public static readonly string[] AllowedMods = new[]
+        {
+            "HD", "DT", "HR", "NC",
+            "HT", "DC", "EZ", "FL",
+            "SD", "PF", "CL", "MR",
+            "TC", "BL", "SO", "NF",
+            "TD", "RX"
+        };
+
+        private static readonly string[] _allowedModSettings = new[]
+        {
+            "speed_change",
+            "adjust_pitch"
+        };
+
         public static string ModToString(APIMod mod)
         {
             if (mod.Settings.ContainsKey("speed_change"))
@@ -28,6 +43,17 @@ namespace LazerRelaxLeaderboard
             }
 
             return combinations;
+        }
+
+        public static bool CheckAllowedMods(APIMod[] mods)
+        {
+            return mods.All(m => AllowedMods.Contains(m.Acronym));
+        }
+
+        public static bool CheckAllowedModSettings(APIMod[] mods)
+        {
+            return mods.All(m =>
+                       m.Settings.Count == 0 || m.Settings.Keys.All(s => _allowedModSettings.Contains(s)));
         }
     }
 }

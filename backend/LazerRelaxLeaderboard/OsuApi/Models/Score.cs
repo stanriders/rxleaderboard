@@ -9,7 +9,10 @@ namespace LazerRelaxLeaderboard.OsuApi.Models
         public long Id { get; set; }
 
         [JsonPropertyName("user")]
-        public User User { get; set; } = null!;
+        public User? User { get; set; }
+
+        [JsonPropertyName("user_id")]
+        public int UserId { get; set; }
 
         [JsonPropertyName("beatmap_id")]
         public int BeatmapId { get; set; }
@@ -35,6 +38,9 @@ namespace LazerRelaxLeaderboard.OsuApi.Models
 
         [JsonPropertyName("statistics")]
         public ScoreStatistics Statistics { get; set; } = null!;
+
+        [JsonPropertyName("ruleset_id")]
+        public Mode Mode { get; set; }
 
         public class ScoreStatistics
         {

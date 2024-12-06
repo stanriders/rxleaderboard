@@ -1,8 +1,10 @@
 ﻿using LazerRelaxLeaderboard.Database;
 using LazerRelaxLeaderboard.OsuApi.Interfaces;
 using LazerRelaxLeaderboard.OsuApi.Models;
-using Microsoft.EntityFrameworkCore;
 using LazerRelaxLeaderboard.Services;
+using Microsoft.EntityFrameworkCore;
+using Score = LazerRelaxLeaderboard.Database.Models.Score;
+using User = LazerRelaxLeaderboard.Database.Models.User;
 
 namespace LazerRelaxLeaderboard.BackgroundServices;
 
@@ -11,8 +13,8 @@ public class LeaderboardUpdateService : BackgroundService
     private readonly IOsuApiProvider _osuApiProvider;
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly ILogger<LeaderboardUpdateService> _logger;
-    private readonly int _interval;
-    private readonly int _batchSize;
+    private readonly int _apiInterval;
+    private readonly int _queryInterval;
     private readonly string _cachePath;
     private readonly bool _enableProcessing;
 
@@ -21,8 +23,8 @@ public class LeaderboardUpdateService : BackgroundService
         _osuApiProvider = osuApiProvider;
         _logger = logger;
         _serviceScopeFactory = serviceScopeFactory;
-        _interval = int.Parse(configuration["ScoreQueryInterval"]!);
-        _batchSize = int.Parse(configuration["ScoreQueryBatch"]!);
+        _apiInterval = int.Parse(configuration["APIQueryInterval"]!);
+        _queryInterval = int.Parse(configuration["ScoreQueryInterval"]!); 
         _cachePath = configuration["BeatmapCachePath"]!;
         _enableProcessing = bool.Parse(configuration["EnableScoreProcessing"]!);
     }
@@ -36,9 +38,27 @@ public class LeaderboardUpdateService : BackgroundService
             return;
         }
 
+        var currentCursor = 0L;
+
+        var cursorResponse = await _osuApiProvider.GetScores(null);
+        if (cursorResponse == null)
+        {
+            _logger.LogWarning("Couldn't get current max score id!");
+        }
+        else
+        {
+            // we're allowed to query 10 million scores back, start from the farthest one that's still allowed
+            // at a rate of 1000 scores per second we should catch up in ~16 minutes
+            currentCursor = cursorResponse.Scores.OrderByDescending(x => x.Id).First().Id - 950_000;
+        }
+
+        await Task.Delay(_apiInterval, stoppingToken);
+
         while (!stoppingToken.IsCancellationRequested)
         {
             _logger.LogInformation("Starting LeaderboardUpdateService loop...");
+
+            var interval = _queryInterval;
 
             try
             {
@@ -50,153 +70,138 @@ public class LeaderboardUpdateService : BackgroundService
                     return;
                 }
 
-                var scoredMaps = await context.Scores.AsNoTracking()
-                    .Include(x => x.Beatmap)
-                    .Where(x => x.Beatmap != null && x.Beatmap.ScoresUpdatedOn < DateTime.UtcNow.AddDays(-7))
-                    .GroupBy(x=> x.BeatmapId)
-                    .OrderByDescending(x=> x.Count())
-                    .Select(x => x.Key)
-                    .ToArrayAsync(cancellationToken: stoppingToken);
-
-                var scorelessMaps = await context.Beatmaps.AsNoTracking()
-                    .Where(x => x.ScoresUpdatedOn < DateTime.UtcNow.AddDays(-7))
-                    .Select(x => x.Id)
-                    .Where(x => !scoredMaps.Contains(x))
-                    .ToArrayAsync(cancellationToken: stoppingToken);
-
-                var existingMaps = scoredMaps.Concat(scorelessMaps.OrderBy(_ => Random.Shared.Next())).ToArray();
-
-                // todo: how long will it take to enumerate all new maps?..
-                //       how do we process broken maps?
-                //       how to prefilter minigames???
-                /*var newMaps = Directory.EnumerateFiles(_cachePath, "*.osu")
-                    .Select(x => int.Parse(x[..^4]))
-                    .Where(x => !existingMaps.Contains(x))
-                    .ToArray();
-
-                // process new maps first
-                var totalMaps = newMaps.Concat(existingMaps).ToArray();*/
-
-                var totalMaps = existingMaps;
-
-                for (var i = 0; i < totalMaps.Length; i += _batchSize)
+                var ppService = loopScope.ServiceProvider.GetService<IPpService>();
+                if (ppService == null)
                 {
-                    _logger.LogInformation("Starting new batch of {BatchSize} ({Current}/{Total})", _batchSize, i, totalMaps.Length);
+                    _logger.LogError("Couldn't get a pp service instance!");
+                    return;
+                }
 
-                    using var batchScope = _serviceScopeFactory.CreateScope();
-                    var ppService = batchScope.ServiceProvider.GetService<IPpService>();
-                    if (ppService == null)
+                var currentMaxScoreId = await context.Scores.AsNoTracking()
+                    .Select(x => x.Id)
+                    .OrderByDescending(x => x)
+                    .FirstAsync(cancellationToken: stoppingToken);
+
+                if (currentCursor == 0)
+                {
+                    currentCursor = currentMaxScoreId;
+                }
+
+                if (currentCursor < currentMaxScoreId)
+                {
+                    // speed up the catching up process
+                    interval = _queryInterval / 5;
+                }
+
+                var scoreResponse = await _osuApiProvider.GetScores(currentCursor);
+                if (scoreResponse == null)
+                {
+                    _logger.LogError("Score query failed!");
+                    continue;
+                }
+
+                _logger.LogInformation("Got a new score batch of {Count}, cursor {Cursor}", scoreResponse.Scores.Count, currentCursor);
+
+                for (var i = 0; i < scoreResponse.Scores.Count; i += 500)
+                {
+                    var scores = scoreResponse.Scores.Skip(i).Take(500).ToList();
+
+                    var affectedPlayers = await ProcessScores(scores, context);
+
+                    await ppService.PopulateScores();
+                    if (affectedPlayers.Count > 0)
                     {
-                        _logger.LogError("Couldn't get a pp service instance!");
-                        return;
-                    }
-
-                    (int collectedScores, List<int> affectedPlayers)? collectionResult = null;
-
-                    // we're catching score collection exceptions separately to run beatmap/pp population regardless of its fails
-                    try
-                    {
-                        collectionResult = await CollectScores(totalMaps.Skip(i).Take(_batchSize).ToArray(), context);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "LeaderboardUpdateService.CollectScores failed!");
-                    }
-
-                    await ppService.PopulateStarRatings();
-
-                    // no real need to waste time on processing all these if we collected zero new scores
-                    if (collectionResult?.collectedScores > 0)
-                    {
-                        await ppService.PopulateScores();
-                        await ppService.CleanupScores();
-                        await ppService.RecalculateBestScores(collectionResult.Value.affectedPlayers);
-                        await ppService.RecalculatePlayersPp(collectionResult.Value.affectedPlayers);
-                    }
-
-                    // recalculate all players pp every 10 batches just in case
-                    if (i % (_batchSize * 50) == 0)
-                    {
-                        await ppService.RecalculateBestScores();
-                        await ppService.RecalculatePlayersPp();
+                        await ppService.RecalculateBestScores(affectedPlayers);
+                        await ppService.RecalculatePlayersPp(affectedPlayers);
                     }
                 }
+
+                await ppService.PopulateStarRatings();
+
+                currentCursor = scoreResponse.Scores.OrderByDescending(x=> x.Id).First().Id;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "LeaderboardUpdateService failed!");
-                await Task.Delay(_interval, stoppingToken);
             }
 
             _logger.LogInformation("Finished LeaderboardUpdateService loop");
 
-            await Task.Delay(5000, stoppingToken);
+            await Task.Delay(interval, stoppingToken);
         }
     }
 
-    public async Task<(int collectedScores, List<int> affectedPlayers)> CollectScores(int[] maps, DatabaseContext databaseContext)
+    private async Task<List<int>> ProcessScores(List<OsuApi.Models.Score> scores, DatabaseContext context)
     {
-        var collectedScores = 0;
         var affectedPlayers = new List<int>();
 
-        foreach (var mapId in maps)
+        var relevantScores = scores.Where(x => x.Mods.Any(m => m.Acronym == "RX"))
+            .Where(x => x.Mode == Mode.Osu)
+            .Where(x => Utils.CheckAllowedMods(x.Mods) && Utils.CheckAllowedModSettings(x.Mods));
+
+        foreach (var score in relevantScores)
         {
-            _logger.LogInformation("Processing {MapId}...", mapId);
-
-            var dbBeatmap = await databaseContext.Beatmaps.FindAsync(mapId);
-            if (dbBeatmap != null)
+            try
             {
-                dbBeatmap.ScoresUpdatedOn = DateTime.UtcNow;
-                databaseContext.Beatmaps.Update(dbBeatmap);
-                // don't save here, only save the date together with scores
-            }
-            else
-            {
-                var osuBeatmap = await _osuApiProvider.GetBeatmap(mapId);
-                if (osuBeatmap == null)
+                // TODO: precheck the batch instead of checking every score
+                if (await context.Scores.AnyAsync(x => x.Id == score.Id))
                 {
-                    _logger.LogWarning("Beatmap {Id} was not found on osu!API", mapId);
-
-                    // wait until querying api again
-                    await Task.Delay(_interval);
                     continue;
                 }
 
-                if (osuBeatmap.Mode != Mode.Osu)
-                {
-                    _logger.LogWarning("Beatmap {Id} mode is not osu! ({Mode})", mapId, osuBeatmap.Mode);
-                    if (dbBeatmap != null)
-                    {
-                        _logger.LogWarning("Removing beatmap {Id}...", mapId);
-
-                        var scores = await databaseContext.Scores.Where(x=> x.BeatmapId == dbBeatmap.Id).ToListAsync();
-                        if (scores.Any())
-                        {
-                            _logger.LogWarning("Removing beatmap {Id} scores...", mapId);
-                            databaseContext.Scores.RemoveRange(scores);
-                        }
-
-                        databaseContext.Beatmaps.Remove(dbBeatmap);
-                        await databaseContext.SaveChangesAsync();
-                    }
-
-                    await Task.Delay(_interval);
-                    continue;
-                }
-
-                // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-                // beatmapsets should never be null, however SOMEHOW they sometimes are
-                if (osuBeatmap.BeatmapSet == null)
-                {
-                    _logger.LogWarning("Beatmap {Id} is broken", mapId);
-
-                    await Task.Delay(_interval);
-                    continue;
-                }
-
+                var dbBeatmap = await context.Beatmaps.FindAsync(score.BeatmapId);
                 if (dbBeatmap == null)
                 {
-                    await databaseContext.Beatmaps.AddAsync(new Database.Models.Beatmap
+                    var osuBeatmap = await _osuApiProvider.GetBeatmap(score.BeatmapId);
+                    if (osuBeatmap == null)
+                    {
+                        _logger.LogWarning("Beatmap {Id} was not found on osu!API", score.BeatmapId);
+
+                        // wait until querying api again
+                        await Task.Delay(_apiInterval);
+                        continue;
+                    }
+
+                    if (osuBeatmap.Status != BeatmapStatus.Ranked &&
+                        osuBeatmap.Status != BeatmapStatus.Approved &&
+                        osuBeatmap.Status != BeatmapStatus.Loved)
+                    {
+                        await Task.Delay(_apiInterval);
+                        continue;
+                    }
+
+                    if (osuBeatmap.Mode != Mode.Osu)
+                    {
+                        _logger.LogWarning("Beatmap {Id} mode is not osu! ({Mode})", score.BeatmapId, osuBeatmap.Mode);
+
+                        await Task.Delay(_apiInterval);
+                        continue;
+                    }
+
+                    // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+                    // beatmapsets should never be null, however SOMEHOW they sometimes are
+                    if (osuBeatmap.BeatmapSet == null)
+                    {
+                        _logger.LogWarning("Beatmap {Id} is broken", score.BeatmapId);
+
+                        await Task.Delay(_apiInterval);
+
+                        continue;
+                    }
+
+                    var mapPath = $"{_cachePath}/{osuBeatmap.Id}.osu";
+                    if (!File.Exists(mapPath))
+                    {
+                        if (!await _osuApiProvider.DownloadMap(osuBeatmap.Id, mapPath))
+                        {
+                            _logger.LogWarning("Couldn't download beatmap {Id}!", score.BeatmapId);
+
+                            await Task.Delay(_apiInterval);
+                            continue;
+                        }
+                    }
+
+                    await context.Beatmaps.AddAsync(new Database.Models.Beatmap
                     {
                         Id = osuBeatmap.Id,
                         ApproachRate = osuBeatmap.ApproachRate,
@@ -217,97 +222,67 @@ public class LeaderboardUpdateService : BackgroundService
                         Status = osuBeatmap.Status,
                         ScoresUpdatedOn = DateTime.UtcNow
                     });
+
+                    await context.SaveChangesAsync();
+
+                    // wait until querying api again
+                    await Task.Delay(_apiInterval);
                 }
 
-                await databaseContext.SaveChangesAsync();
-
-                // wait until querying api again
-                await Task.Delay(_interval);
-            }
-
-            var existingScores = await databaseContext.Scores.AsNoTracking()
-                .Where(x => x.BeatmapId == mapId)
-                .Select(x => x.Id)
-                .ToArrayAsync();
-
-            var allowedMods = new[] { "HD", "DT", "HR" };
-            var modCombos = Utils.CreateCombinations(0, Array.Empty<string>(), allowedMods);
-            modCombos.Add(new[] { string.Empty });
-
-            foreach (var modCombo in modCombos)
-            {
-                var scores = await _osuApiProvider.GetScores(mapId, modCombo);
-                if (scores == null || scores.Scores.Length == 0)
+                var user = await context.Users.FindAsync(score.UserId);
+                if (user == null)
                 {
-                    await Task.Delay(_interval);
-
-                    continue;
-                }
-
-                // only allow new scores w/o settings AND rate changes
-                var filteredScores = scores.Scores
-                    .Where(s => s.Mods.All(m => m.Settings.Count == 0 || m.Settings.Keys.All(x=> x == "speed_change")))
-                    .Where(x => !existingScores.Contains(x.Id));
-
-                foreach (var score in filteredScores)
-                {
-                    var user = await databaseContext.Users.FindAsync(score.User.Id);
-                    if (user != null)
+                    var osuUser = await _osuApiProvider.GetUser(score.UserId);
+                    if (osuUser == null)
                     {
-                        user.CountryCode = score.User.CountryCode;
-                        user.UpdatedAt = DateTime.UtcNow;
-                        user.Username = score.User.Username;
-                    }
-                    else
-                    {
-                        await databaseContext.Users.AddAsync(new Database.Models.User
-                        {
-                            Id = score.User.Id,
-                            CountryCode = score.User.CountryCode,
-                            UpdatedAt = DateTime.UtcNow,
-                            Username = score.User.Username
-                        });
+                        _logger.LogWarning("User {Id} was not found on osu!API", score.UserId);
+                        continue;
                     }
 
-                    await databaseContext.Scores.AddAsync(new Database.Models.Score
+                    await context.Users.AddAsync(new User
                     {
-                        Id = score.Id,
-                        Accuracy = score.Accuracy,
-                        BeatmapId = score.BeatmapId,
-                        Combo = score.Combo,
-                        Count100 = score.Statistics.Count100 ?? 0,
-                        Count300 = score.Statistics.Count300,
-                        Count50 = score.Statistics.Count50 ?? 0,
-                        CountMiss = score.Statistics.CountMiss ?? 0,
-                        SliderEnds = score.Statistics.SliderEnds,
-                        SliderTicks = score.Statistics.SliderTicks,
-                        SpinnerBonus = score.Statistics.SpinnerBonus,
-                        SpinnerSpins = score.Statistics.SpinnerSpins,
-                        LegacySliderEnds = score.Statistics.LegacySliderEnds,
-                        LegacySliderEndMisses = score.Statistics.LegacySliderEndMisses,
-                        SliderTickMisses = score.Statistics.SliderTickMisses,
-                        Date = score.Date,
-                        Grade = score.Grade,
-                        Mods = score.Mods.Select(Utils.ModToString).ToArray(),
-                        TotalScore = score.TotalScore,
-                        UserId = score.User.Id,
-                        IsBest = false
+                        Id = osuUser.Id,
+                        CountryCode = osuUser.CountryCode,
+                        UpdatedAt = DateTime.UtcNow,
+                        Username = osuUser.Username
                     });
-
-                    if (!affectedPlayers.Contains(score.User.Id))
-                    {
-                        affectedPlayers.Add(score.User.Id);
-                    }
-
-                    collectedScores++;
                 }
 
-                await Task.Delay(_interval);
-            }
+                await context.Scores.AddAsync(new Score
+                {
+                    Id = score.Id,
+                    Accuracy = score.Accuracy,
+                    BeatmapId = score.BeatmapId,
+                    Combo = score.Combo,
+                    Count100 = score.Statistics.Count100 ?? 0,
+                    Count300 = score.Statistics.Count300,
+                    Count50 = score.Statistics.Count50 ?? 0,
+                    CountMiss = score.Statistics.CountMiss ?? 0,
+                    SliderEnds = score.Statistics.SliderEnds,
+                    SliderTicks = score.Statistics.SliderTicks,
+                    SpinnerBonus = score.Statistics.SpinnerBonus,
+                    SpinnerSpins = score.Statistics.SpinnerSpins,
+                    LegacySliderEnds = score.Statistics.LegacySliderEnds,
+                    LegacySliderEndMisses = score.Statistics.LegacySliderEndMisses,
+                    SliderTickMisses = score.Statistics.SliderTickMisses,
+                    Date = score.Date,
+                    Grade = score.Grade,
+                    Mods = score.Mods.Select(Utils.ModToString).ToArray(),
+                    TotalScore = score.TotalScore,
+                    UserId = score.UserId,
+                    IsBest = false
+                });
 
-            await databaseContext.SaveChangesAsync();
+                affectedPlayers.Add(score.UserId);
+
+                await context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to process score {ScoreId}", score.Id);
+            }
         }
 
-        return (collectedScores, affectedPlayers);
+        return affectedPlayers;
     }
 }
