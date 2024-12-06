@@ -70,7 +70,7 @@ export default async function UserPage({ params }: Props) {
         </CardBody>
         <CardFooter className="pl-4 pr-5 pb-1">
           <div className="flex grow items-start self-start text-sm">Submitted scores:<Spacer x={1}/><p className="font-bold">{player.playcount}</p></div>
-          <div className="flex flex-row gap-4 justify-end">
+          <div className="flex flex-row gap-1 md:gap-4 justify-end">
             <div className="flex flex-col gap-2"><Chip size="md" radius="lg" className="border-2 border-pink-500/50 min-h-6 h-6 max-h-6 min-w-12 w-12 max-w-12">SS</Chip><p className="text-sm">{player.countSS}</p></div>
             <div className="flex flex-col gap-2"><Chip size="md" radius="lg" className="border-2 border-blue-500/50 min-h-6 h-6 max-h-6 min-w-12 w-12 max-w-12">S</Chip><p className="text-sm">{player.countS}</p></div>
             <div className="flex flex-col gap-2"><Chip size="md" radius="lg" className="border-2 border-green-500/50 min-h-6 h-6 max-h-6 min-w-12 w-12 max-w-12">A</Chip><p className="text-sm">{player.countA}</p></div>
