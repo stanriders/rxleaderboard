@@ -49,6 +49,11 @@ public class PpService : IPpService
             .GroupBy(x => x.BeatmapId)
             .ToListAsync();
 
+        if (mapScores.Count == 0)
+        {
+            return;
+        }
+
         _logger.LogInformation("Populating pp - {Total} total maps", mapScores.Count);
 
         var currentBestPp = await _databaseContext.Scores.AsNoTracking()
@@ -172,6 +177,11 @@ public class PpService : IPpService
             .Where(x => x.StarRating == null)
             .ToListAsync();
 
+        if (unpopulatedStarRatings.Count == 0)
+        {
+            return;
+        }
+
         _logger.LogInformation("Populating beatmaps sr - {Total} total", unpopulatedStarRatings.Count);
 
         foreach (var map in unpopulatedStarRatings)
@@ -230,7 +240,6 @@ public class PpService : IPpService
     public async Task RecalculatePlayersPp(List<int> playerIds)
     {
         _logger.LogInformation("Recalculating {Count} players total pp...", playerIds.Count);
-        var stopwatch = Stopwatch.StartNew();
 
         var currentTopPlayer = await _databaseContext.Users.AsNoTracking()
             .Where(x => x.TotalPp != null)
@@ -269,8 +278,6 @@ public class PpService : IPpService
         {
             await _discordService.PostBestPlayerAnnouncement(newTopPlayer);
         }
-
-        _logger.LogInformation("Recalculating {Count} players total pp done! Took {Elapsed}", playerIds.Count, stopwatch.Elapsed);
     }
 
     public async Task RecalculatePlayerPp(int id)
@@ -370,7 +377,6 @@ public class PpService : IPpService
     public async Task RecalculateBestScores(List<int> players)
     {
         _logger.LogInformation("Recalculating {Count} players best scores started...", players.Count);
-        var stopwatch = Stopwatch.StartNew();
 
         var scoreGroups = await _databaseContext.Scores
             .Where(x=> players.Contains(x.UserId))
@@ -396,9 +402,6 @@ public class PpService : IPpService
         }
 
         await _databaseContext.SaveChangesAsync();
-
-        stopwatch.Stop();
-        _logger.LogInformation("Recalculating {Count} players best scores done! Took {Elapsed}", players.Count, stopwatch.Elapsed);
     }
 
     public async Task RecalculateBestScores(int mapId, int userId)
@@ -531,6 +534,11 @@ public class PpService : IPpService
             .Include(x => x.Beatmap)
             .Where(x => x.Beatmap!.Status != BeatmapStatus.Ranked && x.Beatmap!.Status != BeatmapStatus.Approved)
             .ToListAsync();
+
+        if (scoresThatShouldntHavePp.Count == 0)
+        {
+            return;
+        }
 
         _logger.LogInformation("Removing pp from unranked scores - {Total} total scores", scoresThatShouldntHavePp.Count);
 
