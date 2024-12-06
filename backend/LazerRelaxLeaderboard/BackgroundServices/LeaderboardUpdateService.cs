@@ -48,16 +48,14 @@ public class LeaderboardUpdateService : BackgroundService
         else
         {
             // we're allowed to query 10 million scores back, start from the farthest one that's still allowed
-            // at a rate of 1000 scores per second we should catch up in ~16 minutes
-            currentCursor = cursorResponse.Scores.OrderByDescending(x => x.Id).First().Id - 950_000;
+            // at a rate of 1000 scores per second we should catch up in ~3 hours
+            currentCursor = cursorResponse.Scores.OrderByDescending(x => x.Id).First().Id - 9_950_000;
         }
 
         await Task.Delay(_apiInterval, stoppingToken);
 
         while (!stoppingToken.IsCancellationRequested)
         {
-            _logger.LogInformation("Starting LeaderboardUpdateService loop...");
-
             var interval = _queryInterval;
 
             try
@@ -124,8 +122,6 @@ public class LeaderboardUpdateService : BackgroundService
             {
                 _logger.LogError(ex, "LeaderboardUpdateService failed!");
             }
-
-            _logger.LogInformation("Finished LeaderboardUpdateService loop");
 
             await Task.Delay(interval, stoppingToken);
         }
