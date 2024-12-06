@@ -47,9 +47,9 @@ public class LeaderboardUpdateService : BackgroundService
         }
         else
         {
-            // we're allowed to query 10 million scores back, start from the farthest one that's still allowed
-            // at a rate of 1000 scores per second we should catch up in ~3 hours
-            currentCursor = cursorResponse.Scores.OrderByDescending(x => x.Id).First().Id - 9_950_000;
+            // catch up on the potentially missed scores while we were offline
+            // 100k scores is ~30 minutes of scores which is getting processed in ~2 minutes
+            currentCursor = cursorResponse.Scores.OrderByDescending(x => x.Id).First().Id - 100_000;
         }
 
         await Task.Delay(_apiInterval, stoppingToken);
