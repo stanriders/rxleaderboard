@@ -100,23 +100,27 @@ public class LeaderboardUpdateService : BackgroundService
 
                 _logger.LogInformation("Got a new score batch of {Count}, cursor {Cursor}", scoreResponse.Scores.Count, currentCursor);
 
-                for (var i = 0; i < scoreResponse.Scores.Count; i += 500)
+                if (scoreResponse.Scores.Count == 0)
                 {
-                    var scores = scoreResponse.Scores.Skip(i).Take(500).ToList();
+                    continue;
+                }
 
-                    var affectedPlayers = await ProcessScores(scores, context);
+                var affectedPlayers = await ProcessScores(scoreResponse.Scores, context);
 
-                    await ppService.PopulateScores();
-                    if (affectedPlayers.Count > 0)
-                    {
-                        await ppService.RecalculateBestScores(affectedPlayers);
-                        await ppService.RecalculatePlayersPp(affectedPlayers);
-                    }
+                await ppService.PopulateScores();
+
+                // somehow database seem to have issues keeping up and fails to properly calculate best scores, so we wait for a bit
+                await Task.Delay(_apiInterval, stoppingToken);
+
+                if (affectedPlayers.Count > 0)
+                {
+                    await ppService.RecalculateBestScores(affectedPlayers);
+                    await ppService.RecalculatePlayersPp(affectedPlayers);
                 }
 
                 await ppService.PopulateStarRatings();
 
-                currentCursor = scoreResponse.Scores.OrderByDescending(x=> x.Id).First().Id;
+                currentCursor = scoreResponse.Scores.OrderByDescending(x => x.Id).First().Id;
             }
             catch (Exception ex)
             {
