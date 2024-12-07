@@ -273,15 +273,18 @@ public class LeaderboardUpdateService : BackgroundService
                     IsBest = false
                 });
 
-                affectedPlayers.Add(score.UserId);
-
-                await context.SaveChangesAsync();
+                if (!affectedPlayers.Contains(score.UserId))
+                {
+                    affectedPlayers.Add(score.UserId);
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to process score {ScoreId}", score.Id);
             }
         }
+
+        await context.SaveChangesAsync();
 
         return affectedPlayers;
     }

@@ -20,8 +20,6 @@ namespace LazerRelaxLeaderboard.BackgroundServices
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                await Task.Delay(_interval, stoppingToken);
-
                 _logger.LogInformation("Running cleanup job...");
 
                 try
@@ -51,6 +49,8 @@ namespace LazerRelaxLeaderboard.BackgroundServices
                 {
                     _logger.LogError(ex, "CleanupService failed!");
                 }
+
+                await Task.Delay(_interval, stoppingToken);
             }
         }
     }
