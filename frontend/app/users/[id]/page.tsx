@@ -11,6 +11,7 @@ import { notFound } from "next/navigation";
 import { siteConfig } from "@/config/site";
 import { headers } from "next/headers";
 import { Chip } from "@nextui-org/chip";
+import { PlaycountChart } from "./playcount-chart";
 
 type Props = {
   params: { id: number };
@@ -77,11 +78,17 @@ export default async function UserPage({ params }: Props) {
           </div>
         </CardFooter>
       </Card>
-      <Spacer y={8} />
+      <Spacer y={4} />
       {scores.map((row: ScoreModel) => {
         row.user = player;
         return <><Score score={row} showPlayer={false} key={row.id}/><Spacer y={1} /></>
       })}
+      <Spacer y={4} />
+      <Card>
+        <CardBody className="h-48">
+          <PlaycountChart playcountsPerMonth={player.playcountsPerMonth}/>
+        </CardBody>
+      </Card>
     </>
   );
 }

@@ -1,5 +1,6 @@
 using LazerRelaxLeaderboard.Contracts;
 using LazerRelaxLeaderboard.Database;
+using LazerRelaxLeaderboard.Database.Models;
 using LazerRelaxLeaderboard.OsuApi.Interfaces;
 using LazerRelaxLeaderboard.OsuApi.Models;
 using LazerRelaxLeaderboard.Services;
@@ -110,6 +111,44 @@ namespace LazerRelaxLeaderboard.Controllers
                         .SingleOrDefaultAsync();
                 }
 
+                var countsPerMonth = await _databaseContext.Database.SqlQuery<ScoresPerMonthQuery>(
+                    $@"select date_trunc('month', date(""Date"")) as ""Month"", count(""Id"") as ""Count""
+                       from ""Scores""
+                       where ""UserId"" = {id}
+                       group by ""Month"";").ToArrayAsync();
+
+                var counts = new List<PlaycountPerMonth>();
+
+                var currentCount = 0;
+                for (var i = 0; i <= Utils.MonthDifference(countsPerMonth[0].Month, DateTime.Today); i++)
+                {
+                    if (currentCount <= 0)
+                    {
+                        counts.Add(new PlaycountPerMonth { Date = countsPerMonth[0].Month, Playcount = countsPerMonth[0].Count });
+                        currentCount++;
+                        continue;
+                    }
+
+                    if (currentCount >= countsPerMonth.Length)
+                    {
+                        counts.Add(new PlaycountPerMonth {Date = countsPerMonth[0].Month.AddMonths(i), Playcount = 0});
+                        continue;
+                    }
+
+                    var diff = Utils.MonthDifference(countsPerMonth[currentCount].Month, countsPerMonth[currentCount - 1].Month) - 1;
+                    if (diff > 0)
+                    {
+                        for (var j = 0; j < diff; j++)
+                        {
+                            counts.Add(new PlaycountPerMonth { Date = countsPerMonth[0].Month.AddMonths(i), Playcount = 0 });
+                            i++;
+                        }
+                    }
+
+                    counts.Add(new PlaycountPerMonth { Date = countsPerMonth[currentCount].Month, Playcount = countsPerMonth[currentCount].Count });
+                    currentCount++;
+                }
+
                 // todo: make sure this isn't too slow
                 return new PlayersDataResponse
                 {
@@ -123,7 +162,8 @@ namespace LazerRelaxLeaderboard.Controllers
                     Playcount = await _databaseContext.Scores.CountAsync(x=> x.UserId == user.Id),
                     CountSS = await _databaseContext.Scores.Where(x => x.UserId == user.Id).CountAsync(x => x.Grade == Grade.X || x.Grade == Grade.XH),
                     CountS = await _databaseContext.Scores.Where(x => x.UserId == user.Id).CountAsync(x => x.Grade == Grade.S || x.Grade == Grade.SH),
-                    CountA = await _databaseContext.Scores.Where(x => x.UserId == user.Id).CountAsync(x => x.Grade == Grade.A)
+                    CountA = await _databaseContext.Scores.Where(x => x.UserId == user.Id).CountAsync(x => x.Grade == Grade.A),
+                    PlaycountsPerMonth = counts.ToArray()
                 };
             }
             return null;

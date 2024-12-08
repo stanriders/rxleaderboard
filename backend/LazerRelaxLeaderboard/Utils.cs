@@ -55,5 +55,10 @@ namespace LazerRelaxLeaderboard
             return mods.All(m =>
                        m.Settings.Count == 0 || m.Settings.Keys.All(s => AllowedModSettings.Contains(s)));
         }
+
+        public static int MonthDifference(DateTime date1, DateTime date2)
+        {
+            return Math.Abs(((date1.Year - date2.Year) * 12) + date1.Month - date2.Month);
+        }
     }
 }

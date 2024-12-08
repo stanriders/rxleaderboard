@@ -538,6 +538,12 @@ export interface components {
             /** Format: int32 */
             playcount: number;
         };
+        PlaycountPerMonth: {
+            /** Format: date-time */
+            date?: string;
+            /** Format: int32 */
+            playcount?: number;
+        };
         PlayersDataResponse: {
             /** Format: int32 */
             id: number;
@@ -559,6 +565,7 @@ export interface components {
             countS: number;
             /** Format: int32 */
             countA: number;
+            playcountsPerMonth: components["schemas"]["PlaycountPerMonth"][] | null;
         };
         PlayersResult: {
             players?: components["schemas"]["User"][] | null;
