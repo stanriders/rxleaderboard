@@ -163,7 +163,7 @@ namespace LazerRelaxLeaderboard.Controllers
                     CountSS = await _databaseContext.Scores.Where(x => x.UserId == user.Id).CountAsync(x => x.Grade == Grade.X || x.Grade == Grade.XH),
                     CountS = await _databaseContext.Scores.Where(x => x.UserId == user.Id).CountAsync(x => x.Grade == Grade.S || x.Grade == Grade.SH),
                     CountA = await _databaseContext.Scores.Where(x => x.UserId == user.Id).CountAsync(x => x.Grade == Grade.A),
-                    PlaycountsPerMonth = counts.ToArray()
+                    PlaycountsPerMonth = counts.OrderBy(x=> x.Date).ToArray()
                 };
             }
             return null;
