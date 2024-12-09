@@ -61,7 +61,7 @@ namespace LazerRelaxLeaderboard.Controllers
         }
 
         [HttpGet("/players")]
-        public async Task<PlayersResult> GetTopPlayers(int page = 1, string? search = null)
+        public async Task<PlayersResult> GetTopPlayers(int page = 1, string? countryCode = null, string? search = null)
         {
             const int take = 50;
 
@@ -77,6 +77,11 @@ namespace LazerRelaxLeaderboard.Controllers
                 {
                     query = query.Where(x => x.Username.ToUpper().StartsWith(search.ToUpper()));
                 }
+            }
+
+            if (!string.IsNullOrEmpty(countryCode))
+            {
+                query = query.Where(x => x.CountryCode == countryCode);
             }
 
             var result = await query
@@ -103,11 +108,16 @@ namespace LazerRelaxLeaderboard.Controllers
             if (user != null)
             {
                 int? rank = null;
+                int? countryRank = null;
                 if (user.TotalPp != null)
                 {
                     // todo: how expensive is it?
                     rank = await _databaseContext.Database
                         .SqlQuery<int>($"select x.row_number as \"Value\" from (SELECT \"Id\", ROW_NUMBER() OVER(order by \"TotalPp\" desc) FROM \"Users\" where \"TotalPp\" is not null) x WHERE x.\"Id\" = {user.Id}")
+                        .SingleOrDefaultAsync();
+
+                    countryRank = await _databaseContext.Database
+                        .SqlQuery<int>($"select x.row_number as \"Value\" from (SELECT \"Id\", ROW_NUMBER() OVER(order by \"TotalPp\" desc) FROM \"Users\" where \"TotalPp\" is not null and \"CountryCode\" = {user.CountryCode}) x WHERE x.\"Id\" = {user.Id}")
                         .SingleOrDefaultAsync();
                 }
 
@@ -154,6 +164,7 @@ namespace LazerRelaxLeaderboard.Controllers
                 {
                     Id = user.Id,
                     Rank = rank,
+                    CountryRank = countryRank,
                     CountryCode = user.CountryCode,
                     TotalAccuracy = user.TotalAccuracy,
                     Username = user.Username,
@@ -301,6 +312,12 @@ namespace LazerRelaxLeaderboard.Controllers
                 Mods = Utils.AllowedMods,
                 ModSettings = Utils.AllowedModSettings
             };
+        }
+
+        [HttpGet("/countries")]
+        public async Task<string[]> GetCountries()
+        {
+            return await _databaseContext.Users.AsNoTracking().Select(x => x.CountryCode).Distinct().OrderBy(x=>x).ToArrayAsync();
         }
     }
 }

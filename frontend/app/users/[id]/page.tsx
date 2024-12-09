@@ -62,16 +62,17 @@ export default async function UserPage({ params }: Props) {
             </Link>
           </div>
           <div className="flex flex-col flex-none">
-            <p className="text-sm md:text-md text-default-400 text-right">{player.totalAccuracy?.toFixed(2)}%</p>
             <p className="text-md md:text-xl text-right">{player.totalPp?.toFixed(2)}pp</p>
+            <p className="text-sm md:text-md text-default-400 text-right">{player.totalAccuracy?.toFixed(2)}%</p>
           </div>
-          <div className="flex-none px-2 md:px-5">
-            <p className="text-2xl md:text-3xl justify-center items-center font-semibold text-primary-400">#{player.rank ?? (<>-</>)}</p>
+          <div className="flex flex-col flex-none px-2 md:px-5 justify-center items-center">
+            <p className="text-2xl md:text-3xl font-semibold text-primary-400">#{player.rank ?? (<>-</>)}</p>
+            <p className="text-xs md:text-xs text-default-500">#{player.countryRank ?? (<>-</>)} {player.countryCode}</p>
           </div>
         </CardBody>
         <CardFooter className="pl-4 pr-5 pb-1">
           <div className="flex grow items-start self-start text-sm">Submitted scores:<Spacer x={1}/><p className="font-bold">{player.playcount}</p></div>
-          <div className="flex flex-row gap-1 md:gap-4 justify-end">
+          <div className="flex flex-row gap-1 md:gap-3 justify-end">
             <div className="flex flex-col gap-2"><Chip size="md" radius="lg" className="border-2 border-pink-500/50 min-h-6 h-6 max-h-6 min-w-12 w-12 max-w-12">SS</Chip><p className="text-sm">{player.countSS}</p></div>
             <div className="flex flex-col gap-2"><Chip size="md" radius="lg" className="border-2 border-blue-500/50 min-h-6 h-6 max-h-6 min-w-12 w-12 max-w-12">S</Chip><p className="text-sm">{player.countS}</p></div>
             <div className="flex flex-col gap-2"><Chip size="md" radius="lg" className="border-2 border-green-500/50 min-h-6 h-6 max-h-6 min-w-12 w-12 max-w-12">A</Chip><p className="text-sm">{player.countA}</p></div>
