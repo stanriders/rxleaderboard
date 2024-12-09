@@ -12,7 +12,7 @@ export const PlaycountChart: FC<Props> = (props) => {
     return <></>;
 
   var data = props.playcountsPerMonth.map((val)=> {
-    return {date: new Date(val.date ?? "").toLocaleDateString(), playcount: val.playcount};
+    return {date: new Date(val.date ?? "").toLocaleString('default', { month: 'short', year: 'numeric' }), playcount: val.playcount};
   })
 
   const CustomTooltip = ({ active, payload, label } : any) => {
