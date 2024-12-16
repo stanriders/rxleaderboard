@@ -197,7 +197,7 @@ namespace LazerRelaxLeaderboard.Controllers
         {
             const int take = 30;
 
-            var query = _databaseContext.Beatmaps.AsNoTracking();
+            var query = _databaseContext.Beatmaps.Where(x=> x.Scores.Count > 0).AsNoTracking();
 
             if (!string.IsNullOrEmpty(search))
             {
