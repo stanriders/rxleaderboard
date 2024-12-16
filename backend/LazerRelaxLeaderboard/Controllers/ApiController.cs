@@ -188,6 +188,7 @@ namespace LazerRelaxLeaderboard.Controllers
                 .Where(x => x.UserId == id)
                 .Include(x => x.Beatmap)
                 .OrderByDescending(x => x.Date)
+                .Where(x=> x.Date > DateTime.UtcNow.AddDays(-30))
                 .Take(10)
                 .ToListAsync();
         }

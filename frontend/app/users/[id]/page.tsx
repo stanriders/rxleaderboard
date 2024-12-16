@@ -47,6 +47,10 @@ export default async function UserPage({ params }: Props) {
   const scores = await fetch(`${ApiBase}/players/${params.id}/scores`, {headers: Object.fromEntries(headers())})
     .then(result => result.json())
     .catch(error => console.log("User scores fetch error: " + error));
+    
+  const recentScores = await fetch(`${ApiBase}/players/${params.id}/scores/recent`, {headers: Object.fromEntries(headers())})
+  .then(result => result.json())
+  .catch(error => console.log("User recent scores fetch error: " + error));
 
   return (
     <>
@@ -88,6 +92,12 @@ export default async function UserPage({ params }: Props) {
       <Card>
         <CardBody className="h-48">
           <PlaycountChart playcountsPerMonth={player.playcountsPerMonth}/>
+        </CardBody>
+        <CardBody>
+          {recentScores.map((row: ScoreModel) => {
+            row.user = player;
+            return <><Score score={row} showPlayer={false} key={row.id}/><Spacer y={1} /></>
+          })}
         </CardBody>
       </Card>
     </>
