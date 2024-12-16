@@ -36,7 +36,7 @@ namespace LazerRelaxLeaderboard
         public static List<string[]> CreateCombinations(int startIndex, string[] pair, string[] initialArray)
         {
             var combinations = new List<string[]>();
-            for (int i = startIndex; i < initialArray.Length; i++)
+            for (var i = startIndex; i < initialArray.Length; i++)
             {
                 combinations.Add(pair.Append(initialArray[i]).ToArray());
                 combinations.AddRange(CreateCombinations(i + 1, pair.Append(initialArray[i]).ToArray(), initialArray));

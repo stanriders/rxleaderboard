@@ -16,12 +16,12 @@
 	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.10" />
-    <PackageReference Include="ppy.osu.Game.Rulesets.Osu" Version="2024.1023.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.9.0" />
+    <PackageReference Include="ppy.osu.Game.Rulesets.Osu" Version="2024.1208.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />
     <PackageReference Include="Serilog.Enrichers.ClientInfo" Version="2.1.2" />
     <PackageReference Include="Serilog.Sinks.Seq" Version="8.0.0" />
-    <PackageReference Include="SerilogTracing.Instrumentation.AspNetCore" Version="2.2.0" />
+    <PackageReference Include="SerilogTracing.Instrumentation.AspNetCore" Version="2.3.0" />
     <PackageReference Include="UAParser.Core" Version="4.0.4" />
   </ItemGroup>
 

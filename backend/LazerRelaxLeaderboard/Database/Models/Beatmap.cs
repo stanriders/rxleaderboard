@@ -40,9 +40,6 @@ namespace LazerRelaxLeaderboard.Database.Models
 
         public double? StarRating { get; set; }
 
-        [Obsolete]
-        public DateTime ScoresUpdatedOn { get; set; }
-
         public required BeatmapStatus Status { get; set; }
 
         public required int MaxCombo { get; set; }

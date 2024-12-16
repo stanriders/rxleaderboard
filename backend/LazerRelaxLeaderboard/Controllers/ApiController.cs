@@ -1,15 +1,11 @@
 using LazerRelaxLeaderboard.Contracts;
 using LazerRelaxLeaderboard.Database;
 using LazerRelaxLeaderboard.Database.Models;
-using LazerRelaxLeaderboard.OsuApi.Interfaces;
 using LazerRelaxLeaderboard.OsuApi.Models;
-using LazerRelaxLeaderboard.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Beatmap = LazerRelaxLeaderboard.Database.Models.Beatmap;
 using Score = LazerRelaxLeaderboard.Database.Models.Score;
-using User = LazerRelaxLeaderboard.Database.Models.User;
 
 namespace LazerRelaxLeaderboard.Controllers
 {
@@ -18,16 +14,10 @@ namespace LazerRelaxLeaderboard.Controllers
     public class ApiController : ControllerBase
     {
         private readonly DatabaseContext _databaseContext;
-        private readonly IOsuApiProvider _osuApiProvider;
-        private readonly IPpService _ppService;
-        private readonly string _beatmapCachePath;
 
-        public ApiController(DatabaseContext databaseContext, IConfiguration configuration, IOsuApiProvider osuApiProvider, IPpService ppService)
+        public ApiController(DatabaseContext databaseContext)
         {
             _databaseContext = databaseContext;
-            _osuApiProvider = osuApiProvider;
-            _ppService = ppService;
-            _beatmapCachePath = configuration["BeatmapCachePath"]!;
         }
 
         [HttpGet("/scores")]

@@ -162,9 +162,9 @@ public class LeaderboardUpdateService : BackgroundService
                         continue;
                     }
 
-                    if (osuBeatmap.Status != BeatmapStatus.Ranked &&
-                        osuBeatmap.Status != BeatmapStatus.Approved &&
-                        osuBeatmap.Status != BeatmapStatus.Loved)
+                    if (osuBeatmap.Status is not BeatmapStatus.Ranked and
+                        not BeatmapStatus.Approved and
+                        not BeatmapStatus.Loved)
                     {
                         await Task.Delay(_apiInterval);
                         continue;
@@ -219,8 +219,7 @@ public class LeaderboardUpdateService : BackgroundService
                         Spinners = osuBeatmap.Spinners,
                         StarRatingNormal = osuBeatmap.StarRating,
                         MaxCombo = osuBeatmap.MaxCombo,
-                        Status = osuBeatmap.Status,
-                        ScoresUpdatedOn = DateTime.UtcNow
+                        Status = osuBeatmap.Status
                     });
 
                     await context.SaveChangesAsync();

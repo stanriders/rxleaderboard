@@ -67,7 +67,7 @@ public class PpService : IPpService
             var batch = mapScores.Skip(i).Take(100).ToList();
 
             var queryBuilder = new ConcurrentBag<string>();
-            await Parallel.ForEachAsync(batch, (mapGroup, _) =>
+            await Parallel.ForEachAsync(batch, (mapGroup, token) =>
             {
                 var mapPath = $"{_cachePath}/{mapGroup.Key}.osu";
                 if (!File.Exists(mapPath))
@@ -85,7 +85,7 @@ public class PpService : IPpService
                 foreach (var modsGroup in mapGroup.GroupBy(x => x.Mods))
                 {
                     var mods = GetMods(ruleset, modsGroup.Key);
-                    var difficultyAttributes = difficultyCalculator.Calculate(mods);
+                    var difficultyAttributes = difficultyCalculator.Calculate(mods, token);
                     var performanceCalculator = ruleset.CreatePerformanceCalculator();
 
                     foreach (var score in modsGroup)
@@ -142,6 +142,7 @@ public class PpService : IPpService
 
                         var performanceAttributes = performanceCalculator.Calculate(scoreInfo, difficultyAttributes);
 
+                        // ReSharper disable once CompareOfFloatsByEqualityOperator
                         if (score.Pp != performanceAttributes.Total)
                         {
                             queryBuilder.Add($"UPDATE \"Scores\" SET \"Pp\" = {performanceAttributes.Total} WHERE \"Id\" = {score.Id};");
@@ -558,7 +559,7 @@ public class PpService : IPpService
         await _databaseContext.SaveChangesAsync();
     }
 
-    private Mod[] GetMods(Ruleset ruleset, string[] modNames)
+    private static Mod[] GetMods(Ruleset ruleset, string[] modNames)
     {
         var mods = new List<Mod>();
 
@@ -604,7 +605,7 @@ public class PpService : IPpService
 
         scores = scores.OrderByDescending(i => i.Pp).Take(1000).ToArray();
 
-        if (!scores.Any())
+        if (scores.Length == 0)
         {
             player.TotalPp = null;
             player.TotalAccuracy = null;
@@ -633,6 +634,8 @@ public class PpService : IPpService
         player.TotalPp = totalPp;
         player.TotalAccuracy = totalAccuracy;
 
+        // ReSharper disable CompareOfFloatsByEqualityOperator
         return beforePp != totalPp || beforeAccuracy != totalAccuracy;
+        // ReSharper restore CompareOfFloatsByEqualityOperator
     }
 }

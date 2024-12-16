@@ -14,7 +14,6 @@ public class BeatmapUpdateService : BackgroundService
     private readonly ILogger<BeatmapUpdateService> _logger;
     private readonly int _interval;
     private readonly int _batchSize;
-    private readonly string _cachePath;
     private readonly bool _enableProcessing;
 
     public BeatmapUpdateService(IOsuApiProvider osuApiProvider, IConfiguration configuration, ILogger<BeatmapUpdateService> logger, IServiceScopeFactory serviceScopeFactory)
@@ -24,7 +23,6 @@ public class BeatmapUpdateService : BackgroundService
         _serviceScopeFactory = serviceScopeFactory;
         _interval = int.Parse(configuration["APIQueryInterval"]!);
         _batchSize = int.Parse(configuration["BeatmapQueryBatch"]!);
-        _cachePath = configuration["BeatmapCachePath"]!;
         _enableProcessing = bool.Parse(configuration["EnableBeatmapProcessing"]!);
     }
 
@@ -53,36 +51,22 @@ public class BeatmapUpdateService : BackgroundService
 
                 var scoredMaps = await context.Scores.AsNoTracking()
                     .Include(x => x.Beatmap)
-                    .Where(x => x.Beatmap != null && x.Beatmap.ScoresUpdatedOn < DateTime.UtcNow.AddDays(-7))
+                    .Where(x => x.Beatmap != null)
                     .GroupBy(x=> x.BeatmapId)
                     .OrderByDescending(x=> x.Count())
                     .Select(x => x.Key)
                     .ToArrayAsync(cancellationToken: stoppingToken);
 
                 var scorelessMaps = await context.Beatmaps.AsNoTracking()
-                    .Where(x => x.ScoresUpdatedOn < DateTime.UtcNow.AddDays(-7))
                     .Select(x => x.Id)
                     .Where(x => !scoredMaps.Contains(x))
                     .ToArrayAsync(cancellationToken: stoppingToken);
 
                 var existingMaps = scoredMaps.Concat(scorelessMaps.OrderBy(_ => Random.Shared.Next())).ToArray();
 
-                // todo: how long will it take to enumerate all new maps?..
-                //       how do we process broken maps?
-                //       how to prefilter minigames???
-                /*var newMaps = Directory.EnumerateFiles(_cachePath, "*.osu")
-                    .Select(x => int.Parse(x[..^4]))
-                    .Where(x => !existingMaps.Contains(x))
-                    .ToArray();
-
-                // process new maps first
-                var totalMaps = newMaps.Concat(existingMaps).ToArray();*/
-
-                var totalMaps = existingMaps;
-
-                for (var i = 0; i < totalMaps.Length; i += _batchSize)
+                for (var i = 0; i < existingMaps.Length; i += _batchSize)
                 {
-                    _logger.LogInformation("Starting new batch of {BatchSize} ({Current}/{Total})", _batchSize, i, totalMaps.Length);
+                    _logger.LogInformation("Starting new batch of {BatchSize} ({Current}/{Total})", _batchSize, i, existingMaps.Length);
 
                     using var batchScope = _serviceScopeFactory.CreateScope();
                     var ppService = batchScope.ServiceProvider.GetService<IPpService>();
@@ -97,7 +81,7 @@ public class BeatmapUpdateService : BackgroundService
                     // we're catching score collection exceptions separately to run beatmap/pp population regardless of its fails
                     try
                     {
-                        collectionResult = await CollectScores(totalMaps.Skip(i).Take(_batchSize).ToArray(), context);
+                        collectionResult = await CollectScores(existingMaps.Skip(i).Take(_batchSize).ToArray(), context);
                     }
                     catch (Exception ex)
                     {
@@ -145,13 +129,7 @@ public class BeatmapUpdateService : BackgroundService
             _logger.LogInformation("Processing {MapId}...", mapId);
 
             var dbBeatmap = await databaseContext.Beatmaps.FindAsync(mapId);
-            if (dbBeatmap != null)
-            {
-                dbBeatmap.ScoresUpdatedOn = DateTime.UtcNow;
-                databaseContext.Beatmaps.Update(dbBeatmap);
-                // don't save here, only save the date together with scores
-            }
-            else
+            if (dbBeatmap == null)
             {
                 var osuBeatmap = await _osuApiProvider.GetBeatmap(mapId);
                 if (osuBeatmap == null)
@@ -201,8 +179,7 @@ public class BeatmapUpdateService : BackgroundService
                         Spinners = osuBeatmap.Spinners,
                         StarRatingNormal = osuBeatmap.StarRating,
                         MaxCombo = osuBeatmap.MaxCombo,
-                        Status = osuBeatmap.Status,
-                        ScoresUpdatedOn = DateTime.UtcNow
+                        Status = osuBeatmap.Status
                     });
                 }
 
