@@ -96,7 +96,7 @@ export default async function UserPage({ params }: Props) {
         <CardBody>
           {recentScores.map((row: ScoreModel) => {
             row.user = player;
-            return <><Score score={row} showPlayer={false} key={row.id}/><Spacer y={1} /></>
+            return <><Score score={row} showPlayer={false} key={row.id} simple/><Spacer y={1} /></>
           })}
         </CardBody>
       </Card>
