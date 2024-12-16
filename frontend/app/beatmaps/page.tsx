@@ -5,5 +5,5 @@ export const metadata: Metadata = {
   };
 
 export default async function BeatmapListingPage() {
-  return (<BeatmapListing/>);
+  return <BeatmapListing/>;
 }

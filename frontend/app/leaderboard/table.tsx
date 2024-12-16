@@ -7,16 +7,21 @@ import { User } from "@/components/user";
 import { ApiBase } from "@/api/address";
 import { Input } from "@nextui-org/input";
 import { Spacer } from "@nextui-org/spacer";
-import { useEffect, useState } from "react";
+import { FC, useEffect, useState } from "react";
+import { Select, SelectItem } from "@nextui-org/select";
 import useSWR from "swr";
 
 const fetcher = (url : any) => fetch(url).then(r => r.json()).catch(error => console.log("Leaderboard fetch error: " + error));;
+type Props = { countries: string[] | undefined };
 
-export default function LeaderboardTable() {
+export const LeaderboardTable: FC<Props> = (props) => {
     const [page, setPage] = useState(1);
     const [search, setSearch] = useState("");
+    const [country, setCountry] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
     
+    const countries = ["-"].concat(props.countries ? props.countries : []);
+
     useEffect(() => {
       const timeoutId = setTimeout(() => {
         setDebouncedSearch(search);
@@ -24,9 +29,16 @@ export default function LeaderboardTable() {
       return () => clearTimeout(timeoutId);
     }, [search, 500]);
 
+    const handleCountrySelectionChange = (e:any) => {
+      setCountry(e.target.value);
+    };
+
     let address = `${ApiBase}/players?page=${page}`;
     if (debouncedSearch != "") {
       address += `&search=${debouncedSearch}`
+    }
+    if (country != "" && country != "-") {
+      address += `&countryCode=${country}`
     }
     const { data, error } = useSWR(address, fetcher)
 
@@ -76,10 +88,23 @@ export default function LeaderboardTable() {
 
     return (
     <>
-      <div className="w-full flex justify-end">
+      
+      <div className="w-full flex gap-2">
+        {props.countries ? <div className="w-full flex justify-start">
+          <Select className="md:ml-4 max-w-52" 
+            size="sm" 
+            label="Country" 
+            placeholder="Select a country" 
+            selectedKeys={[country]} 
+            onChange={handleCountrySelectionChange}>
+            {countries.map((country) => (
+              <SelectItem key={country}>{country}</SelectItem>
+            ))}
+          </Select>
+        </div> : <></>}
         <Input
             classNames={{
-              base: "mx-4 max-w-48 h-10",
+              base: "md:mr-4 max-w-52 justify-end",
               mainWrapper: "h-full",
               input: "text-small",
               inputWrapper: "h-full font-normal text-default-500 bg-default-400/20 dark:bg-default-500/20",
