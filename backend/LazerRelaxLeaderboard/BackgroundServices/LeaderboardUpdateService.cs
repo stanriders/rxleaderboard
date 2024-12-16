@@ -143,7 +143,6 @@ public class LeaderboardUpdateService : BackgroundService
         {
             try
             {
-                // TODO: precheck the batch instead of checking every score
                 if (await context.Scores.AnyAsync(x => x.Id == score.Id))
                 {
                     continue;

@@ -214,12 +214,12 @@ public class PpService : IPpService
         var stopwatch = Stopwatch.StartNew();
 
         var playerCount = await _databaseContext.Users.CountAsync();
-        for (var i = 0; i < playerCount; i += 100)
+        for (var i = 0; i < playerCount; i += 500)
         {
             var players = await _databaseContext.Users
                 .OrderBy(x => x.Id)
                 .Skip(i)
-                .Take(100)
+                .Take(500)
                 .ToListAsync();
 
             foreach (var player in players)
@@ -248,12 +248,12 @@ public class PpService : IPpService
             .Select(x => x.Id)
             .FirstOrDefaultAsync();
 
-        for (var i = 0; i < playerIds.Count; i += 100)
+        for (var i = 0; i < playerIds.Count; i += 500)
         {
             var players = await _databaseContext.Users
                 .Where(x=> playerIds.Contains(x.Id))
                 .Skip(i)
-                .Take(100)
+                .Take(500)
                 .ToListAsync();
 
             foreach (var player in players)
@@ -361,13 +361,13 @@ public class PpService : IPpService
                 .ToArray();
 
             var bestScore = sortedScores.FirstOrDefault();
-            if (bestScore != null)
+            if (bestScore != null && !bestScore.IsBest)
             {
                 bestScore.IsBest = true;
                 _databaseContext.Scores.Update(bestScore);
             }
 
-            foreach (var notBestScore in sortedScores.Skip(1))
+            foreach (var notBestScore in sortedScores.Skip(1).Where(x => x.IsBest))
             {
                 notBestScore.IsBest = false;
                 _databaseContext.Scores.Update(notBestScore);
@@ -396,13 +396,13 @@ public class PpService : IPpService
                 .ToArray();
 
             var bestScore = sortedScores.FirstOrDefault();
-            if (bestScore != null)
+            if (bestScore != null && !bestScore.IsBest)
             {
                 bestScore.IsBest = true;
                 _databaseContext.Scores.Update(bestScore);
             }
 
-            foreach (var notBestScore in sortedScores.Skip(1))
+            foreach (var notBestScore in sortedScores.Skip(1).Where(x => x.IsBest))
             {
                 notBestScore.IsBest = false;
                 _databaseContext.Scores.Update(notBestScore);
@@ -420,13 +420,13 @@ public class PpService : IPpService
             .ToArrayAsync();
 
         var bestScore = scores.FirstOrDefault();
-        if (bestScore != null)
+        if (bestScore != null && !bestScore.IsBest)
         {
             bestScore.IsBest = true;
             _databaseContext.Scores.Update(bestScore);
         }
 
-        foreach (var notBestScore in scores.Skip(1))
+        foreach (var notBestScore in scores.Skip(1).Where(x => x.IsBest))
         {
             notBestScore.IsBest = false;
             _databaseContext.Scores.Update(notBestScore);
