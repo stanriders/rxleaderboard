@@ -95,6 +95,7 @@ public class LeaderboardUpdateService : BackgroundService
                 if (scoreResponse == null)
                 {
                     _logger.LogError("Score query failed!");
+                    await Task.Delay(interval, stoppingToken);
                     continue;
                 }
 
@@ -102,6 +103,7 @@ public class LeaderboardUpdateService : BackgroundService
 
                 if (scoreResponse.Scores.Count == 0)
                 {
+                    await Task.Delay(interval, stoppingToken);
                     continue;
                 }
 
