@@ -34,14 +34,18 @@ namespace LazerRelaxLeaderboard.Controllers
         }
 
         [HttpGet("/scores/recent")]
-        public async Task<List<Score>> GetNewScores()
+        public async Task<RecentScoresResponse> GetNewScores()
         {
-            return await _databaseContext.Scores.AsNoTracking()
-                .Include(x => x.Beatmap)
-                .Include(x => x.User)
-                .OrderByDescending(x => x.Date)
-                .Take(5)
-                .ToListAsync();
+            return new RecentScoresResponse
+            {
+                Scores = await _databaseContext.Scores.AsNoTracking()
+                    .Include(x => x.Beatmap)
+                    .Include(x => x.User)
+                    .OrderByDescending(x => x.Date)
+                    .Take(5)
+                    .ToListAsync(),
+                ScoresToday = await _databaseContext.Scores.CountAsync(x => x.Date > DateTime.UtcNow.AddDays(-1))
+            };
         }
 
         [HttpGet("/scores/{id}")]

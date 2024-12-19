@@ -9,3 +9,5 @@ export type ListingBeatmap = components["schemas"]["ListingBeatmap"];
 export type BeatmapStatus = components["schemas"]["BeatmapStatus"];
 export type AllowedModsResponse = components["schemas"]["AllowedModsResponse"];
 export type PlaycountPerMonth = components["schemas"]["PlaycountPerMonth"];
+export type RecentScoresResponse =
+  components["schemas"]["RecentScoresResponse"];

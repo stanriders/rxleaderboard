@@ -5,7 +5,7 @@ import { headers } from "next/headers";
 
 import { RecentScoreTable } from "./recent-scores";
 
-import { ScoreModel } from "@/api/types";
+import { RecentScoresResponse } from "@/api/types";
 import { ApiBase } from "@/api/address";
 
 export default async function Home() {
@@ -14,10 +14,10 @@ export default async function Home() {
     headers: Object.fromEntries(headers()),
   }).catch((error) => console.log(`Recent scores fetch failed, ${error}`));
 
-  let scores: ScoreModel[] | null | undefined;
+  let response: RecentScoresResponse | null | undefined;
 
   if (request) {
-    scores = await request.json();
+    response = await request.json();
   }
 
   return (
@@ -28,13 +28,12 @@ export default async function Home() {
         src="/rv-yellowlight.svg"
         width={250}
       />
-      <p>Relaxation vault - osu!lazer relax leaderboard.</p>
-      <Spacer y={4} />
+      <h1>Relaxation vault - osu!lazer relax leaderboard.</h1>
       <Link isExternal className="text-sm" href="https://discord.gg/p5zqFpBUc2">
         Join the Discord server!
       </Link>
-      <Spacer y={12} />
-      <RecentScoreTable scores={scores} />
+      <Spacer y={10} />
+      <RecentScoreTable response={response} />
     </section>
   );
 }

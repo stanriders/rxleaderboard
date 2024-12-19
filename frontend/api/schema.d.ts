@@ -63,9 +63,9 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            "text/plain": components["schemas"]["Score"][];
-            "application/json": components["schemas"]["Score"][];
-            "text/json": components["schemas"]["Score"][];
+            "text/plain": components["schemas"]["RecentScoresResponse"];
+            "application/json": components["schemas"]["RecentScoresResponse"];
+            "text/json": components["schemas"]["RecentScoresResponse"];
           };
         };
       };
@@ -542,11 +542,6 @@ export interface components {
       starRatingNormal: number;
       /** Format: double */
       starRating?: number | null;
-      /**
-       * Format: date-time
-       * @deprecated
-       */
-      scoresUpdatedOn?: string;
       status: components["schemas"]["BeatmapStatus"];
       /** Format: int32 */
       maxCombo: number;
@@ -618,6 +613,11 @@ export interface components {
       players?: components["schemas"]["User"][] | null;
       /** Format: int32 */
       total?: number;
+    };
+    RecentScoresResponse: {
+      scores?: components["schemas"]["Score"][] | null;
+      /** Format: int32 */
+      scoresToday?: number;
     };
     Score: {
       /** Format: int64 */
