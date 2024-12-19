@@ -43,7 +43,6 @@ export const LeaderboardTable: FC<Props> = (props) => {
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       setDebouncedSearch(search);
-      setCountry("");
       setPage(1);
     }, 500);
 
@@ -57,7 +56,7 @@ export const LeaderboardTable: FC<Props> = (props) => {
 
     if (page) params.set("page", page.toString());
 
-    if (country && country != "—") params.set("country", country);
+    if (country) params.set("country", country);
 
     router.push(pathname + "?" + params.toString());
   }, [page, search, country]);
