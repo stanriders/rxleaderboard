@@ -1,4 +1,3 @@
-
 import type { components } from "@/api/schema";
 
 export type ScoreModel = components["schemas"]["Score"];

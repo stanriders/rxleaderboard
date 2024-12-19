@@ -3,7 +3,9 @@ import "@/styles/globals.css";
 import { Metadata, Viewport } from "next";
 import { Link } from "@nextui-org/link";
 import clsx from "clsx";
+
 import { Providers } from "./providers";
+
 import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
 import { Navbar } from "@/components/navbar";
@@ -14,7 +16,7 @@ export const metadata: Metadata = {
     template: `%s - ${siteConfig.name}`,
   },
   applicationName: siteConfig.name,
-  authors: [{name: "StanR", url: "https://osu.ppy.sh/users/7217455"}],
+  authors: [{ name: "StanR", url: "https://osu.ppy.sh/users/7217455" }],
   description: siteConfig.description,
   keywords: ["rx", "osu", "relax", "leaderboard", "osu!", "osu!lazer", "lazer"],
   icons: {
@@ -29,8 +31,8 @@ export const metadata: Metadata = {
     images: ["https://rx.stanr.info/rv-yellowlight-192.png"],
   },
   twitter: {
-    card: 'summary'
-  }
+    card: "summary",
+  },
 };
 
 // all fetch request should be cached for 1 minute unless specified otherwise
@@ -43,7 +45,11 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({ children, }: { children: React.ReactNode; }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html suppressHydrationWarning lang="en" prefix="og: http://ogp.me/ns#">
       <head />
@@ -67,34 +73,52 @@ export default function RootLayout({ children, }: { children: React.ReactNode; }
               <p className="text-default-400 text-sm">
                 <Link
                   isExternal
-                  size="sm"
                   className="gap-1 text-current"
                   href="https://osu.ppy.sh/users/7217455"
-                  title="osu! profile"
-                >Made by StanR</Link> | <Link
-                  isExternal
                   size="sm"
+                  title="osu! profile"
+                >
+                  Made by StanR
+                </Link>{" "}
+                |{" "}
+                <Link
+                  isExternal
                   className="gap-1 text-current"
                   href="https://discord.gg/p5zqFpBUc2"
-                  title="Discord server"
-                >Discord</Link> | <Link
-                  isExternal
                   size="sm"
+                  title="Discord server"
+                >
+                  Discord
+                </Link>{" "}
+                |{" "}
+                <Link
+                  isExternal
                   className="gap-1 text-current"
                   href="https://github.com/stanriders/rxleaderboard"
+                  size="sm"
                   title="GitHub"
-                >Source code</Link> | <Link
-                isExternal
-                size="sm"
-                className="gap-1 text-current"
-                href="https://ko-fi.com/stanr"
-                title="Ko-fi"
-              >Donate ❤</Link>
+                >
+                  Source code
+                </Link>{" "}
+                |{" "}
+                <Link
+                  isExternal
+                  className="gap-1 text-current"
+                  href="https://ko-fi.com/stanr"
+                  size="sm"
+                  title="Ko-fi"
+                >
+                  Donate ❤
+                </Link>
               </p>
             </footer>
           </div>
         </Providers>
-        <script defer src="https://umami.stanr.info/script.js" data-website-id="516606cb-17b7-4166-8315-c47fef8d73dd"></script>
+        <script
+          defer
+          data-website-id="516606cb-17b7-4166-8315-c47fef8d73dd"
+          src="https://umami.stanr.info/script.js"
+        />
       </body>
     </html>
   );

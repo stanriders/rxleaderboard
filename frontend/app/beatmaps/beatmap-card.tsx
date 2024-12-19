@@ -1,8 +1,9 @@
-import { Card, CardHeader, CardBody, CardFooter } from "@nextui-org/card";
+import { Card, CardHeader, CardBody } from "@nextui-org/card";
 import { FC } from "react";
 import { Link } from "@nextui-org/link";
-import { ListingBeatmap } from "@/api/types";
 import { Image } from "@nextui-org/image";
+
+import { ListingBeatmap } from "@/api/types";
 
 type Props = { beatmap: ListingBeatmap };
 
@@ -10,8 +11,8 @@ export const BeatmapCard: FC<Props> = (props) => {
   const beatmap = props.beatmap;
 
   return (
-    <Link href={`/beatmaps/${beatmap.id}`} >
-      <Card isPressable fullWidth key={beatmap.id} >
+    <Link href={`/beatmaps/${beatmap.id}`}>
+      <Card key={beatmap.id} fullWidth isPressable>
         <CardHeader className="absolute z-10 flex-row !items-start h-32 dark:bg-gradient-to-t dark:from-black/5 dark:to-black/60">
           <Card isBlurred className="w-full">
             <CardBody>
@@ -27,15 +28,17 @@ export const BeatmapCard: FC<Props> = (props) => {
           src={`https://assets.ppy.sh/beatmaps/${beatmap.beatmapSetId}/covers/cover.jpg`}
         />
         <CardBody className="p-2 flex flex-row text-sm">
-            <div className="flex grow flex-col">
-                <p className="text-primary-400">{beatmap.difficultyName}</p>
-                <p className="text-default-600">{beatmap.status}</p>
-            </div>
-            
-            <div className="flex grow flex-col justify-right text-right">
-                <p className="text-primary-400">{beatmap.starRating?.toFixed(2)}*</p>
-                <p className="text-default-600">{beatmap.playcount} scores</p>
-            </div>
+          <div className="flex grow flex-col">
+            <p className="text-primary-400">{beatmap.difficultyName}</p>
+            <p className="text-default-600">{beatmap.status}</p>
+          </div>
+
+          <div className="flex grow flex-col justify-right text-right">
+            <p className="text-primary-400">
+              {beatmap.starRating?.toFixed(2)}*
+            </p>
+            <p className="text-default-600">{beatmap.playcount} scores</p>
+          </div>
         </CardBody>
       </Card>
     </Link>
