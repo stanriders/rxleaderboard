@@ -10,34 +10,62 @@ import { Spacer } from "@nextui-org/spacer";
 import { FC, useEffect, useState } from "react";
 import { Select, SelectItem } from "@nextui-org/select";
 import useSWR from "swr";
+import { Flag } from "@/components/flag";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 
 const fetcher = (url : any) => fetch(url).then(r => r.json()).catch(error => console.log("Leaderboard fetch error: " + error));;
 type Props = { countries: string[] | undefined };
 
 export const LeaderboardTable: FC<Props> = (props) => {
-    const [page, setPage] = useState(1);
-    const [search, setSearch] = useState("");
-    const [country, setCountry] = useState("");
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+
+    const [page, setPage] = useState(Number(searchParams.get('page')) ?? 1);
+    const [search, setSearch] = useState(searchParams.get('search') ?? "");
+    const [country, setCountry] = useState(searchParams.get('country') ?? "");
     const [debouncedSearch, setDebouncedSearch] = useState("");
     
-    const countries = ["-"].concat(props.countries ? props.countries : []);
-
+    const countries = ["—"].concat(props.countries ? props.countries : []);
+    
     useEffect(() => {
       const timeoutId = setTimeout(() => {
         setDebouncedSearch(search);
+        setCountry("");
+        setPage(1);
       }, 500);
       return () => clearTimeout(timeoutId);
     }, [search, 500]);
 
+    useEffect(() => {
+      const params = new URLSearchParams()
+      if (search)
+        params.set("search", search)
+
+      if (page)
+        params.set("page", page.toString())
+
+      if (country)
+        params.set("country", country)
+
+      router.push(pathname + '?' + params.toString())
+    }, [page, search, country])
+
+    useEffect(() => {
+      if (page < 1)
+        setPage(1);
+    }, [page]);
+
     const handleCountrySelectionChange = (e:any) => {
       setCountry(e.target.value);
+      setPage(1);
     };
 
     let address = `${ApiBase}/players?page=${page}`;
     if (debouncedSearch != "") {
       address += `&search=${debouncedSearch}`
     }
-    if (country != "" && country != "-") {
+    if (country != "" && country != "—") {
       address += `&countryCode=${country}`
     }
     const { data, error } = useSWR(address, fetcher)
@@ -53,10 +81,21 @@ export const LeaderboardTable: FC<Props> = (props) => {
     if (!data) 
     return (
     <>
-      <div className="w-full flex justify-end">
+      <div className="w-full flex">
+        {props.countries ? <div className="w-full flex justify-start">
+            <Select className="md:ml-4 max-w-52" 
+              size="sm" 
+              label="Country" 
+              placeholder="Select a country"
+              selectionMode="single"
+              disabled
+              selectedKeys={[country]}>
+                <SelectItem key="country-placeholder">country-placeholder</SelectItem>
+            </Select>
+          </div> : <></>}
         <Input
             classNames={{
-              base: "mx-4 max-w-48 h-10",
+              base: "md:mr-4 max-w-52 justify-end",
               mainWrapper: "h-full",
               input: "text-small",
               inputWrapper: "h-full font-normal text-default-500 bg-default-400/20 dark:bg-default-500/20",
@@ -94,11 +133,14 @@ export const LeaderboardTable: FC<Props> = (props) => {
           <Select className="md:ml-4 max-w-52" 
             size="sm" 
             label="Country" 
-            placeholder="Select a country" 
-            selectedKeys={[country]} 
+            placeholder="Select a country"
+            selectionMode="single"
+            selectedKeys={[country]}
             onChange={handleCountrySelectionChange}>
             {countries.map((country) => (
-              <SelectItem key={country}>{country}</SelectItem>
+              <SelectItem key={country} textValue={country}>
+                <div className="flex flex-row">{country != "—" ? <><Flag country={country} width={18} /><Spacer x={1} /></> : <></>}{country}</div>
+              </SelectItem>
             ))}
           </Select>
         </div> : <></>}
