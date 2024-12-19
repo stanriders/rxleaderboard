@@ -57,7 +57,7 @@ export const LeaderboardTable: FC<Props> = (props) => {
 
     if (page) params.set("page", page.toString());
 
-    if (country) params.set("country", country);
+    if (country && country != "—") params.set("country", country);
 
     router.push(pathname + "?" + params.toString());
   }, [page, search, country]);
@@ -67,6 +67,9 @@ export const LeaderboardTable: FC<Props> = (props) => {
   }, [page]);
 
   const handleCountrySelectionChange = (e: any) => {
+    if (e.target.value == "—") {
+      setCountry("");
+    }
     setCountry(e.target.value);
     setPage(1);
   };
