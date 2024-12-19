@@ -69,8 +69,9 @@ export const LeaderboardTable: FC<Props> = (props) => {
   const handleCountrySelectionChange = (e: any) => {
     if (e.target.value == "—") {
       setCountry("");
+    } else {
+      setCountry(e.target.value);
     }
-    setCountry(e.target.value);
     setPage(1);
   };
 
