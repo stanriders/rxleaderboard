@@ -52,7 +52,7 @@ export const Score: FC<Props> = (props) => {
       >
         {props.showPlayer ? (
           <>
-            <CardHeader className="pl-5 pt-2 pb-2">
+            <CardHeader className="pl-5 pt-1 pb-1">
               {score.user ? <User user={score.user} /> : "???"}
             </CardHeader>
           </>
@@ -142,7 +142,7 @@ export const Score: FC<Props> = (props) => {
     >
       {props.showPlayer ? (
         <>
-          <CardHeader className="pl-5 pt-2 pb-2">
+          <CardHeader className="pl-5 pt-1 pb-1">
             {score.user ? <User user={score.user} /> : "???"}
           </CardHeader>
         </>

@@ -75,16 +75,19 @@ export default async function UserPage({ params }: Props) {
               src={`https://a.ppy.sh/${player.id}`}
             />
             <Spacer x={2} />
-            <Link
-              isExternal
-              className="text-primary-500 text-md md:text-2xl"
-              href={`https://osu.ppy.sh/users/${player.id}`}
-              size="lg"
-            >
-              <Flag country={player.countryCode} width={25} />
-              <Spacer x={1} />
-              {player.username}
-            </Link>
+            <div className="flex gap-1">
+              <Link href={`/leaderboard?country=${player.countryCode}&page=1`}>
+                <Flag country={player.countryCode} width={25} />
+              </Link>
+              <Link
+                isExternal
+                className="text-primary-500 text-md md:text-2xl"
+                href={`https://osu.ppy.sh/users/${player.id}`}
+                size="lg"
+              >
+                {player.username}
+              </Link>
+            </div>
           </div>
           <div className="flex flex-col flex-none">
             <p className="text-md md:text-xl text-right">
@@ -98,9 +101,12 @@ export default async function UserPage({ params }: Props) {
             <p className="text-2xl md:text-3xl font-semibold text-primary-400">
               #{player.rank ?? <>-</>}
             </p>
-            <p className="text-xs md:text-xs text-default-500">
+            <Link
+              className="text-xs md:text-xs text-default-500"
+              href={`/leaderboard?country=${player.countryCode}`}
+            >
               #{player.countryRank ?? <>-</>} {player.countryCode}
-            </p>
+            </Link>
           </div>
         </CardBody>
         <CardFooter className="pl-4 pr-5 pb-1">

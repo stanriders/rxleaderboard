@@ -1,5 +1,4 @@
 import { FC } from "react";
-import { Spacer } from "@nextui-org/spacer";
 import { Link } from "@nextui-org/link";
 
 import { UserModel } from "@/api/types";
@@ -11,10 +10,13 @@ export const User: FC<Props> = (props) => {
   const user = props.user;
 
   return (
-    <Link className="text-primary-500" href={`/users/${user.id}`} size="sm">
-      <Flag country={user.countryCode} width={20} />
-      <Spacer x={1} />
-      {user.username}
-    </Link>
+    <div className="flex py-1 gap-1">
+      <Link href={`/leaderboard?country=${user.countryCode}&page=1`}>
+        <Flag country={user.countryCode} width={20} />
+      </Link>
+      <Link className="text-primary-500" href={`/users/${user.id}`} size="sm">
+        {user.username}
+      </Link>
+    </div>
   );
 };
