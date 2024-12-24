@@ -78,6 +78,11 @@ namespace LazerRelaxLeaderboard.Controllers
                 query = query.Where(x => x.CountryCode == countryCode);
             }
 
+            if (page < 1)
+            {
+                page = 1;
+            }
+
             var result = await query
                 .Where(x => x.TotalPp != null)
                 .OrderByDescending(x => x.TotalPp)
@@ -217,6 +222,11 @@ namespace LazerRelaxLeaderboard.Controllers
                                              x.Title.ToUpper().StartsWith(search.ToUpper()) ||
                                              x.DifficultyName.ToUpper().StartsWith(search.ToUpper()));
                 }
+            }
+
+            if (page < 1)
+            {
+                page = 1;
             }
 
             var result = await query
