@@ -8,7 +8,7 @@ import { notFound } from "next/navigation";
 import { headers } from "next/headers";
 import { Chip } from "@nextui-org/chip";
 
-import { PlaycountChart } from "./playcount-chart";
+import { PlaycountChart } from "@/components/playcount-chart";
 
 import { siteConfig } from "@/config/site";
 import { ApiBase } from "@/api/address";
