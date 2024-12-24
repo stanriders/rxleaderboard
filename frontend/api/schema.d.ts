@@ -615,9 +615,9 @@ export interface components {
       total?: number;
     };
     RecentScoresResponse: {
-      scores?: components["schemas"]["Score"][] | null;
+      scores: components["schemas"]["Score"][] | null;
       /** Format: int32 */
-      scoresToday?: number;
+      scoresToday: number;
     };
     Score: {
       /** Format: int64 */
@@ -674,7 +674,9 @@ export interface components {
       /** Format: int64 */
       latestScoreId: number;
       /** Format: int32 */
-      scoresToday: number;
+      scoresInAMonth: number;
+      playcountPerDay: components["schemas"]["PlaycountPerMonth"][] | null;
+      playcountPerMonth: components["schemas"]["PlaycountPerMonth"][] | null;
     };
     User: {
       /** Format: int32 */

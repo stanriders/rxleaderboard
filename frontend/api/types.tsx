@@ -11,3 +11,4 @@ export type AllowedModsResponse = components["schemas"]["AllowedModsResponse"];
 export type PlaycountPerMonth = components["schemas"]["PlaycountPerMonth"];
 export type RecentScoresResponse =
   components["schemas"]["RecentScoresResponse"];
+export type StatsResponse = components["schemas"]["StatsResponse"];

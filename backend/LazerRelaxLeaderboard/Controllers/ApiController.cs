@@ -299,13 +299,77 @@ namespace LazerRelaxLeaderboard.Controllers
         [HttpGet("/stats")]
         public async Task<StatsResponse> GetStats()
         {
+            var countsPerDayQuery = await _databaseContext.Database.SqlQuery<ScoresPerMonthQuery>(
+                $@"select date_trunc('day', date(""Date"")) as ""Month"", count(""Id"") as ""Count""
+                       from ""Scores""
+                       where ""Date"" > {DateTime.UtcNow.AddMonths(-1)}
+                       group by ""Month"" order by ""Month"";").ToArrayAsync();
+
+            var countsPerDay = new List<PlaycountPerMonth>();
+
+            for (var i = 0; i < countsPerDayQuery.Length; i++)
+            {
+                if (i > 0)
+                {
+                    var dayDifference = (countsPerDayQuery[i].Month - countsPerDay.Last().Date).Days;
+                    if (dayDifference > 1)
+                    {
+                        for (var j = 0; j < dayDifference - 1; j++)
+                        {
+                            countsPerDay.Add(new PlaycountPerMonth { Date = countsPerDay.Last().Date.AddDays(1), Playcount = 0 });
+                        }
+                    }
+                }
+
+                countsPerDay.Add(new PlaycountPerMonth { Date = countsPerDayQuery[i].Month, Playcount = countsPerDayQuery[i].Count });
+            }
+
+            var countsPerMonth = await _databaseContext.Database.SqlQuery<ScoresPerMonthQuery>(
+                $@"select date_trunc('month', date(""Date"")) as ""Month"", count(""Id"") as ""Count""
+                       from ""Scores""
+                       group by ""Month"" order by ""Month"";").ToArrayAsync();
+
+            var counts = new List<PlaycountPerMonth>();
+
+            var currentCount = 0;
+            for (var i = 0; i <= Utils.MonthDifference(countsPerMonth[0].Month, DateTime.Today); i++)
+            {
+                if (currentCount <= 0)
+                {
+                    counts.Add(new PlaycountPerMonth { Date = countsPerMonth[0].Month, Playcount = countsPerMonth[0].Count });
+                    currentCount++;
+                    continue;
+                }
+
+                if (currentCount >= countsPerMonth.Length)
+                {
+                    counts.Add(new PlaycountPerMonth { Date = countsPerMonth[0].Month.AddMonths(i), Playcount = 0 });
+                    continue;
+                }
+
+                var diff = Utils.MonthDifference(countsPerMonth[currentCount].Month, countsPerMonth[currentCount - 1].Month) - 1;
+                if (diff > 0)
+                {
+                    for (var j = 0; j < diff; j++)
+                    {
+                        counts.Add(new PlaycountPerMonth { Date = countsPerMonth[0].Month.AddMonths(i), Playcount = 0 });
+                        i++;
+                    }
+                }
+
+                counts.Add(new PlaycountPerMonth { Date = countsPerMonth[currentCount].Month, Playcount = countsPerMonth[currentCount].Count });
+                currentCount++;
+            }
+
             return new StatsResponse
             {
                 BeatmapsTotal = await _databaseContext.Beatmaps.CountAsync(),
                 ScoresTotal = await _databaseContext.Scores.CountAsync(),
                 UsersTotal = await _databaseContext.Users.CountAsync(),
                 LatestScoreId = await _databaseContext.Scores.Select(x=> x.Id).OrderByDescending(x=> x).FirstAsync(),
-                ScoresToday = await _databaseContext.Scores.CountAsync(x=> x.Date > DateTime.UtcNow.AddDays(-1))
+                ScoresInAMonth = await _databaseContext.Scores.CountAsync(x=> x.Date > DateTime.UtcNow.AddMonths(-1)),
+                PlaycountPerDay = countsPerDay,
+                PlaycountPerMonth = counts
             };
         }
 

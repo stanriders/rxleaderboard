@@ -13,14 +13,19 @@ import {
 
 import { PlaycountPerMonth } from "@/api/types";
 
-type Props = { playcountsPerMonth: PlaycountPerMonth[] | null | undefined };
+type Props = {
+  playcountsPerMonth: PlaycountPerMonth[] | null | undefined;
+  showDate?: boolean;
+};
 
 export const PlaycountChart: FC<Props> = (props) => {
   if (!props.playcountsPerMonth) return <></>;
 
+  const dayFormat = props.showDate ? "numeric" : undefined;
   var data = props.playcountsPerMonth.map((val) => {
     return {
       date: new Date(val.date ?? "").toLocaleString("default", {
+        day: dayFormat,
         month: "short",
         year: "numeric",
       }),
