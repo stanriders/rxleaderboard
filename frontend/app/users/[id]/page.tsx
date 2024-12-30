@@ -8,8 +8,9 @@ import { notFound } from "next/navigation";
 import { headers } from "next/headers";
 import { Chip } from "@nextui-org/chip";
 
-import { PlaycountChart } from "@/components/playcount-chart";
+import { ScoresContainer } from "./scores";
 
+import { PlaycountChart } from "@/components/playcount-chart";
 import { siteConfig } from "@/config/site";
 import { ApiBase } from "@/api/address";
 import { Flag } from "@/components/flag";
@@ -51,9 +52,12 @@ export default async function UserPage({ params }: Props) {
 
   if (!player) return notFound();
 
-  const scores = await fetch(`${ApiBase}/players/${params.id}/scores`, {
-    headers: Object.fromEntries(headers()),
-  })
+  const scores: ScoreModel[] = await fetch(
+    `${ApiBase}/players/${params.id}/scores`,
+    {
+      headers: Object.fromEntries(headers()),
+    },
+  )
     .then((result) => result.json())
     .catch((error) => console.log("User scores fetch error: " + error));
 
@@ -150,16 +154,7 @@ export default async function UserPage({ params }: Props) {
         </CardFooter>
       </Card>
       <Spacer y={4} />
-      {scores.map((row: ScoreModel) => {
-        row.user = player;
-
-        return (
-          <>
-            <Score key={row.id} score={row} showPlayer={false} />
-            <Spacer y={1} />
-          </>
-        );
-      })}
+      <ScoresContainer scores={scores} />
       <Spacer y={4} />
       <Card>
         <CardBody className="h-48">

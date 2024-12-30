@@ -182,12 +182,34 @@ namespace LazerRelaxLeaderboard.Controllers
         [HttpGet("/players/{id}/scores")]
         public async Task<List<Score>> GetPlayerScores(int id)
         {
-            return await _databaseContext.Scores.AsNoTracking()
+            var fullTopHundred = await _databaseContext.Scores.AsNoTracking()
                 .Where(x => x.UserId == id)
                 .Include(x => x.Beatmap)
                 .OrderByDescending(x => x.Pp ?? double.MinValue)
+                .ThenByDescending(x => x.TotalScore)
                 .Take(100)
                 .ToListAsync();
+
+            if (fullTopHundred.Count <= 100)
+            {
+                // don't bother adding more scores if we're already below 100 threshold
+                return fullTopHundred;
+            }
+
+            var nonBests = fullTopHundred.Count(x => !x.IsBest);
+
+            var additionalBestScores = await _databaseContext.Scores.AsNoTracking()
+                .Where(x => x.UserId == id)
+                .Where(x => x.IsBest)
+                .OrderByDescending(x => x.Pp)
+                .ThenByDescending(x => x.TotalScore)
+                .Skip(fullTopHundred.Count - nonBests)
+                .Take(nonBests)
+                .ToListAsync();
+
+            return fullTopHundred.Concat(additionalBestScores)
+                .OrderByDescending(x => x.Pp)
+                .ThenByDescending(x => x.TotalScore).ToList();
         }
 
         [HttpGet("/players/{id}/scores/recent")]
@@ -273,7 +295,7 @@ namespace LazerRelaxLeaderboard.Controllers
                 .Take(100)
                 .ToListAsync();
 
-            if (fullTopHundred.Count < 100)
+            if (fullTopHundred.Count <= 100)
             {
                 // don't bother adding more scores if we're already below 100 threshold
                 return fullTopHundred;
