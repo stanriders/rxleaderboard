@@ -401,7 +401,7 @@ namespace LazerRelaxLeaderboard.Controllers
             return new AllowedModsResponse
             {
                 Mods = Utils.AllowedMods,
-                ModSettings = Utils.AllowedModSettings
+                ModSettings = Utils.AllowedModSettings.Select(x => x.Description).ToArray()
             };
         }
 

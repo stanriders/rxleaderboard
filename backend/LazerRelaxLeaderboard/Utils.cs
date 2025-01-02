@@ -14,10 +14,12 @@ namespace LazerRelaxLeaderboard
             "TD", "RX"
         };
 
-        public static readonly string[] AllowedModSettings = new[]
+        public static readonly (string Setting, string Description)[] AllowedModSettings = new[]
         {
-            "speed_change",
-            "adjust_pitch"
+            ("speed_change", "Rate adjust"),
+            ("adjust_pitch", "Adjust pitch"),
+            ("reflection", "Mirror direction"),
+            ("restart", "Restart on fail")
         };
 
         public static string ModToString(APIMod mod)
@@ -53,7 +55,7 @@ namespace LazerRelaxLeaderboard
         public static bool CheckAllowedModSettings(APIMod[] mods)
         {
             return mods.All(m =>
-                       m.Settings.Count == 0 || m.Settings.Keys.All(s => AllowedModSettings.Contains(s)));
+                       m.Settings.Count == 0 || m.Settings.Keys.All(s => AllowedModSettings.Any(a => a.Setting == s)));
         }
 
         public static int MonthDifference(DateTime date1, DateTime date2)
