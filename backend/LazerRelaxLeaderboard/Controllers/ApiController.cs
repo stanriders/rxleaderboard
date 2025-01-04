@@ -190,7 +190,7 @@ namespace LazerRelaxLeaderboard.Controllers
                 .Take(100)
                 .ToListAsync();
 
-            if (fullTopHundred.Count <= 100)
+            if (fullTopHundred.Count < 100)
             {
                 // don't bother adding more scores if we're already below 100 threshold
                 return fullTopHundred;
@@ -295,7 +295,7 @@ namespace LazerRelaxLeaderboard.Controllers
                 .Take(100)
                 .ToListAsync();
 
-            if (fullTopHundred.Count <= 100)
+            if (fullTopHundred.Count < 100)
             {
                 // don't bother adding more scores if we're already below 100 threshold
                 return fullTopHundred;
