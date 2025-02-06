@@ -11,7 +11,12 @@ import { User } from "./user";
 
 import { BeatmapModel, ScoreModel } from "@/api/types";
 
-type Props = { score: ScoreModel; showPlayer: boolean; simple?: boolean };
+type Props = {
+  score: ScoreModel;
+  showPlayer: boolean;
+  simple?: boolean;
+  rank?: number;
+};
 
 export const Score: FC<Props> = (props) => {
   const score = props.score;
@@ -47,7 +52,7 @@ export const Score: FC<Props> = (props) => {
       <Card
         key={score.id}
         fullWidth
-        className="min-w-72 bg-default-100 dark:bg-default-50"
+        className="min-w-72 bg-default-100 dark:bg-default-50 group"
         shadow="sm"
       >
         {props.showPlayer ? (
@@ -68,7 +73,14 @@ export const Score: FC<Props> = (props) => {
                 className="text-default-500 text-md"
                 href={`https://osu.ppy.sh/scores/${score.id}`}
               >
-                {score.grade}
+                {props.rank ? (
+                  <>
+                    <p className="group-hover:hidden">{score.grade}</p>
+                    <p className="hidden group-hover:block">{props.rank}</p>
+                  </>
+                ) : (
+                  <>{score.grade}</>
+                )}
               </Link>
             </div>
             <div className="flex flex-col flex-auto min-w-1">
@@ -137,7 +149,7 @@ export const Score: FC<Props> = (props) => {
     <Card
       key={score.id}
       fullWidth
-      className="min-w-72 bg-default-100 dark:bg-default-50"
+      className="min-w-72 bg-default-100 dark:bg-default-50 group"
       shadow="sm"
     >
       {props.showPlayer ? (
@@ -158,7 +170,14 @@ export const Score: FC<Props> = (props) => {
               className="text-default-500 text-lg"
               href={`https://osu.ppy.sh/scores/${score.id}`}
             >
-              {score.grade}
+              {props.rank ? (
+                <>
+                  <p className="group-hover:hidden">{score.grade}</p>
+                  <p className="hidden group-hover:block">#{props.rank}</p>
+                </>
+              ) : (
+                <>{score.grade}</>
+              )}
             </Link>
           </div>
           <div className="flex flex-col flex-auto min-w-1">

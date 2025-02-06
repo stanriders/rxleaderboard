@@ -25,9 +25,9 @@ export default async function TopscoresPage() {
 
   return (
     <>
-      {scores.map((row) => (
+      {scores.map((row, index) => (
         <>
-          <Score key={row.id} score={row} showPlayer={true} />
+          <Score key={row.id} rank={index + 1} score={row} showPlayer={true} />
           <Spacer key={row.id} y={1} />
         </>
       ))}

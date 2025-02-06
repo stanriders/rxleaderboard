@@ -128,34 +128,34 @@ export const LeaderboardTable: FC<Props> = (props) => {
   return (
     <>
       <div className="w-full flex gap-2">
-          <div className="w-full flex justify-start">
-            <Select
-              className="md:ml-4 max-w-52"
-              isDisabled={!data}
-              label="Country"
-              placeholder="Select a country"
-              selectedKeys={[country]}
-              selectionMode="single"
-              size="sm"
-              onChange={handleCountrySelectionChange}
-            >
-              {countries.map((country) => (
-                <SelectItem key={country} textValue={country}>
-                  <div className="flex flex-row">
-                    {country != "—" ? (
-                      <>
-                        <Flag country={country} width={18} />
-                        <Spacer x={1} />
-                      </>
-                    ) : (
-                      <></>
-                    )}
-                    {country}
-                  </div>
-                </SelectItem>
-              ))}
-            </Select>
-          </div>
+        <div className="w-full flex justify-start">
+          <Select
+            className="md:ml-4 max-w-52"
+            isDisabled={!data}
+            label="Country"
+            placeholder="Select a country"
+            selectedKeys={[country]}
+            selectionMode="single"
+            size="sm"
+            onChange={handleCountrySelectionChange}
+          >
+            {countries.map((country) => (
+              <SelectItem key={country} textValue={country}>
+                <div className="flex flex-row">
+                  {country != "—" ? (
+                    <>
+                      <Flag country={country} width={18} />
+                      <Spacer x={1} />
+                    </>
+                  ) : (
+                    <></>
+                  )}
+                  {country}
+                </div>
+              </SelectItem>
+            ))}
+          </Select>
+        </div>
         <Input
           classNames={{
             base: "md:mr-4 max-w-52 justify-end",
