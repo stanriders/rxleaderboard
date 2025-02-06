@@ -18,10 +18,13 @@ const fetcher = (url: any) =>
 
 export default function BeatmapListing() {
   const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
   useEffect(() => {
+    if (search == debouncedSearch) return;
+
     const timeoutId = setTimeout(() => {
       setDebouncedSearch(search);
     }, 500);
@@ -38,56 +41,25 @@ export default function BeatmapListing() {
   const response = data as BeatmapsResponse;
 
   if (error) return <div>Failed to load</div>;
-  if (!response)
-    return (
-      <>
-        <div className="w-full flex justify-end">
-          <Input
-            disabled
-            classNames={{
-              base: "mx-4 max-w-48 h-10",
-              mainWrapper: "h-full",
-              input: "text-small",
-              inputWrapper:
-                "h-full font-normal text-default-500 bg-default-400/20 dark:bg-default-500/20",
-            }}
-            placeholder="Search beatmap..."
-            size="sm"
-            type="search"
-            value={debouncedSearch}
-          />
-        </div>
-        <Spacer y={16} />
-        <div className="flex justify-center">
-          <CircularProgress aria-label="Loading..." color="primary" />
-        </div>
-        <Spacer y={16} />
-        <div className="flex w-full justify-center">
-          <Pagination
-            isCompact
-            isDisabled
-            showControls
-            showShadow
-            color="secondary"
-            total={0}
-          />
-        </div>
-      </>
-    );
 
-  const pages = Math.max(1, Math.ceil((response.total ?? 0) / 50));
+  if (data) {
+    const pages = Math.max(1, Math.ceil(data.total ?? 0 / 50));
+
+    if (totalPages != pages) setTotalPages(pages);
+  }
 
   return (
     <>
       <div className="w-full flex justify-end">
         <Input
           classNames={{
-            base: "mx-4 max-w-48 h-10",
+            base: "md:mx-4 max-w-52 justify-end h-12",
             mainWrapper: "h-full",
             input: "text-small",
             inputWrapper:
               "h-full font-normal text-default-500 bg-default-400/20 dark:bg-default-500/20",
           }}
+          isDisabled={!data}
           placeholder="Search beatmap..."
           size="sm"
           type="search"
@@ -95,24 +67,35 @@ export default function BeatmapListing() {
           onValueChange={setSearch}
         />
       </div>
-      <Spacer y={4} />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {response.beatmaps?.map((row: ListingBeatmap) => (
-          <BeatmapCard key={row.id} beatmap={row} />
-        ))}
-      </div>
-      <Spacer y={4} />
+      {data ? (
+        <>
+          <Spacer y={4} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {response.beatmaps?.map((row: ListingBeatmap) => (
+              <BeatmapCard key={row.id} beatmap={row} />
+            ))}
+          </div>
+          <Spacer y={4} />
+        </>
+      ) : (
+        <>
+          <Spacer y={16} />
+          <div className="flex justify-center">
+            <CircularProgress aria-label="Loading..." color="primary" />
+          </div>
+          <Spacer y={16} />
+        </>
+      )}
       <div className="flex w-full justify-center">
         <Pagination
           isCompact
           showControls
           showShadow
           color="primary"
+          isDisabled={!data}
           page={page}
-          total={pages}
-          onChange={(page) => {
-            setPage(page);
-          }}
+          total={totalPages}
+          onChange={setPage}
         />
       </div>
     </>

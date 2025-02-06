@@ -34,13 +34,18 @@ export const LeaderboardTable: FC<Props> = (props) => {
   const searchParams = useSearchParams();
 
   const [page, setPage] = useState(Number(searchParams.get("page")) ?? 1);
+  const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState(searchParams.get("search") ?? "");
   const [country, setCountry] = useState(searchParams.get("country") ?? "");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState(
+    searchParams.get("search") ?? "",
+  );
 
   const countries = ["—"].concat(props.countries ? props.countries : []);
 
   useEffect(() => {
+    if (search == debouncedSearch) return;
+
     const timeoutId = setTimeout(() => {
       setDebouncedSearch(search);
       setPage(1);
@@ -110,85 +115,23 @@ export const LeaderboardTable: FC<Props> = (props) => {
   ));
 
   if (error) return <div>Failed to load</div>;
-  if (!data)
-    return (
-      <>
-        <div className="w-full flex">
-          {props.countries ? (
-            <div className="w-full flex justify-start">
-              <Select
-                disabled
-                className="md:ml-4 max-w-52"
-                label="Country"
-                placeholder="Select a country"
-                selectedKeys={[country]}
-                selectionMode="single"
-                size="sm"
-              >
-                <SelectItem key="country-placeholder">
-                  country-placeholder
-                </SelectItem>
-              </Select>
-            </div>
-          ) : (
-            <></>
-          )}
-          <Input
-            disabled
-            classNames={{
-              base: "md:mr-4 max-w-52 justify-end",
-              mainWrapper: "h-full",
-              input: "text-small",
-              inputWrapper:
-                "h-full font-normal text-default-500 bg-default-400/20 dark:bg-default-500/20",
-            }}
-            placeholder="Search player..."
-            size="sm"
-            type="search"
-            value={debouncedSearch}
-          />
-        </div>
-        <Spacer y={2} />
-        <Table
-          isCompact
-          bottomContent={
-            <div className="flex w-full justify-center">
-              <Pagination
-                isCompact
-                isDisabled
-                showControls
-                showShadow
-                color="secondary"
-                total={0}
-              />
-            </div>
-          }
-          fullWidth={true}
-        >
-          <TableHeader>
-            <TableColumn align="start" width={55}>
-              {""}
-            </TableColumn>
-            <TableColumn className="text-ellipsis">Username</TableColumn>
-            <TableColumn align="center">Accuracy</TableColumn>
-            <TableColumn align="center">PP</TableColumn>
-          </TableHeader>
-          <TableBody>{placeholderRows}</TableBody>
-        </Table>
-      </>
-    );
 
-  const pages = Math.max(1, Math.ceil(data.total / 50));
+  if (data) {
+    const pages = Math.max(1, Math.ceil(data.total ?? 0 / 50));
+
+    if (totalPages != pages) setTotalPages(pages);
+  }
+
   const offset = (page - 1) * 50;
-  let players = data.players;
+  let players = data?.players;
 
   return (
     <>
       <div className="w-full flex gap-2">
-        {props.countries ? (
           <div className="w-full flex justify-start">
             <Select
               className="md:ml-4 max-w-52"
+              isDisabled={!data}
               label="Country"
               placeholder="Select a country"
               selectedKeys={[country]}
@@ -213,9 +156,6 @@ export const LeaderboardTable: FC<Props> = (props) => {
               ))}
             </Select>
           </div>
-        ) : (
-          <></>
-        )}
         <Input
           classNames={{
             base: "md:mr-4 max-w-52 justify-end",
@@ -224,6 +164,7 @@ export const LeaderboardTable: FC<Props> = (props) => {
             inputWrapper:
               "h-full font-normal text-default-500 bg-default-400/20 dark:bg-default-500/20",
           }}
+          isDisabled={!data}
           placeholder="Search player..."
           size="sm"
           type="search"
@@ -242,11 +183,10 @@ export const LeaderboardTable: FC<Props> = (props) => {
               showControls
               showShadow
               color="primary"
+              isDisabled={!data}
               page={page}
-              total={pages}
-              onChange={(page) => {
-                setPage(page);
-              }}
+              total={totalPages}
+              onChange={setPage}
             />
           </div>
         }
@@ -261,27 +201,29 @@ export const LeaderboardTable: FC<Props> = (props) => {
           <TableColumn align="center">PP</TableColumn>
         </TableHeader>
         <TableBody>
-          {players.map((row: UserModel, index: number) => (
-            <TableRow key={row.id}>
-              <TableCell className="text-default-500">
-                #{offset + index + 1}
-              </TableCell>
-              <TableCell>
-                <User user={row} />
-              </TableCell>
-              <TableCell>
-                <p className="text-default-500">
-                  {row.totalAccuracy === null
-                    ? "-"
-                    : row.totalAccuracy?.toFixed(2)}
-                  %
-                </p>
-              </TableCell>
-              <TableCell className="text-primary-400 font-semibold">
-                {row.totalPp === null ? "-" : row.totalPp?.toFixed(0)}
-              </TableCell>
-            </TableRow>
-          ))}
+          {data
+            ? players.map((row: UserModel, index: number) => (
+                <TableRow key={row.id}>
+                  <TableCell className="text-default-500">
+                    #{offset + index + 1}
+                  </TableCell>
+                  <TableCell>
+                    <User user={row} />
+                  </TableCell>
+                  <TableCell>
+                    <p className="text-default-500">
+                      {row.totalAccuracy === null
+                        ? "-"
+                        : row.totalAccuracy?.toFixed(2)}
+                      %
+                    </p>
+                  </TableCell>
+                  <TableCell className="text-primary-400 font-semibold">
+                    {row.totalPp === null ? "-" : row.totalPp?.toFixed(0)}
+                  </TableCell>
+                </TableRow>
+              ))
+            : placeholderRows}
         </TableBody>
       </Table>
     </>
