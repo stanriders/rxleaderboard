@@ -51,7 +51,10 @@ export const PlaycountChart: FC<Props> = (props) => {
 
   return (
     <ResponsiveContainer>
-      <AreaChart data={data} margin={{ right: 35, top: 20, left: props.leftMargin ?? 0 }}>
+      <AreaChart
+        data={data}
+        margin={{ right: 35, top: 20, left: props.leftMargin ?? 0 }}
+      >
         <Area dataKey="playcount" fill="#DBB33F" stroke="#DBB33F" type="bump" />
         <XAxis className="text-xs" dataKey="date" />
         <YAxis className="text-xs" width={40} />

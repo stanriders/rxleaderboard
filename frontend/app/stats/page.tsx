@@ -46,7 +46,8 @@ export default async function Stats() {
             </p>
             <div className="h-48">
               <PlaycountChart
-                playcountsPerMonth={response?.playcountPerMonth} leftMargin={10}
+                leftMargin={10}
+                playcountsPerMonth={response?.playcountPerMonth}
               />
             </div>
           </CardBody>
