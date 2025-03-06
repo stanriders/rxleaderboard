@@ -161,14 +161,18 @@ public class PpService : IPpService
             }
         }
 
-        var newBestPp = await _databaseContext.Scores.AsNoTracking()
-            .Where(x => x.Pp != null)
-            .OrderByDescending(x => x.Pp)
-            .FirstOrDefaultAsync();
-
-        if (newBestPp?.Pp > currentBestPp)
+        // don't post announcements if we're recalculating everything
+        if (!recalculateAll)
         {
-            await _discordService.PostBestScoreAnnouncement(newBestPp.Id);
+            var newBestPp = await _databaseContext.Scores.AsNoTracking()
+                .Where(x => x.Pp != null)
+                .OrderByDescending(x => x.Pp)
+                .FirstOrDefaultAsync();
+
+            if (newBestPp?.Pp > currentBestPp)
+            {
+                await _discordService.PostBestScoreAnnouncement(newBestPp.Id);
+            }
         }
     }
 
@@ -217,6 +221,7 @@ public class PpService : IPpService
         for (var i = 0; i < playerCount; i += 500)
         {
             var players = await _databaseContext.Users
+                .Where(x => x.Scores.Count > 0)
                 .OrderBy(x => x.Id)
                 .Skip(i)
                 .Take(500)

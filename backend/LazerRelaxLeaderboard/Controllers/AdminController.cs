@@ -63,6 +63,8 @@ public class AdminController : ControllerBase
         }
 
         await _ppService.PopulateScores(true);
+        await _ppService.RecalculatePlayersPp();
+        await _ppService.RecalculateBestScores();
 
         return Ok();
     }
@@ -76,7 +78,7 @@ public class AdminController : ControllerBase
         }
 
         await _ppService.RecalculatePlayersPp();
-            
+
         return Ok();
     }
 
