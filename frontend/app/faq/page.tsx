@@ -12,15 +12,25 @@ export const metadata: Metadata = {
 };
 
 export default async function FaqPage() {
-  const request = await fetch(`${ApiBase}/allowed-mods`, {
+  const modsRequest = await fetch(`${ApiBase}/allowed-mods`, {
     headers: Object.fromEntries(headers()),
   }).catch((error) => console.log(`Allowed mods fetch failed, ${error}`));
 
-  let response: AllowedModsResponse | undefined;
+  let modsResponse: AllowedModsResponse | undefined;
 
-  if (request) {
-    response = await request.json();
+  if (modsRequest) {
+    modsResponse = await modsRequest.json();
   }
 
-  return <FAQ response={response} />;
+  const ppVersionRequest = await fetch(`${ApiBase}/pp-version`, {
+    headers: Object.fromEntries(headers()),
+  }).catch((error) => console.log(`Pp version fetch failed, ${error}`));
+
+  let ppVersionResponse: string | undefined;
+
+  if (ppVersionRequest) {
+    ppVersionResponse = await ppVersionRequest.json();
+  }
+
+  return <FAQ modsResponse={modsResponse} ppVersionResponse={ppVersionResponse}/>;
 }

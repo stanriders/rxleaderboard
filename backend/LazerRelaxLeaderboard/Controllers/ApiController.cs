@@ -4,6 +4,12 @@ using LazerRelaxLeaderboard.Database.Models;
 using LazerRelaxLeaderboard.OsuApi.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using osu.Framework.Audio.Track;
+using osu.Framework.Graphics.Textures;
+using osu.Game.Beatmaps;
+using osu.Game.Rulesets.Osu;
+using osu.Game.Rulesets.Osu.Difficulty;
+using osu.Game.Skinning;
 using Beatmap = LazerRelaxLeaderboard.Database.Models.Beatmap;
 using Score = LazerRelaxLeaderboard.Database.Models.Score;
 
@@ -410,6 +416,22 @@ namespace LazerRelaxLeaderboard.Controllers
         public async Task<string[]> GetCountries()
         {
             return await _databaseContext.Users.AsNoTracking().Select(x => x.CountryCode).Distinct().OrderBy(x=>x).ToArrayAsync();
+        }
+
+        [HttpGet("/pp-version")]
+        public string GetPpVersion()
+        {
+            return new OsuDifficultyCalculator(new OsuRuleset().RulesetInfo, new FakeWorkingBeatmap() ).Version.ToString();
+        }
+
+        public class FakeWorkingBeatmap : WorkingBeatmap
+        {
+            public FakeWorkingBeatmap() : base(new BeatmapInfo(), null) { }
+            protected override IBeatmap GetBeatmap() => throw new NotImplementedException();
+            public override Texture GetBackground() => throw new NotImplementedException();
+            public override Stream GetStream(string storagePath) => throw new NotImplementedException();
+            protected override Track GetBeatmapTrack() => throw new NotImplementedException();
+            protected override ISkin GetSkin() => throw new NotImplementedException();
         }
     }
 }
