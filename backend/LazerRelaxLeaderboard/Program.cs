@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
-using Discord.WebSocket;
 using Discord;
+using Discord.WebSocket;
 using LazerRelaxLeaderboard.BackgroundServices;
 using LazerRelaxLeaderboard.Config;
 using LazerRelaxLeaderboard.Database;
@@ -23,7 +23,7 @@ using DiscordConfig = LazerRelaxLeaderboard.Config.DiscordConfig;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Host.UseSerilog((context, services, configuration) => configuration
-    .ReadFrom.Configuration(context.Configuration, new ConfigurationReaderOptions() { SectionName = "Logging" })
+    .ReadFrom.Configuration(context.Configuration, new ConfigurationReaderOptions { SectionName = "Logging" })
     .ReadFrom.Services(services));
 
 using var tracer = new ActivityListenerConfiguration()
@@ -78,7 +78,7 @@ builder.Services.AddHostedService<LeaderboardUpdateService>();
 builder.Services.AddHostedService<CleanupService>();
 
 builder.Services.AddRateLimiter(_ => _
-    .AddTokenBucketLimiter(policyName: "token", options =>
+    .AddTokenBucketLimiter("token", options =>
     {
         options.TokenLimit = 3;
         options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
@@ -88,18 +88,18 @@ builder.Services.AddRateLimiter(_ => _
         options.AutoReplenishment = true;
     }));
 
-builder.Services.AddControllers((options =>
+builder.Services.AddControllers(options =>
 {
     options.OutputFormatters.RemoveType(typeof(HttpNoContentOutputFormatter));
     options.OutputFormatters.Insert(0, new HttpNoContentOutputFormatter
     {
         TreatNullValueAsNoContent = false
     });
-})).AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-    });
+}).AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
 
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

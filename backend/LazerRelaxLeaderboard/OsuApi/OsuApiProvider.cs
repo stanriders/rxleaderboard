@@ -1,6 +1,4 @@
-﻿
-using System.Buffers.Text;
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -21,9 +19,9 @@ public class OsuApiProvider : IOsuApiProvider
     private const string api_user_link = "api/v2/users/{0}";
     private const string api_token_link = "oauth/token";
     private const string map_download_link = "osu/{0}";
+    private readonly OsuApiConfig _config;
 
     private readonly HttpClient _httpClient;
-    private readonly OsuApiConfig _config;
     private readonly ILogger<OsuApiProvider> _logger;
 
     private TokenResponse? _userlessToken;
@@ -48,7 +46,7 @@ public class OsuApiProvider : IOsuApiProvider
         {
             Method = HttpMethod.Get,
             RequestUri = new Uri(osu_base + string.Format(api_beatmap_scores_link, id, modsString)),
-            Headers = { Authorization = new AuthenticationHeaderValue("Bearer", _userlessToken!.AccessToken)}
+            Headers = { Authorization = new AuthenticationHeaderValue("Bearer", _userlessToken!.AccessToken) }
         };
         requestMessage.Headers.Add("x-api-version", "99999999");
 
@@ -67,7 +65,7 @@ public class OsuApiProvider : IOsuApiProvider
     public async Task<Beatmap?> GetBeatmap(int id)
     {
         await RefreshUserlessToken();
-        
+
         var requestMessage = new HttpRequestMessage
         {
             Method = HttpMethod.Get,
@@ -114,7 +112,8 @@ public class OsuApiProvider : IOsuApiProvider
     {
         await RefreshUserlessToken();
 
-        var cursorString = cursor == null ? "" : Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"id\": {cursor}}}"));
+        var cursorString =
+            cursor == null ? "" : Convert.ToBase64String(Encoding.Default.GetBytes($"{{\"id\": {cursor}}}"));
 
         var requestMessage = new HttpRequestMessage
         {
@@ -182,7 +181,7 @@ public class OsuApiProvider : IOsuApiProvider
         var requestModel = new GetUserlessTokenRequest
         {
             ClientId = _config.ClientId,
-            ClientSecret = _config.ClientSecret,
+            ClientSecret = _config.ClientSecret
         };
 
         var requestMessage = new HttpRequestMessage
@@ -198,13 +197,16 @@ public class OsuApiProvider : IOsuApiProvider
         if (!response.IsSuccessStatusCode)
         {
             _logger.Log(LogLevel.Error, "Couldn't update userless token! Status code: {Code}", response.StatusCode);
+
             return;
         }
 
         _userlessToken = await response.Content.ReadFromJsonAsync<TokenResponse>();
         if (_userlessToken == null)
         {
-            _logger.Log(LogLevel.Error, "Couldn't parse userless token! {Json}", await response.Content.ReadAsStringAsync());
+            _logger.Log(LogLevel.Error, "Couldn't parse userless token! {Json}",
+                await response.Content.ReadAsStringAsync());
+
             return;
         }
 

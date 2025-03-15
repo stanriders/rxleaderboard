@@ -1,34 +1,33 @@
 ﻿using System.ComponentModel;
 
-namespace LazerRelaxLeaderboard.OsuApi.Models
+namespace LazerRelaxLeaderboard.OsuApi.Models;
+
+public enum Grade
 {
-    public enum Grade
-    {
-        [Description(@"F")]
-        F,
+    [Description(@"F")]
+    F,
 
-        [Description(@"D")]
-        D,
+    [Description(@"D")]
+    D,
 
-        [Description(@"C")]
-        C,
+    [Description(@"C")]
+    C,
 
-        [Description(@"B")]
-        B,
+    [Description(@"B")]
+    B,
 
-        [Description(@"A")]
-        A,
+    [Description(@"A")]
+    A,
 
-        [Description(@"S")]
-        S,
+    [Description(@"S")]
+    S,
 
-        [Description(@"S")]
-        SH,
+    [Description(@"S")]
+    SH,
 
-        [Description(@"SS")]
-        X,
+    [Description(@"SS")]
+    X,
 
-        [Description(@"SS")]
-        XH
-    }
+    [Description(@"SS")]
+    XH
 }

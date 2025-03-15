@@ -1,8 +1,7 @@
-﻿namespace LazerRelaxLeaderboard.OsuApi.Models
+﻿namespace LazerRelaxLeaderboard.OsuApi.Models;
+
+public class ScoresResponse
 {
-    public class ScoresResponse
-    {
-        public List<Score> Scores { get; set; } = null!;
-        public string CursorString { get; set; } = null!;
-    }
+    public List<Score> Scores { get; set; } = null!;
+    public string CursorString { get; set; } = null!;
 }

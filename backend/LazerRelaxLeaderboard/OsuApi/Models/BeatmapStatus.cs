@@ -1,13 +1,12 @@
-﻿namespace LazerRelaxLeaderboard.OsuApi.Models
+﻿namespace LazerRelaxLeaderboard.OsuApi.Models;
+
+public enum BeatmapStatus
 {
-    public enum BeatmapStatus
-    {
-        Graveyard,
-        Wip,
-        Pending,
-        Ranked,
-        Approved,
-        Qualified,
-        Loved
-    }
+    Graveyard,
+    Wip,
+    Pending,
+    Ranked,
+    Approved,
+    Qualified,
+    Loved
 }

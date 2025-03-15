@@ -1,10 +1,9 @@
 ﻿using LazerRelaxLeaderboard.Database.Models;
 
-namespace LazerRelaxLeaderboard.Contracts
+namespace LazerRelaxLeaderboard.Contracts;
+
+public class PlayersResult
 {
-    public class PlayersResult
-    {
-        public List<User> Players { get; set; } = new();
-        public int Total { get; set; }
-    }
+    public List<User> Players { get; set; } = new();
+    public int Total { get; set; }
 }

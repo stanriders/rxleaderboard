@@ -1,10 +1,9 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace LazerRelaxLeaderboard.OsuApi.Models
+namespace LazerRelaxLeaderboard.OsuApi.Models;
+
+public class BeatmapScores
 {
-    public class BeatmapScores
-    {
-        [JsonPropertyName("scores")]
-        public Score[] Scores { get; set; } = null!;
-    }
+    [JsonPropertyName("scores")]
+    public Score[] Scores { get; set; } = null!;
 }

@@ -1,8 +1,7 @@
-﻿namespace LazerRelaxLeaderboard.Config
+﻿namespace LazerRelaxLeaderboard.Config;
+
+public class OsuApiConfig
 {
-    public class OsuApiConfig
-    {
-        public int ClientId { get; set; }
-        public string ClientSecret { get; set; } = null!;
-    }
+    public int ClientId { get; set; }
+    public string ClientSecret { get; set; } = null!;
 }
