@@ -102,6 +102,7 @@ namespace LazerRelaxLeaderboard.Services
             var score = _databaseContext.Scores.AsNoTracking()
                 .Include(x => x.Beatmap)
                 .Include(x => x.User)
+                .Where(x => !x.Hidden)
                 .FirstOrDefault(x=> x.Id == scoreId);
 
             if (score == null)
@@ -165,6 +166,55 @@ namespace LazerRelaxLeaderboard.Services
                     .WithFooter("Relaxation Vault", iconUrl: "https://rx.stanr.info/rv-yellowlight-192.png")
                     .Build()
             );
+        }
+
+        public async Task PostSusScoreAnnouncement(long scoreId)
+        {
+            if (!_discordConfig.SendAnnouncements)
+            {
+                return;
+            }
+
+            var guild = _discordSocketClient.GetGuild(_discordConfig.GuildId);
+            if (guild == null)
+            {
+                _logger.LogError("Guild {GuildId} not found!", _discordConfig.GuildId);
+                return;
+            }
+
+            var reportChannel = guild.GetTextChannel(_discordConfig.ReportChannelId);
+            if (reportChannel == null)
+            {
+                _logger.LogError("Announcement channel {Channel} not found!", reportChannel);
+                return;
+            }
+
+            var score = _databaseContext.Scores.AsNoTracking()
+                .Include(x => x.Beatmap)
+                .Include(x => x.User)
+                .FirstOrDefault(x => x.Id == scoreId);
+
+            if (score == null)
+            {
+                _logger.LogError("Non-existing score {Score}", scoreId);
+                return;
+            }
+
+            var description = $"[{score.Beatmap!.Artist} - {score.Beatmap.Title} [{score.Beatmap.DifficultyName}]](https://osu.ppy.sh/b/{score.BeatmapId}) +**{string.Join("", score.Mods)}**\n" +
+                              $"**{score.Grade}** · {score.TotalScore} · {score.Combo}x ({score.Count300} / {score.Count100} / {score.Count50} / {score.CountMiss})\n" +
+                              $"**{score.Pp:N2}pp**";
+
+            await reportChannel.SendMessageAsync(
+                embed: new EmbedBuilder()
+                    .WithTitle($"New PP record by {score.User.Username}!")
+                    .WithUrl($"https://osu.ppy.sh/scores/{score.Id}") // todo: in-site score link
+                    .WithDescription(description)
+                    .WithThumbnailUrl($"https://a.ppy.sh/{score.User.Id}")
+                    .WithColor(Color.Red)
+                    .WithTimestamp(score.Date)
+                    .WithFooter("Relaxation Vault", iconUrl: "https://rx.stanr.info/rv-yellowlight-192.png")
+                    .Build()
+                );
         }
     }
 }

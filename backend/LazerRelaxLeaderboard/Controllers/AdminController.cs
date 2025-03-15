@@ -190,4 +190,45 @@ public class AdminController : ControllerBase
         var affected = await _databaseContext.SaveChangesAsync();
         return Ok(affected);
     }
+
+    [HttpPost("nuke/{id}")]
+    public async Task<IActionResult> NukePlayer(int id)
+    {
+        if (!_authService.Authorize(HttpContext))
+        {
+            return Unauthorized();
+        }
+
+        var player = await _databaseContext.Users.FindAsync(id);
+        if (player == null)
+        {
+            return NotFound("Player doesn't exist");
+        }
+
+        _logger.LogInformation("Nuking player {Username}...", player.Username);
+
+        var scores = await _databaseContext.Scores.Where(x => x.UserId == id).ToListAsync();
+        foreach (var score in scores)
+        {
+            score.Hidden = true;
+            _databaseContext.Scores.Update(score);
+        }
+
+        await _databaseContext.SaveChangesAsync();
+
+        await _ppService.RecalculatePlayersPp([id]);
+        await _ppService.RecalculateBestScores([id]);
+
+        return Ok($"Nuked {player.Username}");
+    }
+
+    public async Task<IActionResult> GetHiddenScores()
+    {
+        if (!_authService.Authorize(HttpContext))
+        {
+            return Unauthorized();
+        }
+
+        return Ok(await _databaseContext.Scores.Where(x => x.Hidden).ToListAsync());
+    }
 }

@@ -13,7 +13,7 @@ namespace LazerRelaxLeaderboard.Database.Models
         [ForeignKey("User")]
         public int UserId { get; set; }
         public User User { get; set; } = null!;
-        
+
         public required int BeatmapId { get; set; }
         public Beatmap? Beatmap { get; set; } = null!;
 
@@ -36,15 +36,15 @@ namespace LazerRelaxLeaderboard.Database.Models
         public required int Count300 { get; set; }
 
         public required int CountMiss { get; set; }
-        
+
         public required int? SpinnerBonus { get; set; }
-        
+
         public required int? SpinnerSpins { get; set; }
-        
+
         public required int? LegacySliderEnds { get; set; }
-        
+
         public required int? SliderTicks { get; set; }
-        
+
         public required int? SliderEnds { get; set; }
 
         public required int? LegacySliderEndMisses { get; set; }
@@ -54,5 +54,7 @@ namespace LazerRelaxLeaderboard.Database.Models
         public double? Pp { get; set; }
 
         public required bool IsBest { get; set; }
+
+        public bool Hidden { get; set; }
     }
 }

@@ -31,6 +31,7 @@ namespace LazerRelaxLeaderboard.Controllers
         {
             return await _databaseContext.Scores.AsNoTracking()
                 .Where(x => x.Pp != null)
+                .Where(x => !x.Hidden)
                 .Where(x => x.IsBest)
                 .Include(x => x.Beatmap)
                 .Include(x => x.User)
@@ -47,6 +48,7 @@ namespace LazerRelaxLeaderboard.Controllers
                 Scores = await _databaseContext.Scores.AsNoTracking()
                     .Include(x => x.Beatmap)
                     .Include(x => x.User)
+                    .Where(x => !x.Hidden)
                     .OrderByDescending(x => x.Date)
                     .Take(5)
                     .ToListAsync(),
@@ -175,10 +177,10 @@ namespace LazerRelaxLeaderboard.Controllers
                     Username = user.Username,
                     UpdatedAt = user.UpdatedAt,
                     TotalPp = user.TotalPp,
-                    Playcount = await _databaseContext.Scores.CountAsync(x=> x.UserId == user.Id),
-                    CountSS = await _databaseContext.Scores.Where(x => x.UserId == user.Id).CountAsync(x => x.Grade == Grade.X || x.Grade == Grade.XH),
-                    CountS = await _databaseContext.Scores.Where(x => x.UserId == user.Id).CountAsync(x => x.Grade == Grade.S || x.Grade == Grade.SH),
-                    CountA = await _databaseContext.Scores.Where(x => x.UserId == user.Id).CountAsync(x => x.Grade == Grade.A),
+                    Playcount = await _databaseContext.Scores.Where(x => !x.Hidden).CountAsync(x=> x.UserId == user.Id),
+                    CountSS = await _databaseContext.Scores.Where(x => !x.Hidden).Where(x => x.UserId == user.Id).CountAsync(x => x.Grade == Grade.X || x.Grade == Grade.XH),
+                    CountS = await _databaseContext.Scores.Where(x => !x.Hidden).Where(x => x.UserId == user.Id).CountAsync(x => x.Grade == Grade.S || x.Grade == Grade.SH),
+                    CountA = await _databaseContext.Scores.Where(x => !x.Hidden).Where(x => x.UserId == user.Id).CountAsync(x => x.Grade == Grade.A),
                     PlaycountsPerMonth = counts.ToArray()
                 };
             }
@@ -190,6 +192,7 @@ namespace LazerRelaxLeaderboard.Controllers
         {
             var fullTopHundred = await _databaseContext.Scores.AsNoTracking()
                 .Where(x => x.UserId == id)
+                .Where(x => !x.Hidden)
                 .Include(x => x.Beatmap)
                 .OrderByDescending(x => x.Pp ?? double.MinValue)
                 .ThenByDescending(x => x.TotalScore)
@@ -207,6 +210,7 @@ namespace LazerRelaxLeaderboard.Controllers
             var additionalBestScores = await _databaseContext.Scores.AsNoTracking()
                 .Where(x => x.UserId == id)
                 .Where(x => x.IsBest)
+                .Where(x => !x.Hidden)
                 .Include(x => x.Beatmap)
                 .OrderByDescending(x => x.Pp ?? double.MinValue)
                 .ThenByDescending(x => x.TotalScore)
@@ -224,6 +228,7 @@ namespace LazerRelaxLeaderboard.Controllers
         {
             return await _databaseContext.Scores.AsNoTracking()
                 .Where(x => x.UserId == id)
+                .Where(x => !x.Hidden)
                 .Include(x => x.Beatmap)
                 .OrderByDescending(x => x.Date)
                 .Where(x=> x.Date > DateTime.UtcNow.AddDays(-14))
@@ -296,6 +301,7 @@ namespace LazerRelaxLeaderboard.Controllers
         {
             var fullTopHundred = await _databaseContext.Scores.AsNoTracking()
                 .Where(x => x.BeatmapId == id)
+                .Where(x => !x.Hidden)
                 .Include(x => x.User)
                 .OrderByDescending(x => x.Pp)
                 .ThenByDescending(x => x.TotalScore)
@@ -313,6 +319,7 @@ namespace LazerRelaxLeaderboard.Controllers
             var additionalBestScores = await _databaseContext.Scores.AsNoTracking()
                 .Where(x => x.BeatmapId == id)
                 .Where(x => x.IsBest)
+                .Where(x => !x.Hidden)
                 .Include(x => x.User)
                 .OrderByDescending(x => x.Pp)
                 .ThenByDescending(x => x.TotalScore)

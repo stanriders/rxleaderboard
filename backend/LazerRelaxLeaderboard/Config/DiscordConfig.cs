@@ -6,6 +6,7 @@
 
         public ulong GuildId { get; set; }
         public ulong AnnouncementChannelId { get; set; }
+        public ulong ReportChannelId { get; set; }
 
         public bool SendAnnouncements { get; set; }
     }

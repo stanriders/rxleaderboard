@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using LazerRelaxLeaderboard.Database;
+using LazerRelaxLeaderboard.Database.Models;
 using LazerRelaxLeaderboard.OsuApi.Interfaces;
 using LazerRelaxLeaderboard.OsuApi.Models;
 using Microsoft.EntityFrameworkCore;
@@ -58,6 +59,7 @@ public class PpService : IPpService
 
         var currentBestPp = await _databaseContext.Scores.AsNoTracking()
             .Where(x => x.Pp != null)
+            .Where(x => !x.Hidden)
             .Select(x => x.Pp)
             .OrderByDescending(x => x)
             .FirstOrDefaultAsync();
@@ -145,8 +147,16 @@ public class PpService : IPpService
                         // ReSharper disable once CompareOfFloatsByEqualityOperator
                         if (score.Pp != performanceAttributes.Total)
                         {
+                            if (!recalculateAll && performanceAttributes.Total > currentBestPp * 2)
+                            {
+                                _logger.LogWarning("Hiding score {Id} - {Pp}pp (current top {CurrentTopPp}pp)", score.Id, performanceAttributes.Total, currentBestPp);
+                                _discordService.PostSusScoreAnnouncement(score.Id).Wait(token);
+                                queryBuilder.Add($"UPDATE \"Scores\" SET \"Hidden\" = True WHERE \"Id\" = {score.Id};");
+                            }
+
                             queryBuilder.Add($"UPDATE \"Scores\" SET \"Pp\" = {performanceAttributes.Total} WHERE \"Id\" = {score.Id};");
                         }
+
                     }
                 }
 
@@ -166,11 +176,13 @@ public class PpService : IPpService
         {
             var newBestPp = await _databaseContext.Scores.AsNoTracking()
                 .Where(x => x.Pp != null)
+                .Where(x => !x.Hidden)
                 .OrderByDescending(x => x.Pp)
                 .FirstOrDefaultAsync();
 
-            if (newBestPp?.Pp > currentBestPp)
+            if (newBestPp?.Pp > currentBestPp && newBestPp.Pp < currentBestPp * 2)
             {
+                _logger.LogInformation("Posting score {Id} pp record announcement - {Pp}pp (previous top {CurrentTopPp}pp)", newBestPp.Id, newBestPp.Pp, currentBestPp);
                 await _discordService.PostBestScoreAnnouncement(newBestPp.Id);
             }
         }
@@ -356,6 +368,7 @@ public class PpService : IPpService
         var stopwatch = Stopwatch.StartNew();
 
         var scoreGroups = await _databaseContext.Scores
+            .Where(x => !x.Hidden)
             .GroupBy(x => new { x.BeatmapId, x.UserId })
             .ToArrayAsync();
 
@@ -391,6 +404,7 @@ public class PpService : IPpService
 
         var scoreGroups = await _databaseContext.Scores
             .Where(x=> players.Contains(x.UserId))
+            .Where(x => !x.Hidden)
             .GroupBy(x => new { x.BeatmapId, x.UserId })
             .ToArrayAsync();
 
@@ -415,128 +429,6 @@ public class PpService : IPpService
         }
 
         await _databaseContext.SaveChangesAsync();
-    }
-
-    public async Task RecalculateBestScores(int mapId, int userId)
-    {
-        var scores = await _databaseContext.Scores
-            .Where(x => x.UserId == userId && x.BeatmapId == mapId)
-            .OrderByDescending(x => x.Pp)
-            .ToArrayAsync();
-
-        var bestScore = scores.FirstOrDefault();
-        if (bestScore != null && !bestScore.IsBest)
-        {
-            bestScore.IsBest = true;
-            _databaseContext.Scores.Update(bestScore);
-        }
-
-        foreach (var notBestScore in scores.Skip(1).Where(x => x.IsBest))
-        {
-            notBestScore.IsBest = false;
-            _databaseContext.Scores.Update(notBestScore);
-        }
-
-        await _databaseContext.SaveChangesAsync();
-    }
-
-    public async Task PopulateScorePp(long id)
-    {
-        var score = await _databaseContext.Scores.FindAsync(id);
-        if (score == null)
-        {
-            _logger.LogError("Couldn't populate score {Id} pp - score doesn't exist!", id);
-
-            return;
-        }
-
-        var mapPath = $"{_cachePath}/{score.BeatmapId}.osu";
-        if (!File.Exists(mapPath))
-        {
-            _logger.LogError("Couldn't populate score {Id} pp - map file doesn't exist!", id);
-
-            return;
-        }
-
-        var currentBestPp = await _databaseContext.Scores.AsNoTracking()
-            .Where(x => x.Pp != null)
-            .Select(x=> x.Pp)
-            .OrderByDescending(x => x)
-            .FirstOrDefaultAsync();
-
-        var workingBeatmap = new FlatWorkingBeatmap(mapPath);
-
-        var ruleset = new OsuRuleset();
-        var difficultyCalculator = ruleset.CreateDifficultyCalculator(workingBeatmap);
-
-        var mods = GetMods(ruleset, score.Mods);
-        var difficultyAttributes = difficultyCalculator.Calculate(mods);
-        var performanceCalculator = ruleset.CreatePerformanceCalculator();
-
-        var scoreInfo = new ScoreInfo(workingBeatmap.BeatmapInfo, ruleset.RulesetInfo)
-        {
-            Accuracy = score.Accuracy,
-            MaxCombo = score.Combo,
-            Statistics = new Dictionary<HitResult, int>
-            {
-                { HitResult.Great, score.Count300 },
-                { HitResult.Ok, score.Count100 },
-                { HitResult.Meh, score.Count50 },
-                { HitResult.Miss, score.CountMiss }
-            },
-            Mods = mods,
-            TotalScore = score.TotalScore,
-        };
-
-        if (score.SliderEnds != null)
-        {
-            scoreInfo.Statistics.Add(HitResult.SliderTailHit, score.SliderEnds.Value);
-        }
-
-        if (score.SliderTicks != null)
-        {
-            scoreInfo.Statistics.Add(HitResult.LargeTickHit, score.SliderTicks.Value);
-        }
-
-        if (score.SpinnerBonus != null)
-        {
-            scoreInfo.Statistics.Add(HitResult.LargeBonus, score.SpinnerBonus.Value);
-        }
-
-        if (score.SpinnerSpins != null)
-        {
-            scoreInfo.Statistics.Add(HitResult.SmallBonus, score.SpinnerSpins.Value);
-        }
-
-        if (score.LegacySliderEnds != null)
-        {
-            scoreInfo.Statistics.Add(HitResult.SmallTickHit, score.LegacySliderEnds.Value);
-        }
-
-        if (score.LegacySliderEndMisses != null)
-        {
-            scoreInfo.Statistics.Add(HitResult.SmallTickMiss, score.LegacySliderEndMisses.Value);
-        }
-
-        if (score.SliderTickMisses != null)
-        {
-            scoreInfo.Statistics.Add(HitResult.LargeTickMiss, score.SliderTickMisses.Value);
-        }
-
-        var performanceAttributes = performanceCalculator.Calculate(scoreInfo, difficultyAttributes);
-
-        if (score.Pp != performanceAttributes.Total)
-        {
-            score.Pp = performanceAttributes.Total;
-            _databaseContext.Scores.Update(score);
-        }
-        
-        await _databaseContext.SaveChangesAsync();
-
-        if (performanceAttributes.Total > currentBestPp)
-        {
-            await _discordService.PostBestScoreAnnouncement(score.Id);
-        }
     }
 
     public async Task CleanupScores()
@@ -601,8 +493,9 @@ public class PpService : IPpService
         var beforeAccuracy = player.TotalAccuracy;
 
         var scores = await _databaseContext.Scores.AsNoTracking()
-            .Select(x => new { x.UserId, x.Pp, x.Accuracy, x.BeatmapId })
+            .Select(x => new { x.UserId, x.Pp, x.Accuracy, x.BeatmapId, x.Hidden })
             .Where(x => x.Pp != null)
+            .Where(x => !x.Hidden)
             .Where(x => x.UserId == player.Id)
             .GroupBy(i => i.BeatmapId)
             .Select(g => g.OrderByDescending(i => i.Pp!).First())
