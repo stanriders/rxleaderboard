@@ -14,12 +14,13 @@ namespace LazerRelaxLeaderboard.Controllers;
 public class AdminController : ControllerBase
 {
     private readonly IKeyAuthService _authService;
-    private readonly IPpService _ppService;
     private readonly DatabaseContext _databaseContext;
-    private readonly IOsuApiProvider _osuApiProvider;
     private readonly ILogger<AdminController> _logger;
+    private readonly IOsuApiProvider _osuApiProvider;
+    private readonly IPpService _ppService;
 
-    public AdminController(IKeyAuthService authService, IPpService ppService, DatabaseContext databaseContext, IOsuApiProvider osuApiProvider, ILogger<AdminController> logger)
+    public AdminController(IKeyAuthService authService, IPpService ppService, DatabaseContext databaseContext,
+        IOsuApiProvider osuApiProvider, ILogger<AdminController> logger)
     {
         _authService = authService;
         _ppService = ppService;
@@ -27,7 +28,7 @@ public class AdminController : ControllerBase
         _osuApiProvider = osuApiProvider;
         _logger = logger;
     }
-        
+
     [HttpPost("populateBeatmaps")]
     public async Task<IActionResult> PopulateBeatmaps()
     {
@@ -94,7 +95,7 @@ public class AdminController : ControllerBase
 
         var rankedScores = await _databaseContext.Scores.AsNoTracking()
             .Where(x => x.Pp != null)
-            .OrderByDescending(x=> x.Pp)
+            .OrderByDescending(x => x.Pp)
             .Select(x => x.Id)
             .ToArrayAsync();
 
@@ -222,6 +223,7 @@ public class AdminController : ControllerBase
         return Ok($"Nuked {player.Username}");
     }
 
+    [HttpGet("hidden")]
     public async Task<IActionResult> GetHiddenScores()
     {
         if (!_authService.Authorize(HttpContext))
