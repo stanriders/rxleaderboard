@@ -1,22 +1,26 @@
 ﻿using LazerRelaxLeaderboard.Database;
 using LazerRelaxLeaderboard.OsuApi.Interfaces;
 using LazerRelaxLeaderboard.OsuApi.Models;
-using Microsoft.EntityFrameworkCore;
 using LazerRelaxLeaderboard.Services;
+using Microsoft.EntityFrameworkCore;
+using Beatmap = LazerRelaxLeaderboard.Database.Models.Beatmap;
+using Score = LazerRelaxLeaderboard.Database.Models.Score;
+using User = LazerRelaxLeaderboard.Database.Models.User;
 
 namespace LazerRelaxLeaderboard.BackgroundServices;
 
 // TODO: this can be removed after the automatic score pumping is confirmed to be working properly
 public class BeatmapUpdateService : BackgroundService
 {
-    private readonly IOsuApiProvider _osuApiProvider;
-    private readonly IServiceScopeFactory _serviceScopeFactory;
-    private readonly ILogger<BeatmapUpdateService> _logger;
-    private readonly int _interval;
     private readonly int _batchSize;
     private readonly bool _enableProcessing;
+    private readonly int _interval;
+    private readonly ILogger<BeatmapUpdateService> _logger;
+    private readonly IOsuApiProvider _osuApiProvider;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
 
-    public BeatmapUpdateService(IOsuApiProvider osuApiProvider, IConfiguration configuration, ILogger<BeatmapUpdateService> logger, IServiceScopeFactory serviceScopeFactory)
+    public BeatmapUpdateService(IOsuApiProvider osuApiProvider, IConfiguration configuration,
+        ILogger<BeatmapUpdateService> logger, IServiceScopeFactory serviceScopeFactory)
     {
         _osuApiProvider = osuApiProvider;
         _logger = logger;
@@ -52,21 +56,22 @@ public class BeatmapUpdateService : BackgroundService
                 var scoredMaps = await context.Scores.AsNoTracking()
                     .Include(x => x.Beatmap)
                     .Where(x => x.Beatmap != null)
-                    .GroupBy(x=> x.BeatmapId)
-                    .OrderByDescending(x=> x.Count())
+                    .GroupBy(x => x.BeatmapId)
+                    .OrderByDescending(x => x.Count())
                     .Select(x => x.Key)
-                    .ToArrayAsync(cancellationToken: stoppingToken);
+                    .ToArrayAsync(stoppingToken);
 
                 var scorelessMaps = await context.Beatmaps.AsNoTracking()
                     .Select(x => x.Id)
                     .Where(x => !scoredMaps.Contains(x))
-                    .ToArrayAsync(cancellationToken: stoppingToken);
+                    .ToArrayAsync(stoppingToken);
 
                 var existingMaps = scoredMaps.Concat(scorelessMaps.OrderBy(_ => Random.Shared.Next())).ToArray();
 
                 for (var i = 0; i < existingMaps.Length; i += _batchSize)
                 {
-                    _logger.LogInformation("Starting new batch of {BatchSize} ({Current}/{Total})", _batchSize, i, existingMaps.Length);
+                    _logger.LogInformation("Starting new batch of {BatchSize} ({Current}/{Total})", _batchSize, i,
+                        existingMaps.Length);
 
                     using var batchScope = _serviceScopeFactory.CreateScope();
                     var ppService = batchScope.ServiceProvider.GetService<IPpService>();
@@ -81,7 +86,8 @@ public class BeatmapUpdateService : BackgroundService
                     // we're catching score collection exceptions separately to run beatmap/pp population regardless of its fails
                     try
                     {
-                        collectionResult = await CollectScores(existingMaps.Skip(i).Take(_batchSize).ToArray(), context);
+                        collectionResult =
+                            await CollectScores(existingMaps.Skip(i).Take(_batchSize).ToArray(), context);
                     }
                     catch (Exception ex)
                     {
@@ -119,7 +125,8 @@ public class BeatmapUpdateService : BackgroundService
         }
     }
 
-    public async Task<(int collectedScores, List<int> affectedPlayers)> CollectScores(int[] maps, DatabaseContext databaseContext)
+    public async Task<(int collectedScores, List<int> affectedPlayers)> CollectScores(int[] maps,
+        DatabaseContext databaseContext)
     {
         var collectedScores = 0;
         var affectedPlayers = new List<int>();
@@ -161,7 +168,7 @@ public class BeatmapUpdateService : BackgroundService
 
                 if (dbBeatmap == null)
                 {
-                    await databaseContext.Beatmaps.AddAsync(new Database.Models.Beatmap
+                    await databaseContext.Beatmaps.AddAsync(new Beatmap
                     {
                         Id = osuBeatmap.Id,
                         ApproachRate = osuBeatmap.ApproachRate,
@@ -210,7 +217,7 @@ public class BeatmapUpdateService : BackgroundService
 
                 // only allow new scores w/o settings AND rate changes
                 var filteredScores = scores.Scores
-                    .Where(s => s.Mods.All(m => m.Settings.Count == 0 || m.Settings.Keys.All(x=> x == "speed_change")))
+                    .Where(s => s.Mods.All(m => m.Settings.Count == 0 || m.Settings.Keys.All(x => x == "speed_change")))
                     .Where(x => !existingScores.Contains(x.Id));
 
                 foreach (var score in filteredScores)
@@ -224,7 +231,7 @@ public class BeatmapUpdateService : BackgroundService
                     }
                     else
                     {
-                        await databaseContext.Users.AddAsync(new Database.Models.User
+                        await databaseContext.Users.AddAsync(new User
                         {
                             Id = score.User.Id,
                             CountryCode = score.User.CountryCode,
@@ -233,7 +240,7 @@ public class BeatmapUpdateService : BackgroundService
                         });
                     }
 
-                    await databaseContext.Scores.AddAsync(new Database.Models.Score
+                    await databaseContext.Scores.AddAsync(new Score
                     {
                         Id = score.Id,
                         Accuracy = score.Accuracy,

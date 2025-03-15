@@ -3,6 +3,7 @@ using LazerRelaxLeaderboard.OsuApi.Interfaces;
 using LazerRelaxLeaderboard.OsuApi.Models;
 using LazerRelaxLeaderboard.Services;
 using Microsoft.EntityFrameworkCore;
+using Beatmap = LazerRelaxLeaderboard.Database.Models.Beatmap;
 using Score = LazerRelaxLeaderboard.Database.Models.Score;
 using User = LazerRelaxLeaderboard.Database.Models.User;
 
@@ -10,21 +11,22 @@ namespace LazerRelaxLeaderboard.BackgroundServices;
 
 public class LeaderboardUpdateService : BackgroundService
 {
-    private readonly IOsuApiProvider _osuApiProvider;
-    private readonly IServiceScopeFactory _serviceScopeFactory;
-    private readonly ILogger<LeaderboardUpdateService> _logger;
     private readonly int _apiInterval;
-    private readonly int _queryInterval;
     private readonly string _cachePath;
     private readonly bool _enableProcessing;
+    private readonly ILogger<LeaderboardUpdateService> _logger;
+    private readonly IOsuApiProvider _osuApiProvider;
+    private readonly int _queryInterval;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
 
-    public LeaderboardUpdateService(IOsuApiProvider osuApiProvider, IConfiguration configuration, ILogger<LeaderboardUpdateService> logger, IServiceScopeFactory serviceScopeFactory)
+    public LeaderboardUpdateService(IOsuApiProvider osuApiProvider, IConfiguration configuration,
+        ILogger<LeaderboardUpdateService> logger, IServiceScopeFactory serviceScopeFactory)
     {
         _osuApiProvider = osuApiProvider;
         _logger = logger;
         _serviceScopeFactory = serviceScopeFactory;
         _apiInterval = int.Parse(configuration["APIQueryInterval"]!);
-        _queryInterval = int.Parse(configuration["ScoreQueryInterval"]!); 
+        _queryInterval = int.Parse(configuration["ScoreQueryInterval"]!);
         _cachePath = configuration["BeatmapCachePath"]!;
         _enableProcessing = bool.Parse(configuration["EnableScoreProcessing"]!);
     }
@@ -78,7 +80,7 @@ public class LeaderboardUpdateService : BackgroundService
                 var currentMaxScoreId = await context.Scores.AsNoTracking()
                     .Select(x => x.Id)
                     .OrderByDescending(x => x)
-                    .FirstAsync(cancellationToken: stoppingToken);
+                    .FirstAsync(stoppingToken);
 
                 if (currentCursor == 0)
                 {
@@ -99,7 +101,8 @@ public class LeaderboardUpdateService : BackgroundService
                     continue;
                 }
 
-                _logger.LogInformation("Got a new score batch of {Count}, cursor {Cursor}", scoreResponse.Scores.Count, currentCursor);
+                _logger.LogInformation("Got a new score batch of {Count}, cursor {Cursor}", scoreResponse.Scores.Count,
+                    currentCursor);
 
                 if (scoreResponse.Scores.Count == 0)
                 {
@@ -202,7 +205,7 @@ public class LeaderboardUpdateService : BackgroundService
                         }
                     }
 
-                    await context.Beatmaps.AddAsync(new Database.Models.Beatmap
+                    await context.Beatmaps.AddAsync(new Beatmap
                     {
                         Id = osuBeatmap.Id,
                         ApproachRate = osuBeatmap.ApproachRate,

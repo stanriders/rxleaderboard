@@ -1,26 +1,24 @@
 ﻿using LazerRelaxLeaderboard.Database.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace LazerRelaxLeaderboard.Database
+namespace LazerRelaxLeaderboard.Database;
+
+public class DatabaseContext : DbContext
 {
-    public class DatabaseContext : DbContext
+    public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options) { }
+
+    private DatabaseContext() { }
+    public DbSet<User> Users { get; set; } = null!;
+
+    public DbSet<Score> Scores { get; set; } = null!;
+
+    public DbSet<Beatmap> Beatmaps { get; set; } = null!;
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        public DbSet<User> Users { get; set; } = null!;
+        modelBuilder.Entity<User>().HasIndex(x => x.TotalPp);
+        modelBuilder.Entity<Score>().HasIndex(x => x.Pp);
 
-        public DbSet<Score> Scores { get; set; } = null!;
-
-        public DbSet<Beatmap> Beatmaps { get; set; } = null!;
-
-        public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options) { }
-
-        private DatabaseContext() { }
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<User>().HasIndex(x => x.TotalPp);
-            modelBuilder.Entity<Score>().HasIndex(x => x.Pp);
-
-            base.OnModelCreating(modelBuilder);
-        }
+        base.OnModelCreating(modelBuilder);
     }
 }

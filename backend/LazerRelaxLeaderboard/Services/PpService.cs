@@ -1,31 +1,30 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using LazerRelaxLeaderboard.Database;
-using LazerRelaxLeaderboard.Database.Models;
 using LazerRelaxLeaderboard.OsuApi.Interfaces;
 using LazerRelaxLeaderboard.OsuApi.Models;
 using Microsoft.EntityFrameworkCore;
 using osu.Game.Beatmaps;
 using osu.Game.Rulesets;
-using osu.Game.Rulesets.Difficulty;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Osu;
 using osu.Game.Rulesets.Osu.Mods;
 using osu.Game.Rulesets.Scoring;
 using osu.Game.Scoring;
-using osu.Game.Screens.Play;
+using User = LazerRelaxLeaderboard.Database.Models.User;
 
 namespace LazerRelaxLeaderboard.Services;
 
 public class PpService : IPpService
 {
-    private readonly DatabaseContext _databaseContext;
-    private readonly IOsuApiProvider _osuApiProvider;
-    private readonly ILogger<IPpService> _logger;
-    private readonly IDiscordService _discordService;
     private readonly string _cachePath;
+    private readonly DatabaseContext _databaseContext;
+    private readonly IDiscordService _discordService;
+    private readonly ILogger<IPpService> _logger;
+    private readonly IOsuApiProvider _osuApiProvider;
 
-    public PpService(DatabaseContext databaseContext, ILogger<IPpService> logger, IConfiguration configuration, IOsuApiProvider osuApiProvider, IDiscordService discordService)
+    public PpService(DatabaseContext databaseContext, ILogger<IPpService> logger, IConfiguration configuration,
+        IOsuApiProvider osuApiProvider, IDiscordService discordService)
     {
         _databaseContext = databaseContext;
         _logger = logger;
@@ -104,7 +103,7 @@ public class PpService : IPpService
                                 { HitResult.Miss, score.CountMiss }
                             },
                             Mods = mods,
-                            TotalScore = score.TotalScore,
+                            TotalScore = score.TotalScore
                         };
 
                         if (score.SliderEnds != null)
@@ -156,7 +155,6 @@ public class PpService : IPpService
 
                             queryBuilder.Add($"UPDATE \"Scores\" SET \"Pp\" = {performanceAttributes.Total} WHERE \"Id\" = {score.Id};");
                         }
-
                     }
                 }
 
@@ -182,7 +180,9 @@ public class PpService : IPpService
 
             if (newBestPp?.Pp > currentBestPp && newBestPp.Pp < currentBestPp * 2)
             {
-                _logger.LogInformation("Posting score {Id} pp record announcement - {Pp}pp (previous top {CurrentTopPp}pp)", newBestPp.Id, newBestPp.Pp, currentBestPp);
+                _logger.LogInformation(
+                    "Posting score {Id} pp record announcement - {Pp}pp (previous top {CurrentTopPp}pp)", newBestPp.Id,
+                    newBestPp.Pp, currentBestPp);
                 await _discordService.PostBestScoreAnnouncement(newBestPp.Id);
             }
         }
@@ -268,7 +268,7 @@ public class PpService : IPpService
         for (var i = 0; i < playerIds.Count; i += 500)
         {
             var players = await _databaseContext.Users
-                .Where(x=> playerIds.Contains(x.Id))
+                .Where(x => playerIds.Contains(x.Id))
                 .Skip(i)
                 .Take(500)
                 .ToListAsync();
@@ -295,35 +295,6 @@ public class PpService : IPpService
         if (newTopPlayer != currentTopPlayer)
         {
             await _discordService.PostBestPlayerAnnouncement(newTopPlayer);
-        }
-    }
-
-    public async Task RecalculatePlayerPp(int id)
-    {
-        var player = await _databaseContext.Users.FindAsync(id);
-        if (player == null)
-        {
-            _logger.LogError("Couldn't recalculate pp for player {Id} - player doesn't exist!", id);
-            return;
-        }
-
-        var currentTopPlayer = await _databaseContext.Users.AsNoTracking()
-                .Where(x => x.TotalPp != null)
-                .OrderByDescending(x=> x.TotalPp)
-                .FirstOrDefaultAsync();
-
-        if (await RecalculatePlayerPp(player))
-        {
-            _databaseContext.Users.Update(player);
-
-            await _databaseContext.SaveChangesAsync();
-
-            if (player.TotalPp != null &&
-                player.TotalPp > currentTopPlayer?.TotalPp &&
-                player.Id != currentTopPlayer.Id)
-            {
-                await _discordService.PostBestPlayerAnnouncement(player.Id);
-            }
         }
     }
 
@@ -403,7 +374,7 @@ public class PpService : IPpService
         _logger.LogInformation("Recalculating {Count} players best scores started...", players.Count);
 
         var scoreGroups = await _databaseContext.Scores
-            .Where(x=> players.Contains(x.UserId))
+            .Where(x => players.Contains(x.UserId))
             .Where(x => !x.Hidden)
             .GroupBy(x => new { x.BeatmapId, x.UserId })
             .ToArrayAsync();
@@ -456,6 +427,36 @@ public class PpService : IPpService
         await _databaseContext.SaveChangesAsync();
     }
 
+    public async Task RecalculatePlayerPp(int id)
+    {
+        var player = await _databaseContext.Users.FindAsync(id);
+        if (player == null)
+        {
+            _logger.LogError("Couldn't recalculate pp for player {Id} - player doesn't exist!", id);
+
+            return;
+        }
+
+        var currentTopPlayer = await _databaseContext.Users.AsNoTracking()
+            .Where(x => x.TotalPp != null)
+            .OrderByDescending(x => x.TotalPp)
+            .FirstOrDefaultAsync();
+
+        if (await RecalculatePlayerPp(player))
+        {
+            _databaseContext.Users.Update(player);
+
+            await _databaseContext.SaveChangesAsync();
+
+            if (player.TotalPp != null &&
+                player.TotalPp > currentTopPlayer?.TotalPp &&
+                player.Id != currentTopPlayer.Id)
+            {
+                await _discordService.PostBestPlayerAnnouncement(player.Id);
+            }
+        }
+    }
+
     private static Mod[] GetMods(Ruleset ruleset, string[] modNames)
     {
         var mods = new List<Mod>();
@@ -487,7 +488,7 @@ public class PpService : IPpService
         return mods.ToArray();
     }
 
-    private async Task<bool> RecalculatePlayerPp(Database.Models.User player)
+    private async Task<bool> RecalculatePlayerPp(User player)
     {
         var beforePp = player.TotalPp;
         var beforeAccuracy = player.TotalAccuracy;

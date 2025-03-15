@@ -1,9 +1,8 @@
-﻿namespace LazerRelaxLeaderboard.Services
+﻿namespace LazerRelaxLeaderboard.Services;
+
+public interface IDiscordService
 {
-    public interface IDiscordService
-    {
-        Task PostBestScoreAnnouncement(long scoreId);
-        Task PostBestPlayerAnnouncement(int userId);
-        Task PostSusScoreAnnouncement(long scoreId);
-    }
+    Task PostBestScoreAnnouncement(long scoreId);
+    Task PostBestPlayerAnnouncement(int userId);
+    Task PostSusScoreAnnouncement(long scoreId);
 }

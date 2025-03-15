@@ -1,13 +1,12 @@
-﻿namespace LazerRelaxLeaderboard.Config
+﻿namespace LazerRelaxLeaderboard.Config;
+
+public class DiscordConfig
 {
-    public class DiscordConfig
-    {
-        public string Token { get; set; } = null!;
+    public string Token { get; set; } = null!;
 
-        public ulong GuildId { get; set; }
-        public ulong AnnouncementChannelId { get; set; }
-        public ulong ReportChannelId { get; set; }
+    public ulong GuildId { get; set; }
+    public ulong AnnouncementChannelId { get; set; }
+    public ulong ReportChannelId { get; set; }
 
-        public bool SendAnnouncements { get; set; }
-    }
+    public bool SendAnnouncements { get; set; }
 }
