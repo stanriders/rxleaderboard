@@ -27,8 +27,10 @@ public class ApiController : ControllerBase
     }
 
     [HttpGet("/scores")]
-    public async Task<List<Score>> GetTopScores()
+    public async Task<List<Score>> GetTopScores(int take = 50)
     {
+        take = Math.Min(500, take);
+
         return await _databaseContext.Scores.AsNoTracking()
             .Where(x => x.Pp != null)
             .Where(x => !x.Hidden)
@@ -36,7 +38,7 @@ public class ApiController : ControllerBase
             .Include(x => x.Beatmap)
             .Include(x => x.User)
             .OrderByDescending(x => x.Pp)
-            .Take(50)
+            .Take(take)
             .ToListAsync();
     }
 
