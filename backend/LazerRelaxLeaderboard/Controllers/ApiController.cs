@@ -105,12 +105,27 @@ public class ApiController : ControllerBase
         };
     }
 
-    [HttpGet("/players/{id}")]
-    public async Task<PlayersDataResponse?> GetPlayer(int id)
+    [HttpGet("/players/{username}")]
+    public async Task<PlayersDataResponse?> GetPlayer(string username)
     {
-        var user = await _databaseContext.Users.AsNoTracking()
-            .Where(x => x.Id == id)
-            .FirstOrDefaultAsync();
+        Database.Models.User? user;
+
+        if (!int.TryParse(username, out var id))
+        {
+            user = await _databaseContext.Users.FirstOrDefaultAsync(x =>
+                string.Equals(x.Username, username, StringComparison.InvariantCultureIgnoreCase));
+
+            if (user == null)
+            {
+                return null;
+            }
+        }
+        else
+        {
+            user = await _databaseContext.Users.AsNoTracking()
+                .Where(x => x.Id == id)
+                .FirstOrDefaultAsync();
+        }
 
         if (user != null)
         {
@@ -196,9 +211,22 @@ public class ApiController : ControllerBase
         return null;
     }
 
-    [HttpGet("/players/{id}/scores")]
-    public async Task<List<Score>> GetPlayerScores(int id)
+    [HttpGet("/players/{username}/scores")]
+    public async Task<List<Score>> GetPlayerScores(string username)
     {
+        if (!int.TryParse(username, out var id))
+        {
+            var user = await _databaseContext.Users.FirstOrDefaultAsync(x =>
+                string.Equals(x.Username, username, StringComparison.InvariantCultureIgnoreCase));
+
+            if (user == null)
+            {
+                return [];
+            }
+
+            id = user.Id;
+        }
+
         var fullTopHundred = await _databaseContext.Scores.AsNoTracking()
             .Where(x => x.UserId == id)
             .Where(x => !x.Hidden)
@@ -232,9 +260,22 @@ public class ApiController : ControllerBase
             .ThenByDescending(x => x.TotalScore).ToList();
     }
 
-    [HttpGet("/players/{id}/scores/recent")]
-    public async Task<List<Score>> GetRecentPlayerScores(int id)
+    [HttpGet("/players/{username}/scores/recent")]
+    public async Task<List<Score>> GetRecentPlayerScores(string username)
     {
+        if (!int.TryParse(username, out var id))
+        {
+            var user = await _databaseContext.Users.FirstOrDefaultAsync(x =>
+                string.Equals(x.Username, username, StringComparison.InvariantCultureIgnoreCase));
+
+            if (user == null)
+            {
+                return [];
+            }
+
+            id = user.Id;
+        }
+
         return await _databaseContext.Scores.AsNoTracking()
             .Where(x => x.UserId == id)
             .Where(x => !x.Hidden)
