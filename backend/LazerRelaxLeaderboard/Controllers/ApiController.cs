@@ -146,7 +146,7 @@ public class ApiController : ControllerBase
             var countsPerMonth = await _databaseContext.Database.SqlQuery<ScoresPerMonthQuery>(
                 $@"select date_trunc('month', date(""Date"")) as ""Month"", count(""Id"") as ""Count""
                        from ""Scores""
-                       where ""UserId"" = {id}
+                       where ""UserId"" = {user.Id}
                        group by ""Month"" order by ""Month"";").ToArrayAsync();
 
             var counts = new List<PlaycountPerMonth>();
