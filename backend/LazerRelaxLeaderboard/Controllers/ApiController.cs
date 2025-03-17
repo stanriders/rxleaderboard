@@ -112,9 +112,7 @@ public class ApiController : ControllerBase
 
         if (!int.TryParse(username, out var id))
         {
-            user = await _databaseContext.Users.FirstOrDefaultAsync(x =>
-                string.Equals(x.Username, username, StringComparison.OrdinalIgnoreCase));
-
+            user = await _databaseContext.Users.FirstOrDefaultAsync(x => x.Username.ToLower() == username.ToLower());
             if (user == null)
             {
                 return null;
@@ -216,8 +214,7 @@ public class ApiController : ControllerBase
     {
         if (!int.TryParse(username, out var id))
         {
-            var user = await _databaseContext.Users.FirstOrDefaultAsync(x =>
-                string.Equals(x.Username, username, StringComparison.OrdinalIgnoreCase));
+            var user = await _databaseContext.Users.FirstOrDefaultAsync(x => x.Username.ToLower() == username.ToLower());
 
             if (user == null)
             {
@@ -265,8 +262,7 @@ public class ApiController : ControllerBase
     {
         if (!int.TryParse(username, out var id))
         {
-            var user = await _databaseContext.Users.FirstOrDefaultAsync(x =>
-                string.Equals(x.Username, username, StringComparison.OrdinalIgnoreCase));
+            var user = await _databaseContext.Users.FirstOrDefaultAsync(x => x.Username.ToLower() == username.ToLower());
 
             if (user == null)
             {
