@@ -233,4 +233,20 @@ public class AdminController : ControllerBase
 
         return Ok(await _databaseContext.Scores.Where(x => x.Hidden).ToListAsync());
     }
+
+    [HttpPost("recalculatePp/{beatmapId}")]
+    public async Task<IActionResult> Bruh2(int beatmapId)
+    {
+        if (!_authService.Authorize(HttpContext))
+        {
+            return Unauthorized();
+        }
+
+        await _ppService.PopulateScores(beatmapId);
+        await _ppService.RecalculateStarRatings(beatmapId);
+        await _ppService.RecalculatePlayersPp();
+        await _ppService.RecalculateBestScores();
+
+        return Ok();
+    }
 }

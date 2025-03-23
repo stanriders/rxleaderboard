@@ -188,6 +188,116 @@ public class PpService : IPpService
         }
     }
 
+    public async Task PopulateScores(int beatmapId)
+    {
+        var query = _databaseContext.Scores.AsNoTracking();
+
+        var mapScores = await query
+            .Where(x => x.Beatmap != null)
+            .Include(x => x.Beatmap)
+            .Where(x => x.Beatmap!.Status == BeatmapStatus.Ranked || x.Beatmap!.Status == BeatmapStatus.Approved)
+            .Where(x => x.BeatmapId == beatmapId)
+            .ToListAsync();
+
+        if (mapScores.Count == 0)
+        {
+            return;
+        }
+
+        _logger.LogInformation("Populating beatmap {Beatmap} pp - {Total} total scores", beatmapId, mapScores.Count);
+
+        var queryBuilder = new ConcurrentBag<string>();
+
+        var mapPath = $"{_cachePath}/{beatmapId}.osu";
+        if (!File.Exists(mapPath))
+        {
+            _logger.LogError("Couldn't populate score pp - map {Map} file doesn't exist!", beatmapId);
+
+            return;
+        }
+
+        var workingBeatmap = new FlatWorkingBeatmap(mapPath);
+
+        var ruleset = new OsuRuleset();
+        var difficultyCalculator = ruleset.CreateDifficultyCalculator(workingBeatmap);
+
+        foreach (var modsGroup in mapScores.GroupBy(x => x.Mods))
+        {
+            var mods = GetMods(ruleset, modsGroup.Key);
+            var difficultyAttributes = difficultyCalculator.Calculate(mods);
+            var performanceCalculator = ruleset.CreatePerformanceCalculator();
+
+            foreach (var score in modsGroup)
+            {
+                var scoreInfo = new ScoreInfo(workingBeatmap.BeatmapInfo, ruleset.RulesetInfo)
+                {
+                    Accuracy = score.Accuracy,
+                    MaxCombo = score.Combo,
+                    Statistics = new Dictionary<HitResult, int>
+                    {
+                        { HitResult.Great, score.Count300 },
+                        { HitResult.Ok, score.Count100 },
+                        { HitResult.Meh, score.Count50 },
+                        { HitResult.Miss, score.CountMiss }
+                    },
+                    Mods = mods,
+                    TotalScore = score.TotalScore
+                };
+
+                if (score.SliderEnds != null)
+                {
+                    scoreInfo.Statistics.Add(HitResult.SliderTailHit, score.SliderEnds.Value);
+                }
+
+                if (score.SliderTicks != null)
+                {
+                    scoreInfo.Statistics.Add(HitResult.LargeTickHit, score.SliderTicks.Value);
+                }
+
+                if (score.SpinnerBonus != null)
+                {
+                    scoreInfo.Statistics.Add(HitResult.LargeBonus, score.SpinnerBonus.Value);
+                }
+
+                if (score.SpinnerSpins != null)
+                {
+                    scoreInfo.Statistics.Add(HitResult.SmallBonus, score.SpinnerSpins.Value);
+                }
+
+                if (score.LegacySliderEnds != null)
+                {
+                    scoreInfo.Statistics.Add(HitResult.SmallTickHit, score.LegacySliderEnds.Value);
+                }
+
+                if (score.LegacySliderEndMisses != null)
+                {
+                    scoreInfo.Statistics.Add(HitResult.SmallTickMiss, score.LegacySliderEndMisses.Value);
+                }
+
+                if (score.SliderTickMisses != null)
+                {
+                    scoreInfo.Statistics.Add(HitResult.LargeTickMiss, score.SliderTickMisses.Value);
+                }
+
+                var performanceAttributes = performanceCalculator.Calculate(scoreInfo, difficultyAttributes);
+
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
+                if (score.Pp != performanceAttributes.Total)
+                {
+                    queryBuilder.Add(
+                        $"UPDATE \"Scores\" SET \"Pp\" = {performanceAttributes.Total} WHERE \"Id\" = {score.Id};");
+                }
+            }
+        }
+
+        _logger.LogInformation("Populating scores pp - saving batch of {Total} updates", queryBuilder.Count);
+
+        if (!queryBuilder.IsEmpty)
+        {
+            await _databaseContext.Database.ExecuteSqlRawAsync(string.Join('\n', queryBuilder));
+        }
+    }
+
     public async Task PopulateStarRatings()
     {
         var unpopulatedStarRatings = await _databaseContext.Beatmaps
@@ -331,6 +441,51 @@ public class PpService : IPpService
         await _databaseContext.SaveChangesAsync();
 
         _logger.LogInformation("Recalculating all maps sr done! Took {Elapsed}", stopwatch.Elapsed);
+    }
+
+    public async Task RecalculateStarRatings(int beatmapId)
+    {
+        var map = await _databaseContext.Beatmaps.Where(x => x.Id == beatmapId).FirstOrDefaultAsync();
+
+        if (map == null)
+        {
+            return;
+        }
+
+        _logger.LogInformation("Recalculating map {Beatmap} sr...", beatmapId);
+
+        var mapPath = $"{_cachePath}/{beatmapId}.osu";
+        if (!File.Exists(mapPath))
+        {
+            _logger.LogError("Couldn't populate map {Id} sr - map file doesn't exist!", map.Id);
+
+            return;
+        }
+
+        var workingBeatmap = new FlatWorkingBeatmap(mapPath);
+
+        var ruleset = new OsuRuleset();
+        var difficultyCalculator = ruleset.CreateDifficultyCalculator(workingBeatmap);
+        var difficultyAttributes = difficultyCalculator.Calculate(new List<Mod> { new OsuModRelax() });
+
+        map.StarRating = difficultyAttributes.StarRating;
+
+        try
+        {
+            var onlineBeatmap = await _osuApiProvider.GetBeatmap(beatmapId);
+            if (onlineBeatmap != null)
+            {
+                map.StarRatingNormal = onlineBeatmap.StarRating;
+            }
+        }
+        catch (Exception ex)
+        {
+           _logger.LogError(ex, "Couldn't update map {Id} live SR!", map.Id);
+        }
+
+        _databaseContext.Beatmaps.Update(map);
+
+        await _databaseContext.SaveChangesAsync();
     }
 
     public async Task RecalculateBestScores()
