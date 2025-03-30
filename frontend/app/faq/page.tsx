@@ -32,5 +32,7 @@ export default async function FaqPage() {
     ppVersionResponse = await ppVersionRequest.json();
   }
 
-  return <FAQ modsResponse={modsResponse} ppVersionResponse={ppVersionResponse}/>;
+  return (
+    <FAQ modsResponse={modsResponse} ppVersionResponse={ppVersionResponse} />
+  );
 }

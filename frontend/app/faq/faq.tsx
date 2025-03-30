@@ -6,7 +6,10 @@ import { FC } from "react";
 
 import { AllowedModsResponse } from "@/api/types";
 
-type Props = { modsResponse: AllowedModsResponse | undefined, ppVersionResponse: string | undefined };
+type Props = {
+  modsResponse: AllowedModsResponse | undefined;
+  ppVersionResponse: string | undefined;
+};
 
 // this stupid thing exists because of the nextui bug that makes accordions not work in ssr
 export const FAQ: FC<Props> = (props) => {
@@ -70,12 +73,13 @@ export const FAQ: FC<Props> = (props) => {
                   size="sm"
                 >
                   pp system
-                </Link>.{" "}
+                </Link>
+                .{" "}
                 {props.ppVersionResponse ? (
-                  <>
-                    Current version is {props.ppVersionResponse}.
-                  </>
-                ) : <></>}
+                  <>Current version is {props.ppVersionResponse}.</>
+                ) : (
+                  <></>
+                )}
               </span>
             </AccordionItem>
             <AccordionItem
