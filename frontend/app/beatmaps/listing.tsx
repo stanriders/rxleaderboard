@@ -8,7 +8,7 @@ import { CircularProgress } from "@nextui-org/react";
 
 import { BeatmapCard } from "./beatmap-card";
 
-import { ApiBase } from "@/api/address";
+import { ApiBaseClientside } from "@/api/address";
 import { BeatmapsResponse, ListingBeatmap } from "@/api/types";
 
 const fetcher = (url: any) =>
@@ -32,7 +32,7 @@ export default function BeatmapListing() {
     return () => clearTimeout(timeoutId);
   }, [search, 500]);
 
-  let address = `${ApiBase}/beatmaps?page=${page}`;
+  let address = `${ApiBaseClientside}/beatmaps?page=${page}`;
 
   if (debouncedSearch != "") {
     address += `&search=${debouncedSearch}`;

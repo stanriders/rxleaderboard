@@ -17,7 +17,7 @@ import useSWR from "swr";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 
 import { Flag } from "@/components/flag";
-import { ApiBase } from "@/api/address";
+import { ApiBaseClientside } from "@/api/address";
 import { User } from "@/components/user";
 import { UserModel } from "@/api/types";
 
@@ -79,7 +79,7 @@ export const LeaderboardTable: FC<Props> = (props) => {
     setPage(1);
   };
 
-  let address = `${ApiBase}/players?page=${page}`;
+  let address = `${ApiBaseClientside}/players?page=${page}`;
 
   if (debouncedSearch != "") {
     address += `&search=${debouncedSearch}`;
