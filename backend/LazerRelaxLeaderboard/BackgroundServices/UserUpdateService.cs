@@ -10,9 +10,9 @@ namespace LazerRelaxLeaderboard.BackgroundServices
         private readonly int _apiInterval;
         private readonly IOsuApiProvider _osuApiProvider;
         private readonly IServiceScopeFactory _serviceScopeFactory;
-        private readonly ILogger<LeaderboardUpdateService> _logger;
+        private readonly ILogger<UserUpdateService> _logger;
         public UserUpdateService(IOsuApiProvider osuApiProvider, IConfiguration configuration,
-            ILogger<LeaderboardUpdateService> logger, IServiceScopeFactory serviceScopeFactory)
+            ILogger<UserUpdateService> logger, IServiceScopeFactory serviceScopeFactory)
         {
             _osuApiProvider = osuApiProvider;
             _logger = logger;
