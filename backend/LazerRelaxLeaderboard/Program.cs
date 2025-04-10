@@ -75,6 +75,7 @@ builder.Services.AddTransient<IPpService, PpService>();
 
 builder.Services.AddHostedService<BeatmapUpdateService>();
 builder.Services.AddHostedService<LeaderboardUpdateService>();
+builder.Services.AddHostedService<UserUpdateService>();
 builder.Services.AddHostedService<CleanupService>();
 
 builder.Services.AddRateLimiter(_ => _
