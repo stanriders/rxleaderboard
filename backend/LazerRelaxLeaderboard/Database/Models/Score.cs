@@ -55,4 +55,6 @@ public class Score
     public required bool IsBest { get; set; }
 
     public bool Hidden { get; set; }
+
+    public bool Deleted { get; set; }
 }

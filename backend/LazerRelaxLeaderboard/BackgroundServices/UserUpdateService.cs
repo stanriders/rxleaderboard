@@ -41,7 +41,10 @@ namespace LazerRelaxLeaderboard.BackgroundServices
                         return;
                     }
 
-                    var users = await context.Users.AsNoTracking().Select(x=> x.Id).ToArrayAsync(cancellationToken: stoppingToken);
+                    var users = await context.Users.AsNoTracking()
+                        .Select(x => x.Id)
+                        .OrderByDescending(x => x)
+                        .ToArrayAsync(cancellationToken: stoppingToken);
 
                     _logger.LogInformation("Updating {Count} users...", users.Length);
 
@@ -50,20 +53,58 @@ namespace LazerRelaxLeaderboard.BackgroundServices
                         var osuUser = await _osuApiProvider.GetUser(userId);
                         if (osuUser == null)
                         {
-                            _logger.LogInformation("Nuking player {UserId}...", userId);
+                            if (await context.Scores.AnyAsync(x => x.UserId == userId && !x.Hidden,
+                                    cancellationToken: stoppingToken))
+                            {
+                                _logger.LogInformation("Nuking player {UserId}...", userId);
 
-                            await context.Scores.Where(x => x.UserId == userId)
-                                .ExecuteUpdateAsync(u => u.SetProperty(x => x.Hidden, true),
-                                    cancellationToken: stoppingToken);
+                                await context.Scores.Where(x => x.UserId == userId)
+                                    .ExecuteUpdateAsync(u => u.SetProperty(x => x.Hidden, true),
+                                        cancellationToken: stoppingToken);
 
-                            await ppService.RecalculatePlayersPp([userId]);
-                            await ppService.RecalculateBestScores([userId]);
+                                await ppService.RecalculatePlayersPp([userId]);
+                                await ppService.RecalculateBestScores([userId]);
+                            }
                         }
                         else
                         {
                             await context.Users.Where(x=> x.Id == userId)
                                 .ExecuteUpdateAsync(u => u.SetProperty(x => x.Username, osuUser.Username).SetProperty(x => x.CountryCode, osuUser.CountryCode),
                                     cancellationToken: stoppingToken);
+
+                            var hiddenScores = await context.Scores.Where(x => x.UserId == userId && x.Hidden && !x.Deleted).ToArrayAsync(stoppingToken);
+                            if (hiddenScores.Length > 0)
+                            {
+                                var anyUnhiddenScores = false;
+
+                                // user has hidden scores, but exists on the API - check if they got wiped
+                                foreach (var score in hiddenScores)
+                                {
+                                    var osuScore = await _osuApiProvider.GetScore(score.Id);
+                                    if (osuScore != null)
+                                    {
+                                        // unhide scores that exist again
+                                        score.Hidden = false;
+                                        anyUnhiddenScores = true;
+                                        _logger.LogInformation("Unhiding score {ScoreId}...", score.Id);
+                                    }
+                                    else
+                                    {
+                                        // score still doesn't exist, nuke it for good
+                                        score.Hidden = true;
+                                        score.Deleted = true;
+                                    }
+                                    await Task.Delay(_apiInterval, stoppingToken);
+                                }
+
+                                await context.SaveChangesAsync(stoppingToken);
+
+                                if (anyUnhiddenScores)
+                                {
+                                    await ppService.RecalculatePlayersPp([userId]);
+                                    await ppService.RecalculateBestScores([userId]);
+                                }
+                            }
                         }
 
                         await Task.Delay(_apiInterval, stoppingToken);
