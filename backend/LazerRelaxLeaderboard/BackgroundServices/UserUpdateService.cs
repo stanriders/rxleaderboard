@@ -43,6 +43,8 @@ namespace LazerRelaxLeaderboard.BackgroundServices
 
                     var users = await context.Users.AsNoTracking().Select(x=> x.Id).ToArrayAsync(cancellationToken: stoppingToken);
 
+                    _logger.LogInformation("Updating {Count} users...", users.Length);
+
                     foreach (var userId in users)
                     {
                         var osuUser = await _osuApiProvider.GetUser(userId);
@@ -66,6 +68,8 @@ namespace LazerRelaxLeaderboard.BackgroundServices
 
                         await Task.Delay(_apiInterval, stoppingToken);
                     }
+
+                    _logger.LogInformation("Finished updating users");
                 }
                 catch (Exception ex)
                 {
