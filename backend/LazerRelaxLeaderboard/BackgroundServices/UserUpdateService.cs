@@ -11,6 +11,7 @@ namespace LazerRelaxLeaderboard.BackgroundServices
         private readonly IOsuApiProvider _osuApiProvider;
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly ILogger<UserUpdateService> _logger;
+
         public UserUpdateService(IOsuApiProvider osuApiProvider, IConfiguration configuration,
             ILogger<UserUpdateService> logger, IServiceScopeFactory serviceScopeFactory)
         {
@@ -24,31 +25,31 @@ namespace LazerRelaxLeaderboard.BackgroundServices
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                try
+                using var loopScope = _serviceScopeFactory.CreateScope();
+                var context = loopScope.ServiceProvider.GetService<DatabaseContext>();
+                if (context == null)
                 {
-                    using var loopScope = _serviceScopeFactory.CreateScope();
-                    var context = loopScope.ServiceProvider.GetService<DatabaseContext>();
-                    if (context == null)
-                    {
-                        _logger.LogError("Couldn't get a database instance!");
-                        return;
-                    }
+                    _logger.LogError("Couldn't get a database instance!");
+                    return;
+                }
 
-                    var ppService = loopScope.ServiceProvider.GetService<IPpService>();
-                    if (ppService == null)
-                    {
-                        _logger.LogError("Couldn't get a pp service instance!");
-                        return;
-                    }
+                var ppService = loopScope.ServiceProvider.GetService<IPpService>();
+                if (ppService == null)
+                {
+                    _logger.LogError("Couldn't get a pp service instance!");
+                    return;
+                }
 
-                    var users = await context.Users.AsNoTracking()
-                        .Select(x => x.Id)
-                        .OrderByDescending(x => x)
-                        .ToArrayAsync(cancellationToken: stoppingToken);
+                var users = await context.Users.AsNoTracking()
+                    .Select(x => x.Id)
+                    .OrderByDescending(x => x)
+                    .ToArrayAsync(cancellationToken: stoppingToken);
 
-                    _logger.LogInformation("Updating {Count} users...", users.Length);
+                _logger.LogInformation("Updating {Count} users...", users.Length);
 
-                    foreach (var userId in users)
+                foreach (var userId in users)
+                {
+                    try
                     {
                         var osuUser = await _osuApiProvider.GetUser(userId);
                         if (osuUser == null)
@@ -68,14 +69,19 @@ namespace LazerRelaxLeaderboard.BackgroundServices
                         }
                         else
                         {
-                            await context.Users.Where(x=> x.Id == userId)
-                                .ExecuteUpdateAsync(u => u.SetProperty(x => x.Username, osuUser.Username).SetProperty(x => x.CountryCode, osuUser.CountryCode),
+                            await context.Users.Where(x => x.Id == userId)
+                                .ExecuteUpdateAsync(
+                                    u => u.SetProperty(x => x.Username, osuUser.Username)
+                                        .SetProperty(x => x.CountryCode, osuUser.CountryCode),
                                     cancellationToken: stoppingToken);
 
-                            var hiddenScores = await context.Scores.Where(x => x.UserId == userId && x.Hidden && !x.Deleted).ToArrayAsync(stoppingToken);
+                            var hiddenScores = await context.Scores
+                                .Where(x => x.UserId == userId && x.Hidden && !x.Deleted).ToArrayAsync(stoppingToken);
                             if (hiddenScores.Length > 0)
                             {
                                 var anyUnhiddenScores = false;
+
+                                _logger.LogInformation("Unnuking player {UserId} ({Count} hidden scores)...", userId, hiddenScores.Length);
 
                                 // user has hidden scores, but exists on the API - check if they got wiped
                                 foreach (var score in hiddenScores)
@@ -106,16 +112,16 @@ namespace LazerRelaxLeaderboard.BackgroundServices
                                 }
                             }
                         }
-
-                        await Task.Delay(_apiInterval, stoppingToken);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "UserUpdateService failed!");
                     }
 
-                    _logger.LogInformation("Finished updating users");
+                    await Task.Delay(_apiInterval, stoppingToken);
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "UserUpdateService failed!");
-                }
+
+                _logger.LogInformation("Finished updating users");
 
                 await Task.Delay(_apiInterval, stoppingToken);
             }
