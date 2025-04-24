@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   applicationName: siteConfig.name,
   authors: [{ name: "StanR", url: "https://osu.ppy.sh/users/7217455" }],
   description: siteConfig.description,
-  keywords: ["rx", "osu", "relax", "leaderboard", "osu!", "osu!lazer", "lazer"],
+  keywords: ["rx", "vault", "rxvault", "rx vault", "osu", "relax", "leaderboard", "osu!", "osu!lazer", "lazer", "relaxation vault","stanriders","stanr","relax leaderboard","osu relax leaderboard","osu lazer relax","osu lazer leaderboard","osu lazer","osu!lazer","osu relax mode","osu relax","stanriders relaxation vault","osu! relax players","osu!lazer relax leaderboard","relaxation vault osu","stanr osu","osu leaderboard relax","relax rankings osu","osu relax stats","osu lazer relax stats","osu relax community","stanr osu tools","osu relax tracking","osu relax scoring","osu relax performance","lazer relax leaderboard","osu relax vault","osu relax top players","osu relax global leaderboard","osu relax records"],
   icons: {
     icon: "/favicon.ico",
     shortcut: "/favicon.ico",
