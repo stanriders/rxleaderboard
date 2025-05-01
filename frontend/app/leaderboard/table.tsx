@@ -164,7 +164,6 @@ export const LeaderboardTable: FC<Props> = (props) => {
             inputWrapper:
               "h-full font-normal text-default-500 bg-default-400/20 dark:bg-default-500/20",
           }}
-          isDisabled={!data}
           placeholder="Search player..."
           size="sm"
           type="search"
