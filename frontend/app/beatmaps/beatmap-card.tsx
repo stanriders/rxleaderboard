@@ -29,7 +29,9 @@ export const BeatmapCard: FC<Props> = (props) => {
         />
         <CardBody className="p-2 flex flex-row text-sm">
           <div className="flex grow flex-col overflow-hidden">
-            <p className="text-primary-400 truncate">{beatmap.difficultyName}</p>
+            <p className="text-primary-400 truncate">
+              {beatmap.difficultyName}
+            </p>
             <p className="text-default-600">{beatmap.status}</p>
           </div>
 
