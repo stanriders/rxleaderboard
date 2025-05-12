@@ -29,7 +29,7 @@ export const BeatmapCard: FC<Props> = (props) => {
         />
         <CardBody className="p-2 flex flex-row text-sm">
           <div className="flex grow flex-col">
-            <p className="text-primary-400">{beatmap.difficultyName}</p>
+            <p className="text-primary-400 max-w-3/4 text-ellipsis">{beatmap.difficultyName}</p>
             <p className="text-default-600">{beatmap.status}</p>
           </div>
 

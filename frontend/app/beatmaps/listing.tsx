@@ -43,7 +43,7 @@ export default function BeatmapListing() {
   if (error) return <div>Failed to load</div>;
 
   if (data) {
-    const pages = Math.max(1, Math.ceil(data.total ?? 0 / 50));
+    const pages = Math.max(1, Math.ceil((data.total ?? 0) / 50));
 
     if (totalPages != pages) setTotalPages(pages);
   }
