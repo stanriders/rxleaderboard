@@ -28,8 +28,8 @@ export const BeatmapCard: FC<Props> = (props) => {
           src={`https://assets.ppy.sh/beatmaps/${beatmap.beatmapSetId}/covers/cover.jpg`}
         />
         <CardBody className="p-2 flex flex-row text-sm">
-          <div className="flex grow flex-col">
-            <p className="text-primary-400 max-w-3/4 text-ellipsis">{beatmap.difficultyName}</p>
+          <div className="flex grow flex-col overflow-hidden">
+            <p className="text-primary-400 truncate">{beatmap.difficultyName}</p>
             <p className="text-default-600">{beatmap.status}</p>
           </div>
 
