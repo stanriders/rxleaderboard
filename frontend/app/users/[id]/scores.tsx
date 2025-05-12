@@ -28,21 +28,23 @@ export const ScoresContainer: FC<Props> = (props) => {
         <></>
       )}
 
-      {scores.map((row: ScoreModel, index) => {
-        if (!showAll && !row.isBest) return;
-
-        return (
-          <>
-            <Score
-              key={row.id}
-              rank={index + 1}
-              score={row}
-              showPlayer={false}
-            />
-            <Spacer y={1} />
-          </>
-        );
-      })}
+      {scores
+        .filter((row: ScoreModel) => {
+          return !(!showAll && !row.isBest);
+        })
+        .map((row: ScoreModel, index) => {
+          return (
+            <>
+              <Score
+                key={row.id}
+                rank={index + 1}
+                score={row}
+                showPlayer={false}
+              />
+              <Spacer y={1} />
+            </>
+          );
+        })}
     </>
   );
 };
