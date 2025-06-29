@@ -309,26 +309,39 @@ public class PpService : IPpService
             return;
         }
 
-        _logger.LogInformation("Populating beatmaps sr - {Total} total", unpopulatedStarRatings.Count);
+        _logger.LogInformation("Populating beatmaps SR - {Total} total", unpopulatedStarRatings.Count);
 
         foreach (var map in unpopulatedStarRatings)
         {
             var mapPath = $"{_cachePath}/{map.Id}.osu";
-            if (!File.Exists(mapPath))
+            try
             {
-                _logger.LogWarning("Downloading beatmap {Id}...", map.Id);
-                await _osuApiProvider.DownloadMap(map.Id, mapPath);
-                await Task.Delay(1000); // wait for some time in case of multiple missing maps
+                if (!File.Exists(mapPath))
+                {
+                    _logger.LogWarning("Downloading beatmap {Id}...", map.Id);
+                    await _osuApiProvider.DownloadMap(map.Id, mapPath);
+                    await Task.Delay(1000); // wait for some time in case of multiple missing maps
+                }
+
+                var workingBeatmap = new FlatWorkingBeatmap(mapPath);
+
+                var ruleset = new OsuRuleset();
+                var difficultyCalculator = ruleset.CreateDifficultyCalculator(workingBeatmap);
+
+                var difficultyAttributes = difficultyCalculator.Calculate(new List<Mod> { new OsuModRelax() });
+                map.StarRating = difficultyAttributes.StarRating;
+                _databaseContext.Beatmaps.Update(map);
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to populate SR for beatmap {Id}", map.Id);
 
-            var workingBeatmap = new FlatWorkingBeatmap(mapPath);
-
-            var ruleset = new OsuRuleset();
-            var difficultyCalculator = ruleset.CreateDifficultyCalculator(workingBeatmap);
-
-            var difficultyAttributes = difficultyCalculator.Calculate(new List<Mod> { new OsuModRelax() });
-            map.StarRating = difficultyAttributes.StarRating;
-            _databaseContext.Beatmaps.Update(map);
+                // assume that the beatmap is broken
+                if (File.Exists(mapPath))
+                {
+                    File.Delete(mapPath);
+                }
+            }
         }
 
         await _databaseContext.SaveChangesAsync();
