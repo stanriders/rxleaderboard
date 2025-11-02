@@ -428,9 +428,10 @@ public class PpService : IPpService
         _logger.LogInformation("Recalculating all maps sr - {Total} maps total", maps.Count);
         var stopwatch = Stopwatch.StartNew();
 
-        for (var i = 0; i < maps.Count; i += 1000)
+        const int batchSize = 1000;
+        for (var i = 0; i < maps.Count; i += batchSize)
         {
-            await Parallel.ForEachAsync(maps, (map, cancellationToken) =>
+            await Parallel.ForEachAsync(maps.Skip(i).Take(batchSize), (map, cancellationToken) =>
             {
                 var mapPath = $"{_cachePath}/{map.Id}.osu";
                 if (!File.Exists(mapPath))
@@ -454,7 +455,7 @@ public class PpService : IPpService
                 return ValueTask.CompletedTask;
             });
 
-            _logger.LogInformation("Recalculating all maps sr - saving a batch of 1000 updates");
+            _logger.LogInformation("Recalculating all maps sr - saving a batch of {BatchSize} updates", batchSize);
             await _databaseContext.SaveChangesAsync();
         }
 
