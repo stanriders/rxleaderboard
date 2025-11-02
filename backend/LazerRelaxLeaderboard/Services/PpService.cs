@@ -423,41 +423,33 @@ public class PpService : IPpService
 
     public async Task RecalculateStarRatings()
     {
-        var maps = await _databaseContext.Beatmaps.ToListAsync();
+        var maps = await _databaseContext.Beatmaps.AsNoTracking().ToListAsync();
 
         _logger.LogInformation("Recalculating all maps sr - {Total} maps total", maps.Count);
         var stopwatch = Stopwatch.StartNew();
 
-        const int batchSize = 1000;
-        for (var i = 0; i < maps.Count; i += batchSize)
+        await Parallel.ForEachAsync(maps, async (map, cancellationToken) =>
         {
-            await Parallel.ForEachAsync(maps.Skip(i).Take(batchSize), (map, cancellationToken) =>
+            var mapPath = $"{_cachePath}/{map.Id}.osu";
+            if (!File.Exists(mapPath))
             {
-                var mapPath = $"{_cachePath}/{map.Id}.osu";
-                if (!File.Exists(mapPath))
-                {
-                    _logger.LogError("Couldn't populate map {Id} sr - map file doesn't exist!", map.Id);
+                _logger.LogError("Couldn't populate map {Id} sr - map file doesn't exist!", map.Id);
 
-                    return ValueTask.CompletedTask;
-                }
+                return;
+            }
 
-                var workingBeatmap = new FlatWorkingBeatmap(mapPath);
+            var workingBeatmap = new FlatWorkingBeatmap(mapPath);
 
-                var ruleset = new OsuRuleset();
-                var difficultyCalculator = ruleset.CreateDifficultyCalculator(workingBeatmap);
+            var ruleset = new OsuRuleset();
+            var difficultyCalculator = ruleset.CreateDifficultyCalculator(workingBeatmap);
 
-                var difficultyAttributes =
-                    difficultyCalculator.Calculate(new List<Mod> { new OsuModRelax() }, cancellationToken);
-                map.StarRating = difficultyAttributes.StarRating;
-                // todo: update live SR as well
-                _databaseContext.Beatmaps.Update(map);
+            var difficultyAttributes =
+                difficultyCalculator.Calculate(new List<Mod> { new OsuModRelax() }, cancellationToken);
 
-                return ValueTask.CompletedTask;
-            });
-
-            _logger.LogInformation("Recalculating all maps sr - saving a batch of {BatchSize} updates", batchSize);
-            await _databaseContext.SaveChangesAsync();
-        }
+            // todo: update live SR as well
+            await _databaseContext.Beatmaps.ExecuteUpdateAsync(
+                x => x.SetProperty(p => p.StarRating, difficultyAttributes.StarRating), cancellationToken);
+        });
 
         _logger.LogInformation("Recalculating all maps sr done! Took {Elapsed}", stopwatch.Elapsed);
     }
