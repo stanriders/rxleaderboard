@@ -428,28 +428,49 @@ public class PpService : IPpService
         _logger.LogInformation("Recalculating all maps sr - {Total} maps total", maps.Count);
         var stopwatch = Stopwatch.StartNew();
 
-        await Parallel.ForEachAsync(maps, async (map, cancellationToken) =>
+        const int batchSize = 200;
+        for (var i = 0; i < maps.Count; i += batchSize)
         {
-            var mapPath = $"{_cachePath}/{map.Id}.osu";
-            if (!File.Exists(mapPath))
+            var batch = maps.Skip(i).Take(batchSize).ToList();
+
+            var queryBuilder = new ConcurrentBag<string>();
+            await Parallel.ForEachAsync(batch, (map, cancellationToken) =>
             {
-                _logger.LogError("Couldn't populate map {Id} sr - map file doesn't exist!", map.Id);
+                var mapPath = $"{_cachePath}/{map.Id}.osu";
+                if (!File.Exists(mapPath))
+                {
+                    _logger.LogError("Couldn't populate map {Id} sr - map file doesn't exist!", map.Id);
 
-                return;
+                    return ValueTask.CompletedTask;
+                }
+
+                var workingBeatmap = new FlatWorkingBeatmap(mapPath);
+
+                var ruleset = new OsuRuleset();
+                var difficultyCalculator = ruleset.CreateDifficultyCalculator(workingBeatmap);
+
+                var difficultyAttributes =
+                    difficultyCalculator.Calculate(new List<Mod> { new OsuModRelax() }, cancellationToken);
+
+                // todo: update live SR as well
+
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
+                if (map.StarRating != difficultyAttributes.StarRating)
+                {
+                    queryBuilder.Add(
+                        $"UPDATE \"Beatmaps\" SET \"StarRating\" = {difficultyAttributes.StarRating} WHERE \"Id\" = {map.Id};");
+                }
+
+                return ValueTask.CompletedTask;
+            });
+
+            _logger.LogInformation("Recalculating all maps sr - saving a batch of {Total} updates", queryBuilder.Count);
+
+            if (!queryBuilder.IsEmpty)
+            {
+                await _databaseContext.Database.ExecuteSqlRawAsync(string.Join('\n', queryBuilder));
             }
-
-            var workingBeatmap = new FlatWorkingBeatmap(mapPath);
-
-            var ruleset = new OsuRuleset();
-            var difficultyCalculator = ruleset.CreateDifficultyCalculator(workingBeatmap);
-
-            var difficultyAttributes =
-                difficultyCalculator.Calculate(new List<Mod> { new OsuModRelax() }, cancellationToken);
-
-            // todo: update live SR as well
-            await _databaseContext.Beatmaps.ExecuteUpdateAsync(
-                x => x.SetProperty(p => p.StarRating, difficultyAttributes.StarRating), cancellationToken);
-        });
+        }
 
         _logger.LogInformation("Recalculating all maps sr done! Took {Elapsed}", stopwatch.Elapsed);
     }
