@@ -428,7 +428,7 @@ public class PpService : IPpService
         _logger.LogInformation("Recalculating all maps sr - {Total} maps total", maps.Count);
         var stopwatch = Stopwatch.StartNew();
 
-        const int batchSize = 200;
+        const int batchSize = 1000;
         for (var i = 0; i < maps.Count; i += batchSize)
         {
             var batch = maps.Skip(i).Take(batchSize).ToList();
