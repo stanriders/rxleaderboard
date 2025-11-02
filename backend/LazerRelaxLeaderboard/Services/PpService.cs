@@ -428,30 +428,35 @@ public class PpService : IPpService
         _logger.LogInformation("Recalculating all maps sr - {Total} maps total", maps.Count);
         var stopwatch = Stopwatch.StartNew();
 
-        await Parallel.ForEachAsync(maps, (map, cancellationToken) =>
+        for (var i = 0; i < maps.Count; i += 1000)
         {
-            var mapPath = $"{_cachePath}/{map.Id}.osu";
-            if (!File.Exists(mapPath))
+            await Parallel.ForEachAsync(maps, (map, cancellationToken) =>
             {
-                _logger.LogError("Couldn't populate map {Id} sr - map file doesn't exist!", map.Id);
+                var mapPath = $"{_cachePath}/{map.Id}.osu";
+                if (!File.Exists(mapPath))
+                {
+                    _logger.LogError("Couldn't populate map {Id} sr - map file doesn't exist!", map.Id);
+
+                    return ValueTask.CompletedTask;
+                }
+
+                var workingBeatmap = new FlatWorkingBeatmap(mapPath);
+
+                var ruleset = new OsuRuleset();
+                var difficultyCalculator = ruleset.CreateDifficultyCalculator(workingBeatmap);
+
+                var difficultyAttributes =
+                    difficultyCalculator.Calculate(new List<Mod> { new OsuModRelax() }, cancellationToken);
+                map.StarRating = difficultyAttributes.StarRating;
+                // todo: update live SR as well
+                _databaseContext.Beatmaps.Update(map);
 
                 return ValueTask.CompletedTask;
-            }
+            });
 
-            var workingBeatmap = new FlatWorkingBeatmap(mapPath);
-
-            var ruleset = new OsuRuleset();
-            var difficultyCalculator = ruleset.CreateDifficultyCalculator(workingBeatmap);
-
-            var difficultyAttributes = difficultyCalculator.Calculate(new List<Mod> { new OsuModRelax() }, cancellationToken);
-            map.StarRating = difficultyAttributes.StarRating;
-            // todo: update live SR as well
-            _databaseContext.Beatmaps.Update(map);
-
-            return ValueTask.CompletedTask;
-        });
-
-        await _databaseContext.SaveChangesAsync();
+            _logger.LogInformation("Recalculating all maps sr - saving a batch of 1000 updates");
+            await _databaseContext.SaveChangesAsync();
+        }
 
         _logger.LogInformation("Recalculating all maps sr done! Took {Elapsed}", stopwatch.Elapsed);
     }
