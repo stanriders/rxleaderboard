@@ -112,10 +112,10 @@ public class LeaderboardUpdateService : BackgroundService
 
                 var affectedPlayers = await ProcessScores(scoreResponse.Scores, context);
 
-                await ppService.PopulateScores();
-
                 // somehow database seem to have issues keeping up and fails to properly calculate best scores, so we wait for a bit
                 await Task.Delay(_apiInterval, stoppingToken);
+
+                await ppService.PopulateScores();
 
                 if (affectedPlayers.Count > 0)
                 {
@@ -205,7 +205,7 @@ public class LeaderboardUpdateService : BackgroundService
                         }
                     }
 
-                    await context.Beatmaps.AddAsync(new Beatmap
+                    context.Beatmaps.Add(new Beatmap
                     {
                         Id = osuBeatmap.Id,
                         ApproachRate = osuBeatmap.ApproachRate,
@@ -226,8 +226,6 @@ public class LeaderboardUpdateService : BackgroundService
                         Status = osuBeatmap.Status
                     });
 
-                    await context.SaveChangesAsync();
-
                     // wait until querying api again
                     await Task.Delay(_apiInterval);
                 }
@@ -242,7 +240,7 @@ public class LeaderboardUpdateService : BackgroundService
                         continue;
                     }
 
-                    await context.Users.AddAsync(new User
+                    context.Users.Add(new User
                     {
                         Id = osuUser.Id,
                         CountryCode = osuUser.CountryCode,
@@ -251,7 +249,7 @@ public class LeaderboardUpdateService : BackgroundService
                     });
                 }
 
-                await context.Scores.AddAsync(new Score
+                context.Scores.Add(new Score
                 {
                     Id = score.Id,
                     Accuracy = score.Accuracy,
