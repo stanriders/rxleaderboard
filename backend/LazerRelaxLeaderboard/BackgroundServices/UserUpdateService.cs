@@ -72,7 +72,8 @@ namespace LazerRelaxLeaderboard.BackgroundServices
                             await context.Users.Where(x => x.Id == userId)
                                 .ExecuteUpdateAsync(
                                     u => u.SetProperty(x => x.Username, osuUser.Username)
-                                        .SetProperty(x => x.CountryCode, osuUser.CountryCode),
+                                        .SetProperty(x => x.CountryCode, osuUser.CountryCode)
+                                        .SetProperty(x => x.UpdatedAt, DateTime.UtcNow),
                                     cancellationToken: stoppingToken);
 
                             var hiddenScores = await context.Scores
