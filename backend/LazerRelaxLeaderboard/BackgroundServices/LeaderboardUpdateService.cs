@@ -129,7 +129,7 @@ public class LeaderboardUpdateService : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "LeaderboardUpdateService failed!");
+                _logger.LogError(ex, "LeaderboardUpdateService failed! {Message}", ex.Message);
             }
 
             await Task.Delay(interval, stoppingToken);

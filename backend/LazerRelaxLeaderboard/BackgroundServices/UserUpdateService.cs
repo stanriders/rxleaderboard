@@ -116,7 +116,7 @@ namespace LazerRelaxLeaderboard.BackgroundServices
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "UserUpdateService failed!");
+                        _logger.LogError(ex, "UserUpdateService failed! {Message}", ex.Message);
                     }
 
                     await Task.Delay(_apiInterval, stoppingToken);

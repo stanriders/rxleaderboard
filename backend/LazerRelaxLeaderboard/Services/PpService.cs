@@ -146,14 +146,14 @@ public class PpService : IPpService
                         // ReSharper disable once CompareOfFloatsByEqualityOperator
                         if (score.Pp != performanceAttributes.Total)
                         {
-                            if (!recalculateAll && performanceAttributes.Total > currentBestPp * 2)
+                            queryBuilder.Add($"UPDATE \"Scores\" SET \"Pp\" = {performanceAttributes.Total} WHERE \"Id\" = {score.Id};");
+
+                            if (!recalculateAll && (performanceAttributes.Total > currentBestPp * 2 || performanceAttributes.Total > 3000))
                             {
                                 _logger.LogWarning("Hiding score {Id} - {Pp}pp (current top {CurrentTopPp}pp)", score.Id, performanceAttributes.Total, currentBestPp);
                                 _discordService.PostSusScoreAnnouncement(score.Id).Wait(token);
                                 queryBuilder.Add($"UPDATE \"Scores\" SET \"Hidden\" = True WHERE \"Id\" = {score.Id};");
                             }
-
-                            queryBuilder.Add($"UPDATE \"Scores\" SET \"Pp\" = {performanceAttributes.Total} WHERE \"Id\" = {score.Id};");
                         }
                     }
                 }

@@ -48,7 +48,7 @@ public class CleanupService : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "CleanupService failed!");
+                _logger.LogError(ex, "CleanupService failed! {Message}", ex.Message);
             }
 
             await Task.Delay(_interval, stoppingToken);
