@@ -41,8 +41,8 @@ namespace LazerRelaxLeaderboard.BackgroundServices
                 }
 
                 var users = await context.Users.AsNoTracking()
+                    .OrderBy(x => x.UpdatedAt)
                     .Select(x => x.Id)
-                    .OrderByDescending(x => x)
                     .ToArrayAsync(cancellationToken: stoppingToken);
 
                 _logger.LogInformation("Updating {Count} users...", users.Length);

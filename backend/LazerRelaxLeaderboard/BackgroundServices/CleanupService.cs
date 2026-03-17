@@ -51,6 +51,8 @@ public class CleanupService : BackgroundService
                 _logger.LogError(ex, "CleanupService failed! {Message}", ex.Message);
             }
 
+            _logger.LogInformation("Cleanup job complete, waiting {Interval}...", _interval);
+
             await Task.Delay(_interval, stoppingToken);
         }
     }
