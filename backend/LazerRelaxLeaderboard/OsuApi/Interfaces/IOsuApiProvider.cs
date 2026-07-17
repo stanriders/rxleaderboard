@@ -10,4 +10,5 @@ public interface IOsuApiProvider
     Task<ScoresResponse?> GetScores(long? cursor);
     Task<User?> GetUser(int id);
     Task<bool> DownloadMap(int id, string path);
+    Task<UsersLookupResponse?> GetUsers(int[] ids);
 }

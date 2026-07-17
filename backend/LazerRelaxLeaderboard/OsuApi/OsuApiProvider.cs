@@ -6,6 +6,7 @@ using LazerRelaxLeaderboard.Config;
 using LazerRelaxLeaderboard.OsuApi.Interfaces;
 using LazerRelaxLeaderboard.OsuApi.Models;
 using Microsoft.Extensions.Options;
+using osu.Game.Rulesets.Mods;
 
 namespace LazerRelaxLeaderboard.OsuApi;
 
@@ -19,6 +20,7 @@ public class OsuApiProvider : IOsuApiProvider
     private const string api_user_link = "api/v2/users/{0}";
     private const string api_token_link = "oauth/token";
     private const string map_download_link = "osu/{0}";
+    private const string api_users_lookup_link = "api/v2/users/lookup/{0}";
     private readonly OsuApiConfig _config;
 
     private readonly HttpClient _httpClient;
@@ -169,6 +171,37 @@ public class OsuApiProvider : IOsuApiProvider
         await File.WriteAllBytesAsync(path, await response.Content.ReadAsByteArrayAsync());
 
         return true;
+    }
+
+    public async Task<UsersLookupResponse?> GetUsers(int[] ids)
+    {
+        if (ids.Length > 50)
+        {
+            throw new ArgumentOutOfRangeException(nameof(ids), "Too many users");
+        }
+
+        await RefreshUserlessToken();
+
+        var usersString = "?" + string.Join("&", ids.Select(id => $"ids[]={id}"));
+
+        var requestMessage = new HttpRequestMessage
+        {
+            Method = HttpMethod.Get,
+            RequestUri = new Uri(osu_base + string.Format(api_users_lookup_link, usersString)),
+            Headers = { Authorization = new AuthenticationHeaderValue("Bearer", _userlessToken!.AccessToken) }
+        };
+        requestMessage.Headers.Add("x-api-version", "99999999");
+
+        var response = await _httpClient.SendAsync(requestMessage);
+
+        if (response is { IsSuccessStatusCode: false })
+        {
+            return null;
+        }
+
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<UsersLookupResponse>();
     }
 
     private async Task RefreshUserlessToken()

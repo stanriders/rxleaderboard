@@ -47,29 +47,23 @@ namespace LazerRelaxLeaderboard.BackgroundServices
 
                 _logger.LogInformation("Updating {Count} users...", users.Length);
 
-                foreach (var userId in users)
+                const int max_users = 50;
+
+                for (var i = 0; i < users.Length; i += max_users)
                 {
+                    var usersSlice = users.Take(max_users).Skip(i).ToArray();
+
                     try
                     {
-                        var osuUser = await _osuApiProvider.GetUser(userId);
-                        if (osuUser == null)
+                        var osuUsers = await _osuApiProvider.GetUsers(usersSlice);
+                        if (osuUsers == null)
                         {
-                            if (await context.Scores.AnyAsync(x => x.UserId == userId && !x.Hidden,
-                                    cancellationToken: stoppingToken))
-                            {
-                                _logger.LogInformation("Nuking player {UserId}...", userId);
-
-                                await context.Scores.Where(x => x.UserId == userId)
-                                    .ExecuteUpdateAsync(u => u.SetProperty(x => x.Hidden, true),
-                                        cancellationToken: stoppingToken);
-
-                                await ppService.RecalculatePlayersPp([userId]);
-                                await ppService.RecalculateBestScores([userId]);
-                            }
+                            continue;
                         }
-                        else
+
+                        foreach (var osuUser in osuUsers.Users)
                         {
-                            await context.Users.Where(x => x.Id == userId)
+                            await context.Users.Where(x => x.Id == osuUser.Id)
                                 .ExecuteUpdateAsync(
                                     u => u.SetProperty(x => x.Username, osuUser.Username)
                                         .SetProperty(x => x.CountryCode, osuUser.CountryCode)
@@ -77,12 +71,13 @@ namespace LazerRelaxLeaderboard.BackgroundServices
                                     cancellationToken: stoppingToken);
 
                             var hiddenScores = await context.Scores
-                                .Where(x => x.UserId == userId && x.Hidden && !x.Deleted).ToArrayAsync(stoppingToken);
+                                .Where(x => x.UserId == osuUser.Id && x.Hidden && !x.Deleted).ToArrayAsync(stoppingToken);
                             if (hiddenScores.Length > 0)
                             {
                                 var anyUnhiddenScores = false;
 
-                                _logger.LogInformation("Unnuking player {UserId} ({Count} hidden scores)...", userId, hiddenScores.Length);
+                                _logger.LogInformation("Unnuking player {UserId} ({Count} hidden scores)...", osuUser.Id,
+                                    hiddenScores.Length);
 
                                 // user has hidden scores, but exists on the API - check if they got wiped
                                 foreach (var score in hiddenScores)
@@ -101,6 +96,7 @@ namespace LazerRelaxLeaderboard.BackgroundServices
                                         score.Hidden = true;
                                         score.Deleted = true;
                                     }
+
                                     await Task.Delay(_apiInterval, stoppingToken);
                                 }
 
@@ -108,9 +104,25 @@ namespace LazerRelaxLeaderboard.BackgroundServices
 
                                 if (anyUnhiddenScores)
                                 {
-                                    await ppService.RecalculatePlayersPp([userId]);
-                                    await ppService.RecalculateBestScores([userId]);
+                                    await ppService.RecalculatePlayersPp([osuUser.Id]);
+                                    await ppService.RecalculateBestScores([osuUser.Id]);
                                 }
+                            }
+                        }
+
+                        foreach (var missingPlayer in usersSlice.Where(x => osuUsers.Users.All(o => o.Id != x)))
+                        {
+                            if (await context.Scores.AnyAsync(x => x.UserId == missingPlayer && !x.Hidden,
+                                    cancellationToken: stoppingToken))
+                            {
+                                _logger.LogInformation("Nuking player {UserId}...", missingPlayer);
+
+                                await context.Scores.Where(x => x.UserId == missingPlayer)
+                                    .ExecuteUpdateAsync(u => u.SetProperty(x => x.Hidden, true),
+                                        cancellationToken: stoppingToken);
+
+                                await ppService.RecalculatePlayersPp([missingPlayer]);
+                                await ppService.RecalculateBestScores([missingPlayer]);
                             }
                         }
                     }
@@ -119,12 +131,12 @@ namespace LazerRelaxLeaderboard.BackgroundServices
                         _logger.LogError(ex, "UserUpdateService failed! {Message}", ex.Message);
                     }
 
-                    await Task.Delay(_apiInterval, stoppingToken);
+                    await Task.Delay(_apiInterval * 2, stoppingToken);
                 }
 
                 _logger.LogInformation("Finished updating users");
 
-                await Task.Delay(_apiInterval, stoppingToken);
+                await Task.Delay(_apiInterval * 5, stoppingToken);
             }
         }
     }
