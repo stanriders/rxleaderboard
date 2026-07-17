@@ -161,7 +161,7 @@ public class PpService : IPpService
                 return ValueTask.CompletedTask;
             });
 
-            _logger.LogInformation("Populating scores pp - saving batch of {Total} updates", queryBuilder.Count);
+            _logger.LogInformation("Populating scores pp - saving batch of {Updates} updates ({Iterator}/{Total} maps)", queryBuilder.Count, i, mapScores.Count);
 
             if (!queryBuilder.IsEmpty)
             {
