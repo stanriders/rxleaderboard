@@ -1,5 +1,5 @@
 "use client";
-import { FC } from "react";
+import { FC, useState } from "react";
 import {
   Table,
   TableBody,
@@ -10,6 +10,7 @@ import {
 } from "@nextui-org/table";
 import { formatDistance } from "date-fns";
 import { Tooltip } from "@nextui-org/react";
+import { Switch } from "@nextui-org/switch";
 
 import { ScoreModel, UserModel } from "@/api/types";
 import { User } from "@/components/user";
@@ -19,10 +20,22 @@ type Props = { scores: ScoreModel[] };
 
 // this stupid thing exists because of the nextui bug that makes tables not work in ssr
 export const BeatmapPageTable: FC<Props> = (props) => {
+  const [showAll, setShowAll] = useState(false);
   let index = 0;
+
+  const shouldShowSwitch = props.scores.find((r) => !r.isBest) != null;
 
   return (
     <>
+      {shouldShowSwitch ? (
+        <div className="flex justify-end pb-4">
+          <Switch isSelected={showAll} size="sm" onValueChange={setShowAll}>
+            Show all scores
+          </Switch>
+        </div>
+      ) : (
+        <></>
+      )}
       <Table isCompact isStriped fullWidth={true}>
         <TableHeader>
           <TableColumn align="start" width={45}>
@@ -62,7 +75,11 @@ export const BeatmapPageTable: FC<Props> = (props) => {
           </TableColumn>
         </TableHeader>
         <TableBody>
-          {props.scores.map((row: ScoreModel) => {
+          {props.scores
+            .filter((row: ScoreModel) => {
+              return !(!showAll && !row.isBest);
+            })
+            .map((row: ScoreModel) => {
             if (row.isBest) {
               index++;
             }
