@@ -223,6 +223,32 @@ public class AdminController : ControllerBase
         return Ok($"Nuked {player.Username}");
     }
 
+    [HttpPost("nukeScore/{id}")]
+    public async Task<IActionResult> NukeScore(long id)
+    {
+        if (!_authService.Authorize(HttpContext))
+        {
+            return Unauthorized();
+        }
+
+        var score = await _databaseContext.Scores.FindAsync(id);
+        if (score == null)
+        {
+            return NotFound("Score doesn't exist");
+        }
+
+        score.Hidden = true;
+
+        _logger.LogInformation("Nuking score {Id}...", id);
+
+        await _databaseContext.SaveChangesAsync();
+
+        await _ppService.RecalculatePlayersPp([score.UserId]);
+        await _ppService.RecalculateBestScores([score.UserId]);
+
+        return Ok($"Nuked score {id}");
+    }
+
     [HttpGet("hidden")]
     public async Task<IActionResult> GetHiddenScores()
     {
