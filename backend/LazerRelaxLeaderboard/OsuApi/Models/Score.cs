@@ -65,7 +65,7 @@ public class Score
         [JsonPropertyName("small_tick_hit")]
         public int? LegacySliderEnds { get; set; }
 
-        [JsonPropertyName("small_tick_mss")]
+        [JsonPropertyName("small_tick_miss")]
         public int? LegacySliderEndMisses { get; set; }
 
         [JsonPropertyName("large_tick_hit")]
