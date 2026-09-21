@@ -21,7 +21,7 @@ type Props = {
 export const Score: FC<Props> = (props) => {
   const score = props.score;
   const beatmap = score.beatmap as BeatmapModel;
-  const isCalculating = score.beatmap?.status == "Ranked" && score.pp == null;
+  const isCalculating = (score.beatmap?.status == "Ranked" || score.beatmap?.status == "Approved") && score.pp == null;
   const opacity =
     score.isBest || isCalculating
       ? "opacity-100"

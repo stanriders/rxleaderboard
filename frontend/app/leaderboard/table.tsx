@@ -33,7 +33,7 @@ export const LeaderboardTable: FC<Props> = (props) => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const [page, setPage] = useState(Number(searchParams.get("page")) ?? 1);
+  const [page, setPage] = useState(Number(searchParams.get("page")) || 1);
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState(searchParams.get("search") ?? "");
   const [country, setCountry] = useState(searchParams.get("country") ?? "");

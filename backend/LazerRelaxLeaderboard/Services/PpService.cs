@@ -392,6 +392,7 @@ public class PpService : IPpService
         {
             var players = await _databaseContext.Users
                 .Where(x => playerIds.Contains(x.Id))
+                .OrderBy(x => x.Id)
                 .Skip(i)
                 .Take(500)
                 .ToListAsync();
