@@ -53,8 +53,8 @@ namespace LazerRelaxLeaderboard.BackgroundServices
                         var users = await context.Users.AsNoTracking()
                             .OrderBy(x => x.UpdatedAt)
                             .Select(x => x.Id)
-                            .Take(max_users)
                             .Skip(i)
+                            .Take(max_users)
                             .ToArrayAsync(cancellationToken: stoppingToken);
 
                         var osuUsers = await _osuApiProvider.GetUsers(users);
