@@ -111,9 +111,7 @@ public class LeaderboardUpdateService : BackgroundService
                 }
 
                 var affectedPlayers = await ProcessScores(scoreResponse.Scores, context);
-
-                // somehow database seem to have issues keeping up and fails to properly calculate best scores, so we wait for a bit
-                await Task.Delay(_apiInterval, stoppingToken);
+                context.ChangeTracker.Clear(); // don't keep track of scores because we populate them with raw SQL later which makes tracked models stale
 
                 await ppService.PopulateScores();
 
